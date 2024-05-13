@@ -11,7 +11,7 @@ from .. import matrix
 
 # ---- // Main
 class SetPopup(BaseExecution):
-    def __init__(self, peer_id: int, ui_id: int, visible: bool, text: str, pos: list, render_distance: int, vehicle_parent_id: int|None, object_parent_id: int|None):
+    def __init__(self, peer_id: int, ui_id: int, visible: bool, text: str, pos: list, render_distance: int, vehicle_parent_id: int = 0, object_parent_id: int = 0):
         super().__init__(
             functionName = "setPopup",
             arguments = [peer_id, ui_id, "", visible, text, *matrix.getXYZ(pos), render_distance, vehicle_parent_id, object_parent_id]
