@@ -48,3 +48,11 @@ def onPlayerLeave(_, __, peer_id):
     players.pop(peer_id)
     
 addon.listen("onPlayerLeave", onPlayerLeave)
+
+# listen for chat messages
+def onChatMessage(peer_id, name, message):
+    addon.execute(
+        PTS.Announce("Server", f"Hey, {name}!", peer_id)
+    )
+    
+addon.listen("onChatMessage", onChatMessage)
