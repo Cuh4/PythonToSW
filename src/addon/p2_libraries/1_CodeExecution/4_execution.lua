@@ -52,8 +52,7 @@ function CodeExecution:handlePendingExecutions()
                 end
 
                 -- log
-                self:sendLog(("Processing execution: %s"):format(execution.ID))
-                self:sendLog("Arguments: "..table.concat(execution.arguments, ", "))
+                self:sendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
 
                 -- get function
                 local executionFunction = self:getFunctionFromExecution(execution)
