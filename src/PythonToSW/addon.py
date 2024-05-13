@@ -22,10 +22,11 @@ from . import Event
 
 # ---- // Main
 class Addon():
-    def __init__(self, addonName: str, port: int):
+    def __init__(self, addonName: str, port: int, code: "function"):
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
+        self.codeFunc = code
         self.running = False
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
         self.destinationAddonPath = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
@@ -57,14 +58,8 @@ class Addon():
         self.__hideFlaskOutput()
         
         # start server
-        threading.Thread(
-            target = self.app.run,
-            kwargs = {
-                "host": "127.0.0.1",
-                "port": self.port,
-                "threaded": False
-            }
-        ).start()
+        threading.Thread(target = self.codeFunc).start()
+        self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
         
     # Execute a server function in the addon
     def execute(self, execution: executions.BaseExecution):
@@ -208,7 +203,7 @@ class Addon():
             callback = self.getCallback(name)
             
             if not callback:
-                return "Invalid callback name", 400
+                return "Invalid callback name", 400 # its ok! addon just isnt listening for this callback
             
             # get arguments
             args = flask.request.args.get("args")
@@ -217,7 +212,7 @@ class Addon():
                 raise exceptions.InternalError("Missing args for /trigger-callback endpoint")
             
             args = helpers.URLDecode(args)
-            args = [*json.loads(args).values()]
+            args = json.loads(args)
             
             # trigger
             callback.fire(*args)
