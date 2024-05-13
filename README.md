@@ -11,16 +11,18 @@ import time
 import PythonToSW as PTS
 
 # create addon
-addon = PTS.Addon(addonName = "My Python Addon", port = 7800) # automatically creates an sw addon and brings it to your game's addon directory
-addon.start()
+addon = PTS.Addon(addonName = "My Python Addon", port = 7800) # automatically creates an sw addon and places it in your game's addon directory
 
-# every 5 seconds, send a message to everyone
-while True:
-    time.sleep(5)
+def main():
+    # every 5 seconds, send a message to everyone
+    while True:
+        time.sleep(5)
 
-    addon.execute(
-        PTS.Announce("Server", "Hello World", -1)
-    )
+        addon.execute(
+            PTS.Announce("Server", "Hello World")
+        )
+
+addon.start(main)
 ```
 
 ## ⚙️ | Installing this package
