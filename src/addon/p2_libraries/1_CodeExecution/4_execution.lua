@@ -104,11 +104,9 @@ end
 ---@param name string
 ---@param ... any
 function CodeExecution:triggerCallback(name, ...)
-    self:sendLog("Triggering callback: "..name)
-
     self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/trigger-callback",
-        {name = name, value = name},
+        {name = "name", value = name},
         {name = "args", value = AuroraFramework.services.HTTPService.JSON.encode({...})}
     ))
 end
