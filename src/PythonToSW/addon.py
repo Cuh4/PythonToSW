@@ -22,11 +22,10 @@ from . import Event
 
 # ---- // Main
 class Addon():
-    def __init__(self, addonName: str, port: int, code: "function"):
+    def __init__(self, addonName: str, port: int):
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
-        self.codeFunc = code
         self.running = False
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
         self.destinationAddonPath = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
@@ -41,7 +40,7 @@ class Addon():
         self.callbacks: dict[str, Event] = {}
         
     # Start the addon
-    def start(self):
+    def start(self, codeFunc: "function"):
         if self.running:
             raise exceptions.FailedStartAttempt("Addon is already running")
         
@@ -58,7 +57,7 @@ class Addon():
         self.__hideFlaskOutput()
         
         # start server
-        threading.Thread(target = self.codeFunc).start()
+        threading.Thread(target = codeFunc).start()
         self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
         
     # Execute a server function in the addon
