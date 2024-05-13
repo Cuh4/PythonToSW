@@ -10,7 +10,7 @@ from . import BaseExecution
 
 # ---- // Main
 class Announce(BaseExecution):
-    def __init__(self, author: str, message: str, peer_id: int):
+    def __init__(self, author: str, message: str, peer_id: int = -1):
         super().__init__(
             functionName = "announce",
             arguments = [author, message, peer_id]
