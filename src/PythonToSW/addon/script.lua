@@ -4929,23 +4929,42 @@ function CodeExecution:start()
         return
     end
 
+    -- log
+    self:sendLog("Started.")
+
     -- set started
     self.started = true
 
     -- callback functionality
+    local exceptions = {
+        onTick = true,
+        httpReply = true
+    }
+
     for name, callback in pairs(AuroraFramework.callbacks) do
-        -- ignore onTick!!
-        if name == "onTick" then
+        -- ignore problematic callbacks
+        if exceptions[name] then
             goto continue
         end
 
         -- connect to event and trigger backend callback
+        self:sendLog(("Connecting to event: %s."):format(name))
+
         callback.main:connect(function(...)
             self:triggerCallback(name, ...)
         end)
 
         ::continue::
     end
+
+    -- manually handle http reply
+    AuroraFramework.callbacks.httpReply.main:connect(function(port, ...)
+        if port == 0 or port == self.backendPort then -- port 0 returns response the very next tick. not good for http!
+            return
+        end
+
+        self:triggerCallback("httpReply", ...)
+    end)
 
     -- count up ticks
     AuroraFramework.callbacks.onTick.main:connect(function()
@@ -4989,7 +5008,7 @@ end
 ---
 ---@field handlePendingExecutions fun(self: CodeExecution) Handle pending executions
 ---@field getFunctionFromExecution fun(self: CodeExecution, execution: CodeExecution_PendingExecution): function|nil Get a server function from an execution
----@field returnExecutionResults fun(self: CodeExecution, id: string, returnValues: table<integer, any>) Send return values to backend
+---@field returnExecutionResults fun(self: CodeExecution, execution: CodeExecution_PendingExecution, returnValues: table<integer, any>) Send return values to backend
 ---@field triggerCallback fun(self: CodeExecution, name: string, ...: any) Trigger a callback in the backend
 
 ---@class CodeExecution_PendingExecution
