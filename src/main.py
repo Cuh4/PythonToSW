@@ -1,13 +1,7 @@
 # // imports
 import PythonToSW as PTS
 
-# // setup
-# create addon
-addon = PTS.Addon(addonName = "Testing", port = 12705)
-addon.start()
-
-# // main
-# create player class
+# // classes
 class Player():
     def __init__(self, name: str, peer_id: int, steam_id: int):
         self.name = name
@@ -30,29 +24,61 @@ class Player():
         addon.execute(
             PTS.Announce("Server", message, self.peer_id)
         )
+        
+    def getCharacter(self):
+        data = addon.execute(
+            PTS.GetPlayerCharacter(self.peer_id)
+        )
+        
+        return data[0]
 
-# create players
+# // variables
 players: dict[str, Player] = {}
+ticks: int = 0
 
-# listen for players joining
-def onPlayerJoin(steam_id, name, peer_id):
-    players[peer_id] = Player(name, peer_id, steam_id)
-    
-    # say hi!
-    players[peer_id].whisper("Hello!")
-    
-addon.listen("onPlayerJoin", onPlayerJoin)
-    
-# listen for players leaving
-def onPlayerLeave(_, __, peer_id):
-    players.pop(peer_id)
-    
-addon.listen("onPlayerLeave", onPlayerLeave)
+# // main
+# function that is called when the addon is started
+def main():
+    # create players
+    players: dict[str, Player] = {}
 
-# listen for chat messages
-def onChatMessage(peer_id, name, message):
-    addon.execute(
-        PTS.Announce("Server", f"Hey, {name}!", peer_id)
-    )
+    # listen for players joining
+    def onPlayerJoin(steam_id: int, name: str, peer_id: int, *_):
+        # create player
+        players[peer_id] = Player(name, peer_id, steam_id)
+        
+        # get object id
+        characterID = players[peer_id].getCharacter()
+        
+        # create custom nametag
+        addon.execute(
+            PTS.SetPopup(-1, characterID, True, name, PTS.matrix.new(0, 2, 0), 10, None, characterID)
+        )
+        
+        # say hi
+        players[peer_id].whisper("Welcome!")
+        
+    addon.listen("onPlayerJoin", onPlayerJoin)
+        
+    # listen for players leaving
+    def onPlayerLeave(_, __, peer_id: int, *___):
+        # remove player
+        players.pop(peer_id)
+        
+    addon.listen("onPlayerLeave", onPlayerLeave)
     
-addon.listen("onChatMessage", onChatMessage)
+    # listen for messages
+    def onChatMessage(peer_id, name, message):
+        # get player
+        player = players[peer_id]
+        
+        # show ticks
+        player.whisper(f"Ticks: {ticks}")
+        
+    addon.listen("onChatMessage", onChatMessage)
+
+# create addon
+addon = PTS.Addon(addonName = "Testing", port = 12705, code = main)
+
+# start it
+addon.start()
