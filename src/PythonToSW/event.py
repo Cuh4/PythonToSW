@@ -28,7 +28,6 @@ class Event():
     # Get all callbacks connected to this event
     def getCallbacks(self):
         return self.callbacks.copy()
-    
 
     # Fire this event    
     def fire(self, *args, **kwargs):
