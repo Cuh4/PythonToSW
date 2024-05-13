@@ -1,6 +1,10 @@
 # // imports
 import PythonToSW as PTS
 
+# // variables
+players: dict[str, "Player"] = {}
+ticks: int = 0
+
 # // classes
 class Player():
     def __init__(self, name: str, peer_id: int, steam_id: int):
@@ -32,18 +36,33 @@ class Player():
         
         return data[0]
 
-# // variables
-players: dict[str, Player] = {}
-ticks: int = 0
+# // functions
+def getPlayers():
+    data = addon.execute(
+        PTS.GetPlayers()
+    )
+    
+    return data[0]
 
 # // main
-# function that is called when the addon is started
+# called when the addon is started
 def main():
-    # create players
-    players: dict[str, Player] = {}
+    # print start message
+    print("Addon has started!")
+
+    # create player object for current players
+    for player in getPlayers():
+        players[player["id"]] = Player(
+            player["name"],
+            player["id"],
+            player["steam_id"]
+        )
 
     # listen for players joining
     def onPlayerJoin(steam_id: int, name: str, peer_id: int, *_):
+        # print message
+        print(f"{name} has joined.")
+        
         # create player
         players[peer_id] = Player(name, peer_id, steam_id)
         
@@ -69,6 +88,9 @@ def main():
     
     # listen for messages
     def onChatMessage(peer_id, name, message):
+        # print message
+        print(f"{name}: {message}")
+        
         # get player
         player = players[peer_id]
         
@@ -76,6 +98,14 @@ def main():
         player.whisper(f"Ticks: {ticks}")
         
     addon.listen("onChatMessage", onChatMessage)
+    
+    # listen for ontick
+    def onTick():
+        # increment ticks
+        global ticks
+        ticks += 1
+        
+    addon.listen("onTick", onTick)
 
 # create addon
 addon = PTS.Addon(addonName = "Testing", port = 12705, code = main)
