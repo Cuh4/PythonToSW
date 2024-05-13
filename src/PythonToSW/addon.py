@@ -59,7 +59,11 @@ class Addon():
         # start server
         threading.Thread(
             target = self.app.run,
-            kwargs = {"host": "127.0.0.1", "port": self.port},
+            kwargs = {
+                "host": "127.0.0.1",
+                "port": self.port,
+                "threaded": False
+            }
         ).start()
         
     # Execute a server function in the addon
@@ -133,14 +137,13 @@ class Addon():
         
     # Setup API routes
     def __setupRoutes(self):
-        # check if addon is  running
+        # check if addon is running
         if not self.running:
             raise exceptions.InternalError("Attempted to setup routes when addon is not running")
         
-        # endpoint to raise error from addon
+        # route - raise error from addon
         @self.app.get("/error")
         def error():
-            print("error callback")
             @flask.ctx.after_this_request
             def raiseException(_):
                 raise exceptions.AddonException(f"[{errorType}]: {errorMessage}")
@@ -156,10 +159,9 @@ class Addon():
             # return
             return "Ok", 200
         
-        # endpoint to return values for an execution
+        # route - return values for an execution
         @self.app.get("/return")
         def returnVal():
-            print("return callback")
             # get id and return values
             executionID = flask.request.args.get("id")
             returnValues = flask.request.args.get("returnValues")
@@ -185,17 +187,15 @@ class Addon():
             # return
             return "Ok", 200
         
-        # endpoint to fetch pending executions
+        # route - fetch pending executions
         @self.app.get("/get-pending-executions")
         def getPendingExecutions():
-            print("get-pending-executions callback")
             encoded = {execution.ID: execution._toDict() for execution in self.getPendingExecutions().values()}
             return json.dumps(encoded, indent = 5), 200
         
-        # endpoint to trigger callback
-        # @self.app.get("/trigger-callback")
+        # route - trigger callback
+        @self.app.get("/trigger-callback")
         def triggerCallback():
-            print("trigger-callback callback")
             # get name
             name = flask.request.args.get("name")
             
@@ -227,8 +227,8 @@ class Addon():
         
     # Hide flask output
     def __hideFlaskOutput(self):
-        self.app.logger.disabled = True
         logging.getLogger("werkzeug").disabled = True
+        self.app.logger.disabled = True
         flask.cli.show_server_banner = lambda *_, **__: None
         
     # Setup addon
