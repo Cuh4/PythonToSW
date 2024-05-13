@@ -26,6 +26,7 @@ addon.start(main)
 ```
 
 ## ⚙️ | Installing this package
+⚠️ - This package isn't on PyPi or anything like that, and likely won't be. Sorry!
 - Run `git clone https://github.com/Cuh4/PythonToSW`
 - Extract `/src/PythonToSW`
 - Import it with `import PythonToSW as PTS`
