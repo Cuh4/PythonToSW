@@ -10,8 +10,8 @@ from . import BaseExecution
 
 # ---- // Main
 class GetPlayerPos(BaseExecution):
-    def __init__(self, peerID: int):
+    def __init__(self, peer_id: int):
         super().__init__(
             functionName = "getPlayerPos",
-            arguments = [peerID]
+            arguments = [peer_id]
         )
