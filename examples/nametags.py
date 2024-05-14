@@ -94,6 +94,8 @@ def main():
         # Remove it
         nametag.remove()
         nametags.pop(peer_id)
+        
+    addon.listen("onPlayerLeave", onPlayerLeave)
     
     # Listen for players respawning
     def onPlayerRespawn(peer_id):
