@@ -6,7 +6,7 @@
     ----------------------------
 
     CREDIT:
-        Author: @cuh6_ (Discord)
+        Author: @Cuh4 (GitHub)
         GitHub Repository: https://github.com/Cuh4/LuaClasses
 
     Description:
