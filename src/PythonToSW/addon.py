@@ -38,7 +38,7 @@ from . import Event
 
 # ---- // Main
 class Addon():
-    def __init__(self, addonName: str, port: int):
+    def __init__(self, addonName: str, port: int, *, showStartupMessage: bool = True):
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
@@ -54,6 +54,8 @@ class Addon():
         
         self.pendingExecutions: dict[str, executions.BaseExecution] = {}
         self.callbacks: dict[str, Event] = {}
+        
+        self.showStartupMessage = showStartupMessage
         
     # Start the addon
     def start(self, codeFunc: "function"):
@@ -71,6 +73,10 @@ class Addon():
         
         # hide flask output
         self.__hideFlaskOutput()
+        
+        # show message
+        if self.showStartupMessage:
+            print(f"[PythonToSW] {self.addonName} has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
         
         # start server
         threading.Thread(target = codeFunc).start()
