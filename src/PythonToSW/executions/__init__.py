@@ -82,6 +82,8 @@ from .announce import Announce
 from .clearOilSpills import ClearOilSpills
 from .clearRadiation import ClearRadiation
 from .clearVehicles import ClearVehicles
+from .getCharacterItem import GetCharacterItem
+from .getObjectData import GetObjectData
 from .getPlayerCharacter import GetPlayerCharacter
 from .getPlayerPos import GetPlayerPos
 from .getPlayers import GetPlayers
@@ -96,6 +98,9 @@ from .removeMapLabel import RemoveMapLabel
 from .removeMapLine import RemoveMapLine
 from .removeMapObject import RemoveMapObject
 from .removePopup import RemovePopup
+from .setCharacterData import SetCharacterData
+from .setCharacterItem import SetCharacterItem
+from .setCharacterTooltip import SetCharacterTooltip
 from .setOilSpill import SetOilSpill
 from .setPlayerPos import SetPlayerPos
 from .setPopup import SetPopup
