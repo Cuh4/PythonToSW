@@ -27,10 +27,11 @@ from setuptools import setup, find_packages
 # ---- // Main
 setup(
     name= "PythonToSW",
-    version = "1.0.0",
+    version = open("../VERSION", encoding = "utf-8").read(),
     author = "Cuh4",
     description = "A package that allows you to create addons in Stormworks with Python, handled through HTTP.",
     long_description = open("../README.md", encoding = "utf-8").read(),
+    long_description_content_type = "text/markdown",
     packages = find_packages(),
     license = "Apache License 2.0",
     
