@@ -1,4 +1,3 @@
-include src/PythonToSW/addon/script.lua
-include src/PythonToSW/addon/playlist.xml
+include src/PythonToSW/addon/
 include README.md
 include VERSION
