@@ -1,5 +1,5 @@
 src/addon/script.lua
 __pycache__/
 
-src/dist
-src/*.egg-info
+dist
+*.egg-info

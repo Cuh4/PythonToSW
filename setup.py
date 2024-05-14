@@ -22,23 +22,44 @@ limitations under the License.
 """
 
 # ---- // Imports
+import os
 from setuptools import setup, find_packages
+
+# ---- // Variables
+with open(os.path.join(os.path.dirname(__file__), "VERSION"), encoding = "utf-8") as file:
+    version = file.read()
+    print(version)
+    
+with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding = "utf-8") as file:
+    long_description = file.read()
 
 # ---- // Main
 setup(
     name= "PythonToSW",
-    version = open("../VERSION", encoding = "utf-8").read(),
+    version = version,
     author = "Cuh4",
     description = "A package that allows you to create addons in Stormworks with Python, handled through HTTP.",
-    long_description = open("../README.md", encoding = "utf-8").read(),
+    long_description = long_description,
     long_description_content_type = "text/markdown",
-    packages = find_packages(),
+    packages = find_packages(where = "src"),
     license = "Apache License 2.0",
     
     classifiers = [
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
+    
+    install_requires = [
+        "pyperclip",
+        "requests",
+        "urllib3",
+        "uuid",
+        "urllib",
+        "xmltodict",
+        "flask"
+    ],
 
     python_requires = ">=3.12",
+    include_package_data = True,
+    package_dir = {"": "src"}
 )
