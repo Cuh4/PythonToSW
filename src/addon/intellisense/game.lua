@@ -13,15 +13,40 @@
 ----------------------------------------
 ---- // Credit
 ----------------------------------------
--- Created by: @toastery (Discord)
--- Maintained by: @cuh6_ (Discord)
+-- Created by: @nameouschangey (GitHub) and @Toast732 (GitHub)
+-- Maintained by: @Cuh4 (Discord)
 
 -- GitHub Repo: https://github.com/Cuh4/StormworksAddonLuaDocumentation
 
 ----------------------------------------
 ---- // Changelog (dd/mm/yy format)
 ----------------------------------------
--- Last updated for game version: v1.10.10 (The Person Overboard Update)
+-- Last updated for game version: v1.11.0 (The Commercial Fishing Major Update)
+
+-- 12/05/2024
+--[[
+    - Switched around server.setCharacterSeated and server.setSeated (server.setSeated is no longer an alias but the actual thing)
+    - Added server.setCreatureSeated as an alias of server.setSeated
+]]
+
+-- 08/05/2024
+--[[
+    - Added descriptions for server.spawnTornado, server.spawnMeteor, server.spawnMeteorShower, server.spawnVolcano, server.getVolcanos, server.spawnWhirlpool, server.spawnTsunami
+    - Added server.getFishData, server.getFishHotspots
+    - Added SWFishData and SWFishHotSpotData classes
+    - Int states for fish equipment types are now shown in the equipment type description
+]]
+
+-- 06/05/2024
+--[[
+    - Rename SWOreTypeEnum to SWResourceTypeEnum
+    - Add missing resources to SWResourceTypeEnum (solid_propellant and fishes)
+]]
+
+-- 05/05/2024
+--[[
+    - Fix description for server.getWeather
+]]
 
 -- 26/04/2024
 --[[
@@ -111,6 +136,9 @@
     - Removed server.getVehicleName
 ]]
 
+----------------------------------------
+---- // Intellisense
+----------------------------------------
 -------------------------
 -- LUA LSP DIAGNOSTICS SETTINGS
 -------------------------
@@ -575,7 +603,7 @@ function onOilSpill(tile_x, tile_z, delta, total, vehicle_id) end
 ---| 8 # slurry
 ---| 9 # saturated slurry
 
----@alias SWOreTypeEnum
+---@alias SWResourceTypeEnum
 ---| 0 # coal
 ---| 1 # iron
 ---| 2 # aluminium
@@ -588,6 +616,50 @@ function onOilSpill(tile_x, tile_z, delta, total, vehicle_id) end
 ---| 9 # ingot_gold_impure
 ---| 10 # ingot_gold
 ---| 11 # ingot_uranium
+---| 12 # solid_propellant
+---| 13 # anchovy
+---| 14 # anglerfish
+---| 15 # arctic_char
+---| 16 # ballan_lizardfish
+---| 17 # ballan_wrasse
+---| 18 # barreleye_fish
+---| 19 # black_bream
+---| 20 # black_dragonfish
+---| 21 # clownfish
+---| 22 # cod
+---| 23 # dolphinfish
+---| 24 # gulper_eel
+---| 25 # haddock
+---| 26 # hake
+---| 27 # herring
+---| 28 # john_dory
+---| 29 # labrus
+---| 30 # lanternfish
+---| 31 # mackerel
+---| 32 # midshipman
+---| 33 # perch
+---| 34 # pike
+---| 35 # pinecone_fish
+---| 36 # pollock
+---| 37 # red_mullet
+---| 38 # rockfish
+---| 39 # sablefish
+---| 40 # salmon
+---| 41 # sardine
+---| 42 # scad
+---| 43 # sea_bream
+---| 44 # halibut
+---| 45 # sea_piranha
+---| 46 # seabass
+---| 47 # slimehead
+---| 48 # snapper
+---| 49 # gold_snapper
+---| 50 # snook
+---| 51 # spadefish
+---| 52 # trout
+---| 53 # tubeshoulders_fish
+---| 54 # viperfish
+---| 55 # yellowfin_tuna
 
 
 ---@class SWGameSettingEnum : string
@@ -1132,14 +1204,15 @@ function server.killCharacter(object_id) end
 --- @param object_id number The unique object_id of the character you want to revive
 function server.reviveCharacter(object_id) end
 
---- Makes the provided character sit in the first seat found that has a matching name or matching voxel position to that which is provided. Can seat player characters
+--- Makes the provided object (character, creature, etc) sit in the first seat found that has a matching name or matching voxel position to that which is provided. Can seat player characters
 --- @overload fun(object_id: number, vehicle_id: number, voxel_x: number, voxel_y: number, voxel_z: number)
 --- @param object_id number The unique object_id of the character you want to seat
 --- @param vehicle_id number The vehicle that the seat is a part of
 --- @param seat_name string The name of the seat of which you want to set the character seated in.
-function server.setCharacterSeated(object_id, vehicle_id, seat_name) end
+function server.setSeated(object_id, vehicle_id, seat_name) end
 
-server.setSeated = server.setCharacterSeated
+server.setCharacterSeated = server.setSeated
+server.setCreatureSeated = server.setSeated
 
 --- Get object/character data of the specified object_id
 --- @param object_id number The unique object_id of the character you want to get data on
@@ -1413,50 +1486,49 @@ function server.getCharacterItem(object_id, SLOT_NUMBER) end
 ---| 79 # space_suit
 ---| 80 # exploration_space_suit
 ---| 81 # fishing rod
----| 82 # anchovie
----| 83 # anglerfish
----| 84 # arctic_char
----| 85 # ballan_lizardfish
----| 86 # ballan_wrasse
----| 87 # barreleye_fish
----| 88 # black_Bream
----| 89 # black_dragonfish
----| 90 # clown_fish
----| 91 # cod
----| 92 # dolphinfish
----| 93 # gulper_eel
----| 94 # haddock
----| 95 # hake
----| 96 # herring
----| 97 # john_dory
----| 98 # labrus
----| 99 # lanternfish
----| 100 # mackerel
----| 101 # midshipman
----| 102 # perch
----| 103 # pike
----| 104 # pinecone_fish
----| 105 # pollack
----| 106 # red_mullet
----| 107 # rockfish
----| 108 # sablefish
----| 109 # salmon
----| 110 # sardine
----| 111 # scad
----| 112 # sea_bream
----| 113 # sea_halibut
----| 114 # sea_piranha
----| 115 # seabass
----| 116 # slimehead
----| 117 # snapper
----| 118 # snapper_gold
----| 119 # snook
----| 120 # spadefish
----| 121 # trout
----| 122 # tubeshoulders_fish
----| 123 # viperfish
----| 124 # yellowfin_tuna
-
+---| 82 # anchovie [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 83 # anglerfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 84 # arctic_char [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 85 # ballan_lizardfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 86 # ballan_wrasse [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 87 # barreleye_fish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 88 # black_Bream [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 89 # black_dragonfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 90 # clown_fish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 91 # cod [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 92 # dolphinfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 93 # gulper_eel [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 94 # haddock [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 95 # hake [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 96 # herring [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 97 # john_dory [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 98 # labrus [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 99 # lanternfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 100 # mackerel [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 101 # midshipman [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 102 # perch [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 103 # pike [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 104 # pinecone_fish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 105 # pollack [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 106 # red_mullet [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 107 # rockfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 108 # sablefish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 109 # salmon [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 110 # sardine [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 111 # scad [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 112 # sea_bream [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 113 # sea_halibut [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 114 # sea_piranha [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 115 # seabass [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 116 # slimehead [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 117 # snapper [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 118 # snapper_gold [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 119 # snook [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 120 # spadefish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 121 # trout [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 122 # tubeshoulders_fish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 123 # viperfish [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
+---| 124 # yellowfin_tuna [int = fish {0 = idle, 1 = flee, 2 = flop, 3 = dead}]
 
 -------------------------
 -- Vehicles
@@ -1475,6 +1547,7 @@ function server.getCharacterItem(object_id, SLOT_NUMBER) end
 --- @field name string the name of the seat
 --- @field pos SWVoxelPos the voxel position of the seat
 --- @field seated_id integer the character id of who is in the seat
+--- @field seated_peer_id integer the peer id of the player sitting in the seat, if any
 
 --- @class SWVehicleButtonData
 --- @field name string the name of the button
@@ -1503,7 +1576,7 @@ function server.getCharacterItem(object_id, SLOT_NUMBER) end
 --- @class SWVehicleHopperData
 --- @field name string the name of the hopper
 --- @field pos SWVoxelPos the voxel position of the hopper
---- @field values table<SWOreTypeEnum, number> a table indexed by the ore id, with the value being the amount of that ore inside this hopper
+--- @field values table<SWResourceTypeEnum, number> a table indexed by the resource id, with the value being the amount of that resource inside this hopper
 --- @field capacity number total capacity of the hopper
 
 --- @class SWVehicleWeaponData
@@ -1771,12 +1844,12 @@ function server.setVehicleTank(vehicle_id, tank_name, amount, FLUID_TYPE) end
 function server.setVehicleBattery(vehicle_id, battery_name, amount) end
 
 --- Sets the number of coal objects inside a hopper
---- @overload fun(vehicle_id: number, voxel_x: number, voxel_y: number, voxel_z: number, amount: number, ORE_TYPE: SWOreTypeEnum)
+--- @overload fun(vehicle_id: number, voxel_x: number, voxel_y: number, voxel_z: number, amount: number, RESOURCE_TYPE: SWResourceTypeEnum)
 --- @param vehicle_id number The vehicle ID to set the hopper on
 --- @param hopper_name string The name of the hopper to set
 --- @param amount number The amount to set the hopper to
---- @param ORE_TYPE SWOreTypeEnum The ore type to set inside the hopper
-function server.setVehicleHopper(vehicle_id, hopper_name, amount, ORE_TYPE) end
+--- @param RESOURCE_TYPE SWResourceTypeEnum The resource type to set inside the hopper
+function server.setVehicleHopper(vehicle_id, hopper_name, amount, RESOURCE_TYPE) end
 
 --- Sets the charge level of the weapon
 --- @overload fun(vehicle_id: number, voxel_x: number, voxel_y: number, voxel_z: number, amount: number)
@@ -2007,11 +2080,35 @@ function server.setAITargetVehicle(object_id, target_vehicle_id) end
 ---@field r number the radius of the oil deposit
 ---@field oil number the amount of oil contained in this oil deposit
 
+---@class SWFishData
+---@field name string the name of the fish
+---@field price number the price of the fish
+---@field resource_type SWResourceTypeEnum the resource type of the fish
+---@field equipment_type SWEquipmentTypeEnum the equipment type of the fish
+---@field is_net_catchable boolean true if the fish is catchable via fish nets
+
+---@class SWFishHotSpotData
+---@field x number the x position of the fish hotspot in world space
+---@field y number the y position of the fish hotspot in world space
+---@field z number the z position of the fish hotspot in world space
+---@field resource_type SWResourceTypeEnum the resource type of the fish hotspot
+---@field r number the radius of the fish hotspot
+
+--- Get fish data
+---@return table<SWResourceTypeEnum, SWFishData>
+function server.getFishData() end
+
+--- Get fish hotspot data
+---@return table<integer, SWFishHotSpotData>
+function server.getFishHotspots() end
+
+--- Spawns a tsunami
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @return boolean is_success
 function server.spawnTsunami(transform_matrix, magnitude) end
 
+--- Spawns a whirlpool
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @return boolean is_success
@@ -2020,28 +2117,33 @@ function server.spawnWhirlpool(transform_matrix, magnitude) end
 --- Cancels the current gerstner wave even (tsunami or whirlpool)
 function server.cancelGerstner() end
 
+--- Spawns a tornado
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @return boolean is_success
 function server.spawnTornado(transform_matrix, magnitude) end
 
+--- Spawns a meteor
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @param is_spawn_tsunami boolean
 --- @return boolean is_success
 function server.spawnMeteor(transform_matrix, magnitude, is_spawn_tsunami) end
 
+--- Spawns a meteor shower
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @param is_spawn_tsunami boolean
 --- @return boolean is_success
 function server.spawnMeteorShower(transform_matrix, magnitude, is_spawn_tsunami) end
 
+--- Spawns a volcano
 --- @param transform_matrix SWMatrix
 --- @param magnitude number magnitude 0->1
 --- @return boolean is_success
 function server.spawnVolcano(transform_matrix, magnitude) end
 
+--- Gets all volcanos
 --- @return table<number, SWVolcano> volcanos
 function server.getVolcanos() end
 
@@ -2097,7 +2199,7 @@ function server.getDate() end
 --- @return SWTime clock
 function server.getTime() end
 
---- Returns the time the save has been running for in milliseconds
+--- Returns the current weather
 --- @param transform_matrix SWMatrix
 --- @return SWWeather weather
 function server.getWeather(transform_matrix) end
