@@ -26,10 +26,8 @@ addon.start(main)
 ```
 
 ## ⚙️ | Installing this package
-⚠️ - This package isn't on PyPi or anything like that, and likely won't be. Sorry!
-- Run `git clone https://github.com/Cuh4/PythonToSW`
-- Extract `/src/PythonToSW`
-- Import it with `import PythonToSW as PTS`
+- Use `pip install PythonToSW`
+- Import the package with `import PythonToSW as PTS` in your code
 
 ## 😔 | Quirks
 - Noticeable delays. This project works through HTTP instead of converting Python code to Lua code, and HTTP is unfortunately slow.
