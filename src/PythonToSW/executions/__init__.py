@@ -57,10 +57,29 @@ class BaseExecution():
         return self.returnValues
     
 # ---- // Other Executions
+from .addAdmin import AddAdmin
+from .addAuth import AddAuth
+from .addMapLabel import AddMapLabel
+from .addMapLine import AddMapLine
+from .addMapObject import AddMapObject
 from .announce import Announce
-from .setPlayerPos import SetPlayerPos
+from .clearOilSpills import ClearOilSpills
+from .clearRadiation import ClearRadiation
+from .clearVehicles import ClearVehicles
+from .getPlayerCharacter import GetPlayerCharacter
 from .getPlayerPos import GetPlayerPos
 from .getPlayers import GetPlayers
+from .getSeasonalEvent import GetSeasonalEvent
+from .getUniqueID import GetUniqueID
+from .isAridDLC import IsAridDLC
+from .isSpaceDLC import IsSpaceDLC
+from .isWeaponsDLC import IsWeaponsDLC
+from .removeAdmin import RemoveAdmin
+from .removeAuth import RemoveAuth
+from .removeMapLabel import RemoveMapLabel
+from .removeMapLine import RemoveMapLine
+from .removeMapObject import RemoveMapObject
 from .removePopup import RemovePopup
+from .setOilSpill import SetOilSpill
+from .setPlayerPos import SetPlayerPos
 from .setPopup import SetPopup
-from .getPlayerCharacter import GetPlayerCharacter
