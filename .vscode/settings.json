@@ -1,6 +1,6 @@
 {
     "Lua.workspace.ignoreDir": [
         ".vscode",
-        "/src/PythonToSW/addon/script.lua",
+        "/src/PythonToSW/addon",
     ]
 }
