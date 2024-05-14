@@ -34,6 +34,7 @@ addon.start(main)
 ## 😔 | Quirks
 - Noticeable delays. This project works through HTTP instead of converting Python code to Lua code, and HTTP is unfortunately slow.
 - Lack of vehicle support. I likely won't add vehicle support, sorry! :-(
+- For your addon to function, the host of the server must run the Python script behind your addon. Closing the Python script will essentially stop the addon.
 
 ## ✨ | Credit
 - **Cuh4** ([GitHub](https://github.com/Cuh4)) 
