@@ -50,7 +50,7 @@ class Nametag():
                 ui_id = self.UI_ID,
                 visible = True,
                 text = self.playerName,
-                pos = PTS.matrix.new(0, 10, 0),
+                pos = PTS.matrix.new(0, 2, 0),
                 renderDistance = 10,
                 vehicleParentID = 0,
                 objectParentID = self.getCharacterID()
