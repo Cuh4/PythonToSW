@@ -1,3 +1,4 @@
 cd src
 py setup.py sdist
-twine dist/*
+twine upload dist/*
+cd ..
