@@ -38,19 +38,19 @@ from . import Event
 
 # ---- // Main
 class Addon():
-    def __init__(self, addonName: str, port: int, *, showStartupMessage: bool = True):
+    def __init__(self, addonName: str, port: int, *, showStartupMessage: bool = True, destinationAddonPath: str = None):
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
         self.running = False
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
-        self.destinationAddonPath = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
+        self.destinationAddonPath = destinationAddonPath or os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
         
         if not os.path.exists(self.addonPath):
             raise exceptions.InternalError(f"Addon path does not exist: {os.path.abspath(self.addonPath)}")
         
         if not os.path.exists(self.destinationAddonPath):
-            raise exceptions.InternalError(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.")
+            raise exceptions.InternalError(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.\nIf you are on a non-Windows OS, please provide the destinationAddonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
         
         self.pendingExecutions: dict[str, executions.BaseExecution] = {}
         self.callbacks: dict[str, Event] = {}
