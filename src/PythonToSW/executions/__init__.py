@@ -87,6 +87,7 @@ from .despawnObject import DespawnObject
 from .despawnVehicle import DespawnVehicle
 from .despawnVehicleGroup import DespawnVehicleGroup
 from .getCharacterItem import GetCharacterItem
+from .getCurrency import GetCurrency
 from .getObjectData import GetObjectData
 from .getPlayerCharacter import GetPlayerCharacter
 from .getPlayerPos import GetPlayerPos
@@ -97,6 +98,7 @@ from .getVehicleBatteryByName import GetVehicleBatteryByName
 from .getVehicleBatteryByVoxel import GetVehicleBatteryByVoxel
 from .getVehicleComponents import GetVehicleComponents
 from .getVehicleData import GetVehicleData
+from .getVehicleGroup import GetVehicleGroup
 from .getVehiclePos import GetVehiclePos
 from .getVehicleTankByName import GetVehicleTankByName
 from .getVehicleTankByVoxel import GetVehicleTankByVoxel
@@ -114,6 +116,7 @@ from .setCharacterData import SetCharacterData
 from .setCharacterItem import SetCharacterItem
 from .setCharacterTooltip import SetCharacterTooltip
 from .setCreatureMoveTarget import SetCreatureMoveTarget
+from .setCurrency import SetCurrency
 from .setOilSpill import SetOilSpill
 from .setPlayerPos import SetPlayerPos
 from .setPopup import SetPopup
