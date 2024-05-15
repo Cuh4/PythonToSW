@@ -58,7 +58,7 @@ class Addon():
         self.showStartupMessage = showStartupMessage
         
     # Start the addon
-    def start(self, codeFunc: "function"):
+    def start(self, target: "function"):
         if self.running:
             raise exceptions.FailedStartAttempt("Addon is already running")
         
@@ -76,10 +76,10 @@ class Addon():
         
         # show message
         if self.showStartupMessage:
-            print(f"[PythonToSW] {self.addonName} has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
+            print(f"[PythonToSW] '{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
         
         # start server
-        threading.Thread(target = codeFunc).start()
+        threading.Thread(target = target).start()
         self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
         
     # Execute a server function in the addon
