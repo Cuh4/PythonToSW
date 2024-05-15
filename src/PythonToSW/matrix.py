@@ -21,8 +21,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# ---- // Variables
+import math
+
 # ---- // Main
-def new(x: float|int, y: float|int, z: float|int):
+# Creates a new matrix
+def new(x: float|int, y: float|int, z: float|int) -> list:
     return [
         1, 0, 0, 0,
         0, 0, 0, 0,
@@ -30,5 +34,10 @@ def new(x: float|int, y: float|int, z: float|int):
         x, y, z, 1
     ]
     
-def getXYZ(matrix: list):
+# Returns the x, y, and z coordinates of a matrix
+def getXYZ(matrix: list) -> tuple[float, float, float]:
     return matrix[12], matrix[13], matrix[14]
+
+# Returns the distance between two matrices
+def distance(matrix1: list, matrix2: list) -> float:
+    return math.sqrt((matrix1[12] - matrix2[12])**2 + (matrix1[13] - matrix2[13])**2 + (matrix1[14] - matrix2[14])**2)
