@@ -32,7 +32,6 @@ with open(os.path.join(os.path.dirname(__file__), "VERSION"), encoding = "utf-8"
     
 with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding = "utf-8") as file:
     long_description = file.read()
-    
 
 # ---- // Main
 setup(
@@ -50,14 +49,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     
-    install_requires = [
-        "pyperclip",
-        "requests",
-        "urllib3",
-        "uuid",
-        "xmltodict",
-        "flask"
-    ],
+    install_requires = open("requirements.txt").read().splitlines(),
 
     python_requires = ">=3.12",
     include_package_data = True,
