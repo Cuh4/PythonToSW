@@ -97,6 +97,7 @@ from .getVehicleBatteryByName import GetVehicleBatteryByName
 from .getVehicleBatteryByVoxel import GetVehicleBatteryByVoxel
 from .getVehicleComponents import GetVehicleComponents
 from .getVehicleData import GetVehicleData
+from .getVehiclePos import GetVehiclePos
 from .getVehicleTankByName import GetVehicleTankByName
 from .getVehicleTankByVoxel import GetVehicleTankByVoxel
 from .isAridDLC import IsAridDLC
@@ -120,6 +121,7 @@ from .setVehicleBatteryByName import SetVehicleBatteryByName
 from .setVehicleBatteryByVoxel import SetVehicleBatteryByName
 from .setVehicleEditable import SetVehicleEditable
 from .setVehicleInvulnerable import SetVehicleInvulnerable
+from .setVehiclePos import SetVehiclePos
 from .setVehicleShowOnMap import SetVehicleShowOnMap
 from .setVehicleTankByName import SetVehicleTankByName
 from .setVehicleTankByVoxel import SetVehicleTankByVoxel
