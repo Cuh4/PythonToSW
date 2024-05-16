@@ -39,23 +39,34 @@ from . import Event
 # ---- // Main
 class Addon():
     def __init__(self, addonName: str, port: int, *, showStartupMessage: bool = True, destinationAddonPath: str = None):
+        # main attributes
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
         self.running = False
+        self.showStartupMessage = showStartupMessage
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
         self.destinationAddonPath = destinationAddonPath or os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
+        self.pendingExecutions: dict[str, executions.BaseExecution] = {}
+        self.callbacks: dict[str, Event] = {}
         
+        self.playlistEncoded = self.__parsePlaylist()
+        self.script = self.__parseScript()
+        self.vehicles: list[str] = []
+        
+        # check if paths exist
         if not os.path.exists(self.addonPath):
             raise exceptions.InternalError(f"Addon path does not exist: {os.path.abspath(self.addonPath)}")
         
         if not os.path.exists(self.destinationAddonPath):
             raise exceptions.InternalError(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.\nIf you are on a non-Windows OS, please provide the destinationAddonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
         
-        self.pendingExecutions: dict[str, executions.BaseExecution] = {}
-        self.callbacks: dict[str, Event] = {}
+        # edit playlist
+        self.playlistEncoded["playlist"]["@name"] = f"[P2SW] {self.addonName}"
+        self.playlistEncoded["playlist"]["@folder_path"] = f"data/missions/{self.addonName}"
         
-        self.showStartupMessage = showStartupMessage
+        # edit script
+        self.script = self.script.replace("__PORT__", str(self.port))
         
     # Start the addon
     def start(self, target: "function"):
@@ -137,6 +148,65 @@ class Addon():
     def listen(self, name: str, callback: callable):
         self.__createCallbackIfNotExists(name)
         return self.getCallback(name).connect(callback)
+    
+    # Register a vehicle. The path must be the path to the vehicle .xml file
+    def registerVehicle(self, path: str, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
+        # check if path exists
+        if not os.path.exists(path):
+            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path}")
+        
+        # validate playlist structure (this is awful)
+        if self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"].get("components", None) is None and self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"].get("c", None) is None:
+            self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"] = {"c" : []}
+            
+        # get vehicle id
+        vehicleID = os.path.basename(path).replace("vehicle_", "").replace(".xml", "")
+        
+        if not vehicleID.isnumeric():
+            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path (can't get ID?): {path}")
+        
+        vehicleID = int(vehicleID)
+        
+        # register vehicle
+        self.vehicles.append(path)
+        
+        # add vehicle to playlist
+        self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"]["c"].append({
+            "@component_type": "3",
+            "@id": f"{vehicleID}",
+            "@name": "Vehicle",
+            "@dynamic_object_type": "2",
+            "@character_outfit_category": "11",
+            "@character_type": "1",
+            "@vehicle_file_name": f"data/missions_working/vehicle_{vehicleID}.xml",
+            "@vehicle_file_store": "4",
+            "@vehicle_is_static": "true" if isStatic else "false",
+            "@vehicle_is_editable": "true" if isEditable else "false",
+            "@vehicle_is_invulnerable": "true" if isInvulnerable else "false",
+            "@vehicle_is_show_on_map": "true" if isShowOnMap else "false",
+            "@vehicle_is_transponder_active": "true" if isTransponderActive else "false",
+
+            "spawn_bounds": {
+                "min": {
+                    "@x": "0",
+                    "@y": "0",
+                    "@z": "0"
+                },
+                "max": {
+                    "@x": "0",
+                    "@y": "0",
+                    "@z": "0"
+                }
+            },
+
+            "spawn_local_offset": {
+                "@x": "0",
+                "@y": "0",
+                "@z": "0"
+            },
+
+            "graph_links": None
+        })
         
     # Get a callback by its name
     def getCallback(self, name: str) -> Event|None:
@@ -247,34 +317,37 @@ class Addon():
         self.app.logger.disabled = True
         flask.cli.show_server_banner = lambda *_, **__: None
         
+    # Return parsed playlist.xml
+    def __parsePlaylist(self):
+        playlistFile = os.path.join(self.addonPath, "playlist.xml")
+        
+        if not os.path.exists(playlistFile):
+            raise exceptions.InternalError(f"Playlist file does not exist: {playlistFile}")
+        
+        return helpers.XMLDecode(helpers.quickRead(playlistFile))
+    
+    # Return script.lua
+    def __parseScript(self):
+        scriptFile = os.path.join(self.addonPath, "script.lua")
+        
+        if not os.path.exists(scriptFile):
+            raise exceptions.InternalError(f"Script file does not exist: {scriptFile}")
+        
+        return helpers.quickRead(scriptFile)
+        
     # Setup addon
     def __setupAddon(self):
         # set destination path
         secureAddonName = werkzeug.utils.secure_filename(self.addonName)
         destinationPath = os.path.join(self.destinationAddonPath, secureAddonName)
         
-        # parse playlist.xml
-        playlistFile = os.path.join(self.addonPath, "playlist.xml")
-        
-        if not os.path.exists(playlistFile):
-            raise exceptions.InternalError(f"Playlist file does not exist: {playlistFile}")
-        
-        rawPlaylist: str = helpers.quickRead(playlistFile)
-        decodedPlaylist = helpers.XMLDecode(rawPlaylist)
-        
-        # set addon name and path
-        decodedPlaylist["playlist"]["@name"] = f"[P2SW] {self.addonName}"
-        decodedPlaylist["playlist"]["@folder_path"] = f"data/missions/{secureAddonName}"
-        
-        # parse script.lua
-        scriptFile = os.path.join(self.addonPath, "script.lua")
-        
-        if not os.path.exists(scriptFile):
-            raise exceptions.InternalError(f"Script file does not exist: {scriptFile}")
-        
-        rawScript: str = helpers.quickRead(scriptFile)
-        rawScript = rawScript.replace("__PORT__", str(self.port))
-        
         # write files to destination
-        helpers.quickWrite(os.path.join(destinationPath, "playlist.xml"), helpers.XMLEncode(decodedPlaylist))
-        helpers.quickWrite(os.path.join(destinationPath, "script.lua"), rawScript)
+        helpers.quickWrite(os.path.join(destinationPath, "playlist.xml"), helpers.XMLEncode(self.playlistEncoded))
+        helpers.quickWrite(os.path.join(destinationPath, "script.lua"), self.script)
+        
+        # save vehicles
+        for vehicle in self.vehicles:
+            name = os.path.basename(vehicle)
+            content = helpers.quickRead(vehicle)
+            
+            helpers.quickWrite(os.path.join(destinationPath, name), content)

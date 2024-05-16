@@ -36,3 +36,6 @@ class FailedExecutionAttempt(Exception):
 
 class InvalidExecutionID(Exception):
     pass
+
+class InvalidVehiclePath(Exception):
+    pass

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<playlist folder_path="" file_store="4" name="">
-	<locations>
-		<locations/>
+<playlist file_store="4" name="" folder_path="">
+	<locations location_id_counter="1" component_id_counter="1">
+		<locations>
+			<l id="1" name="OCEAN" env_mod_spawn_num="1">
+				<components>
+					<components/>
+				</components>
+			</l>
+		</locations>
 	</locations>
 </playlist>
-
