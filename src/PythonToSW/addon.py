@@ -156,8 +156,10 @@ class Addon():
             raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path}")
         
         # validate playlist structure (this is awful)
-        if self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"].get("components", None) is None and self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"].get("c", None) is None:
-            self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"] = {"c" : []}
+        root = self.playlistEncoded["playlist"]["locations"]["locations"]["l"]
+        
+        if root["components"].get("components", None) is None and root["components"].get("c", None) is None:
+            root["components"] = {"c" : []}
             
         # get vehicle id
         vehicleID = os.path.basename(path).replace("vehicle_", "").replace(".xml", "")
@@ -171,7 +173,7 @@ class Addon():
         self.vehicles.append(path)
         
         # add vehicle to playlist
-        self.playlistEncoded["playlist"]["locations"]["locations"]["l"]["components"]["c"].append({
+        root["components"]["c"].append({
             "@component_type": "3",
             "@id": f"{vehicleID}",
             "@name": "Vehicle",
