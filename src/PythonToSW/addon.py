@@ -155,11 +155,6 @@ class Addon():
         
         # remove it
         self.pendingExecutions.pop(executionID)
-        
-    # Listen for a game callback
-    def listen(self, name: str, callback: callable):
-        self.__createCallbackIfNotExists(name)
-        return self.getCallback(name).connect(callback)
     
     # Register a vehicle. The path must be the path to the vehicle .xml file
     def registerVehicle(self, path: str, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
@@ -227,6 +222,18 @@ class Addon():
 
             "graph_links": None
         })
+        
+        # send log
+        self.log(f"Registered vehicle #{vehicleID}.")
+        
+    # Listen for a game callback
+    def listen(self, name: str, callback: "function"):
+        # send log
+        self.log(f"{callback.__name__} is listening for callback: {name}")
+        
+        # listen for game callback
+        self.__createCallbackIfNotExists(name)
+        return self.getCallback(name).connect(callback)
         
     # Get a callback by its name
     def getCallback(self, name: str) -> Event|None:
