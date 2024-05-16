@@ -157,7 +157,7 @@ class Addon():
         self.pendingExecutions.pop(executionID)
     
     # Register a vehicle. The path must be the path to the vehicle .xml file
-    def registerVehicle(self, path: str, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
+    def registerVehicle(self, path: str, vehicleID: int, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
         # check if path exists
         if not os.path.exists(path):
             raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path}")
@@ -167,17 +167,9 @@ class Addon():
         
         if root["components"].get("components", None) is None and root["components"].get("c", None) is None:
             root["components"] = {"c" : []}
-            
-        # get vehicle id
-        vehicleID = os.path.basename(path).replace("vehicle_", "").replace(".xml", "")
-        
-        if not vehicleID.isnumeric():
-            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path (can't get ID?): {path}")
-        
-        vehicleID = int(vehicleID)
         
         # register vehicle
-        self.vehicles.append(path)
+        self.vehicles.append({"path" : path, "vehicleID" : vehicleID})
         
         # add vehicle to playlist
         vehicle = {
@@ -384,9 +376,9 @@ class Addon():
         helpers.quickWrite(os.path.join(destinationPath, "playlist.xml"), helpers.XMLEncode(self.playlistEncoded))
         helpers.quickWrite(os.path.join(destinationPath, "script.lua"), self.script)
         
-        # save vehicles
+        # add vehicles to addon directory
         for vehicle in self.vehicles:
-            name = os.path.basename(vehicle)
-            content = helpers.quickRead(vehicle)
+            vehicleID = vehicle["vehicleID"]
+            content = helpers.quickRead(vehicle["path"])
             
-            helpers.quickWrite(os.path.join(destinationPath, name), content)
+            helpers.quickWrite(os.path.join(destinationPath, f"vehicle_{vehicleID}"), content)
