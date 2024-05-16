@@ -185,8 +185,6 @@ class Addon():
             "@id": f"{vehicleID}",
             "@name": "Vehicle",
             "@dynamic_object_type": "2",
-            "@character_outfit_category": "11",
-            "@character_type": "1",
             "@vehicle_file_name": f"data/missions_working/vehicle_{vehicleID}.xml",
             "@vehicle_file_store": "4",
             
@@ -210,9 +208,7 @@ class Addon():
             },
 
             "spawn_local_offset": {
-                "@x": "0",
                 "@y": "0",
-                "@z": "0"
             },
 
             "graph_links": None
@@ -239,13 +235,17 @@ class Addon():
         self.log(f"Registered vehicle #{vehicleID}.")
         
     # Listen for a game callback
-    def listen(self, name: str, callback: "function"):
+    def listen(self, name: str, callback: "function") -> Event:
         # send log
         self.log(f"{callback.__name__} is listening for callback: {name}")
         
-        # listen for game callback
+        # create if not exists
         self.__createCallbackIfNotExists(name)
-        return self.getCallback(name).connect(callback)
+        event = self.getCallback(name)
+
+        # connect
+        event.connect(callback)
+        return event
         
     # Get a callback by its name
     def getCallback(self, name: str) -> Event|None:
