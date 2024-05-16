@@ -180,7 +180,7 @@ class Addon():
         self.vehicles.append(path)
         
         # add vehicle to playlist
-        root["components"]["c"].append({
+        vehicle = {
             "@component_type": "3",
             "@id": f"{vehicleID}",
             "@name": "Vehicle",
@@ -189,11 +189,6 @@ class Addon():
             "@character_type": "1",
             "@vehicle_file_name": f"data/missions_working/vehicle_{vehicleID}.xml",
             "@vehicle_file_store": "4",
-            "@vehicle_is_static": "true" if isStatic else "false",
-            "@vehicle_is_editable": "true" if isEditable else "false",
-            "@vehicle_is_invulnerable": "true" if isInvulnerable else "false",
-            "@vehicle_is_show_on_map": "true" if isShowOnMap else "false",
-            "@vehicle_is_transponder_active": "true" if isTransponderActive else "false",
             
             "spawn_transform" : {
                 "@30" : "0",
@@ -221,7 +216,24 @@ class Addon():
             },
 
             "graph_links": None
-        })
+        }
+        
+        if isStatic:
+            vehicle["@vehicle_is_static"] = "true"
+            
+        if isEditable:
+            vehicle["@vehicle_is_editable"] = "true"
+            
+        if isInvulnerable:
+            vehicle["@vehicle_is_invulnerable"] = "true"
+            
+        if isShowOnMap:
+            vehicle["@vehicle_is_show_on_map"] = "true"
+            
+        if isTransponderActive:
+            vehicle["@vehicle_is_transponder_active"] = "true"
+
+        root["components"]["c"].append(vehicle)
         
         # send log
         self.log(f"Registered vehicle #{vehicleID}.")
