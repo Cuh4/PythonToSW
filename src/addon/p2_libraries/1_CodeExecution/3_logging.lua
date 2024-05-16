@@ -46,5 +46,5 @@ function CodeExecution:error(errorType, errorMessage)
         "/error",
         {name = "errorType", value = errorType},
         {name = "errorMessage", value = errorMessage}
-    ))
+    ), nil, true)
 end

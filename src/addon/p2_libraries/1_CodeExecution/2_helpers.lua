@@ -47,8 +47,32 @@ end
 -- Send a request
 ---@param URL string
 ---@param callback fun(response: string, successful: boolean)|nil
+---@param priority boolean|nil
 ---@return af_services_http_request
-function CodeExecution:sendRequest(URL, callback)
+function CodeExecution:sendRequest(URL, callback, priority)
+    -- stop here if this is not a priority request and a cooldown is active
+    if self.requestCooldown and not priority then
+        return
+    end
+
+    -- if this is a priority request, then send the request straight away and add a tick cooldown to prevent rate limit
+    if priority then
+        -- set cooldown
+        self.requestCooldown = true
+
+        -- remove old cooldown if any
+        if self.requestCooldownDelay then
+            self.requestCooldownDelay:remove()
+        end
+
+        -- remove cooldown the next tick
+        self.requestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
+            self.requestCooldown = false
+            self.requestCooldownDelay = nil
+        end)
+    end
+
+    -- send request
     return AuroraFramework.services.HTTPService.request(
         self.backendPort,
         URL,

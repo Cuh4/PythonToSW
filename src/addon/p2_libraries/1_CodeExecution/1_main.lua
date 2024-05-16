@@ -37,6 +37,7 @@ CodeExecution = Class("CodeExecution", function(self, backendPort, executionTick
     self.tickTimer = 0
     self.started = false
     self.handled = {}
+    self.requestCooldown = false
 end, BaseLibrary)
 
 -- Start the code execution
@@ -114,12 +115,14 @@ end
 ---@field tickTimer number
 ---@field started boolean
 ---@field handled table<string, boolean>
+---@field requestCooldown boolean
+---@field requestCooldownDelay af_services_timer_delay|nil
 ---
 ---
 ---@field start fun(self: CodeExecution) Start fetching pending executions and executing them
 ---
 ---@field copyTable fun(self: CodeExecution, tbl: table): table Copy a table
----@field sendRequest fun(self: CodeExecution, URL: string, callback: fun(response: string, successful: boolean)|nil): af_services_http_request Send a GET request
+---@field sendRequest fun(self: CodeExecution, URL: string, callback: fun(response: string, successful: boolean)|nil, priority: boolean|nil): af_services_http_request Send a GET request
 ---
 ---@field sendLog fun(self: CodeExecution, log: string) Send a log
 ---@field error fun(self: CodeExecution, errorType: string, errorMessage: string) Trigger an error in the backend
