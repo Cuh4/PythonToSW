@@ -26,7 +26,7 @@ import PythonToSW as PTS
 import time
 
 # Create addon
-addon = PTS.Addon(addonName = "pts-testing", port = 12752)
+addon = PTS.Addon(addonName = "Vehicle Spawner", port = 12752)
 
 # Register vehicles
 addon.registerVehicle("vehicle_1.xml", isStatic = False, isInvulnerable = False, isShowOnMap = True) # The ID of this vehicle is 1. You can find this out from the name (vehicle_*1*.xml)
