@@ -29,7 +29,7 @@ import time
 addon = PTS.Addon(addonName = "Vehicle Spawner", port = 12752)
 
 # Register vehicles
-addon.registerVehicle("vehicle_1.xml", isStatic = False, isInvulnerable = False, isShowOnMap = True) # The ID of this vehicle is 1. You can find this out from the name (vehicle_*1*.xml)
+addon.registerVehicle("my_vehicle.xml", vehicleID = 1, isStatic = False, isInvulnerable = False, isShowOnMap = True) # Remember the vehicleID argument for later
 
 # Main code
 def main():
@@ -46,7 +46,7 @@ def main():
         
         # Infinitely spawn vehicles at their position
         while True:
-            addon.execute(PTS.SpawnAddonVehicle(playerPos, addonIndex, 1))
+            addon.execute(PTS.SpawnAddonVehicle(playerPos, addonIndex, 1)) # 1 = vehicleID argument from earlier
             time.sleep(1)
         
     onCustomCommandEvent = addon.listen("onCustomCommand", onCustomCommand)
