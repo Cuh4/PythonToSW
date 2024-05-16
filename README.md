@@ -3,30 +3,26 @@
 ## 📚 | Overview
 A Python package that allows you to create basic addons in Stormworks: Build and Rescue with Python.
 
-Example:
-
 ```python
-# imports
 import time
 import PythonToSW as PTS
 
-# create addon
-addon = PTS.Addon(addonName = "My Python Addon", port = 7800) # automatically creates an sw addon and places it in your game's addon directory
+addon = PTS.Addon(addonName = "My Python Addon", port = 7800)
 
 def main():
-    # every 5 seconds, send a message to everyone
+    # Every 5 seconds, send a message to everyone
     while True:
         time.sleep(5)
 
         addon.execute(
-            PTS.Announce("Server", "Hello World")
+            PTS.Announce("Server", "Hello World", -1)
         )
 
-addon.start(main)
+addon.start(target = main) # Start the addon. This automatically creates an addon and places it in your Stormworks' addon directory, so you can easily use the addon in a save
 ```
 
 ## ⚙️ | Installing this package
-- Use `pip install PythonToSW`
+- Use `pip install PythonToSW --upgrade`
 - Import the package with `import PythonToSW as PTS` in your code
 
 ## 😔 | Quirks
