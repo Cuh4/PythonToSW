@@ -1,4 +1,5 @@
 src/addon/script.lua
+src/test.py
 __pycache__/
 
 dist
