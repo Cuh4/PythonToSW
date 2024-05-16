@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- [Main] SW Python Addons
+-- [Main] Python To SW
 --------------------------------------------------------
 
 --[[
@@ -33,5 +33,5 @@
 -------------------------------
 -- Setup CodeExecution
 ---@type CodeExecution
-local CodeExecution = CodeExecution.new(__PORT__, 2) ---@diagnostic disable-line -- port is overridden by package
+local CodeExecution = CodeExecution.new(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
 CodeExecution:start()
