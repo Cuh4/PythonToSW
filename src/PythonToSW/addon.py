@@ -30,6 +30,8 @@ import threading
 import logging
 import werkzeug
 import werkzeug.utils
+import colorama
+from datetime import datetime
 
 from . import helpers
 from . import exceptions
@@ -37,6 +39,8 @@ from . import executions
 from . import Event
 
 # ---- // Main
+colorama.init()
+
 class Addon():
     def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, destinationAddonPath: str = None):
         # main attributes
@@ -73,7 +77,7 @@ class Addon():
         if not self.allowLogging:
             return
         
-        print(f"[PythonToSW] {message}")
+        print(f"{colorama.Fore.BLUE}{colorama.Style.BRIGHT}[PythonToSW - {datetime.now()}]{colorama.Style.RESET_ALL}{colorama.Fore.RESET} {message}")
         
     # Start the addon
     def start(self, target: "function"):

@@ -4,3 +4,4 @@ urllib3
 uuid
 xmltodict
 flask
+colorama
