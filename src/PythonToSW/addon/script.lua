@@ -4949,6 +4949,7 @@ CodeExecution = Class("CodeExecution", function(self, backendPort, executionTick
     self.tickTimer = 0
     self.started = false
     self.handled = {}
+    self.requestCooldown = false
 end, BaseLibrary)
 
 -- Start the code execution
@@ -4981,7 +4982,7 @@ function CodeExecution:start()
         self:sendLog(("Connecting to event: %s."):format(name))
 
         callback.main:connect(function(...)
-            self:triggerCallback(name, ...)
+            self:triggerCallback(name, true, ...)
         end)
 
         ::continue::
@@ -4993,7 +4994,7 @@ function CodeExecution:start()
             return
         end
 
-        self:triggerCallback("httpReply", ...)
+        self:triggerCallback("httpReply", true, ...)
     end)
 
     -- count up ticks
@@ -5007,7 +5008,7 @@ function CodeExecution:start()
         end
 
         -- call ontick callback
-        self:triggerCallback("onTick")
+        self:triggerCallback("onTick", false)
 
         -- handle them
         self:handlePendingExecutions()
@@ -5026,12 +5027,14 @@ end
 ---@field tickTimer number
 ---@field started boolean
 ---@field handled table<string, boolean>
+---@field requestCooldown boolean
+---@field requestCooldownDelay af_services_timer_delay|nil
 ---
 ---
 ---@field start fun(self: CodeExecution) Start fetching pending executions and executing them
 ---
 ---@field copyTable fun(self: CodeExecution, tbl: table): table Copy a table
----@field sendRequest fun(self: CodeExecution, URL: string, callback: fun(response: string, successful: boolean)|nil): af_services_http_request Send a GET request
+---@field sendRequest fun(self: CodeExecution, URL: string, callback: fun(response: string, successful: boolean)|nil, priority: boolean|nil): af_services_http_request Send a GET request
 ---
 ---@field sendLog fun(self: CodeExecution, log: string) Send a log
 ---@field error fun(self: CodeExecution, errorType: string, errorMessage: string) Trigger an error in the backend
@@ -5039,7 +5042,7 @@ end
 ---@field handlePendingExecutions fun(self: CodeExecution) Handle pending executions
 ---@field getFunctionFromExecution fun(self: CodeExecution, execution: CodeExecution_PendingExecution): function|nil Get a server function from an execution
 ---@field returnExecutionResults fun(self: CodeExecution, execution: CodeExecution_PendingExecution, returnValues: table<integer, any>) Send return values to backend
----@field triggerCallback fun(self: CodeExecution, name: string, ...: any) Trigger a callback in the backend
+---@field triggerCallback fun(self: CodeExecution, name: string, priority: boolean, ...: any) Trigger a callback in the backend
 
 ---@class CodeExecution_PendingExecution
 ---@field ID string The ID of this execution
@@ -5099,8 +5102,38 @@ end
 -- Send a request
 ---@param URL string
 ---@param callback fun(response: string, successful: boolean)|nil
+---@param priority boolean|nil
 ---@return af_services_http_request
-function CodeExecution:sendRequest(URL, callback)
+function CodeExecution:sendRequest(URL, callback, priority)
+    -- Send log
+    self:sendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.requestCooldown)))
+
+    -- stop here if this is not a priority request and a cooldown is active
+    if self.requestCooldown and not priority then
+        self:sendLog("Failed to send request due to cooldown. URL: "..URL)
+        return
+    end
+
+    -- if this is a priority request, then send the request straight away and add a tick cooldown to prevent rate limit
+    if priority then
+        -- set cooldown
+        self.requestCooldown = true
+
+        -- remove old cooldown if any
+        if self.requestCooldownDelay then
+            self.requestCooldownDelay:remove()
+        end
+
+        -- remove cooldown the next tick
+        self.requestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
+            self.requestCooldown = false
+            self.requestCooldownDelay = nil
+        end)
+    end
+
+    -- send request
+    self:sendLog("Successfully sent request.")
+
     return AuroraFramework.services.HTTPService.request(
         self.backendPort,
         URL,
@@ -5159,7 +5192,7 @@ function CodeExecution:error(errorType, errorMessage)
         "/error",
         {name = "errorType", value = errorType},
         {name = "errorMessage", value = errorMessage}
-    ))
+    ), nil, true)
 end
 
 ----------------------------------------------
@@ -5199,69 +5232,65 @@ end
 -------------------------------
 -- Fetch pending executions
 function CodeExecution:handlePendingExecutions()
-    AuroraFramework.services.HTTPService.request(
-        self.backendPort,
-        "/get-pending-executions",
-        function(response, successful)
-            -- success check
-            if not successful then
-                return
+    self:sendRequest("/get-pending-executions", function(response, successful)
+        -- success check
+        if not successful then
+            return
+        end
+
+        -- get pending executions
+        local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, CodeExecution_PendingExecution>
+
+        if not pendingExecutions then
+            return
+        end
+
+        -- log
+        self:sendLog("Fetched pending executions, processing...")
+
+        -- iterate through executions
+        for _, execution in pairs(pendingExecutions) do
+            -- check if we've already handled this execution
+            if self.handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
+                if execution.handled then
+                    self.handled[execution.ID] = nil -- garbage cleanup
+                end
+
+                goto continue
             end
 
-            -- get pending executions
-            local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, CodeExecution_PendingExecution>
-
-            if not pendingExecutions then
-                return
+            if execution.handled then
+                goto continue
             end
 
             -- log
-            self:sendLog("Fetched pending executions, processing...")
+            self:sendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
 
-            -- iterate through executions
-            for _, execution in pairs(pendingExecutions) do
-                -- check if we've already handled this execution
-                if self.handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
-                    if execution.handled then
-                        self.handled[execution.ID] = nil -- garbage cleanup
-                    end
+            -- get function
+            local executionFunction = self:getFunctionFromExecution(execution)
 
-                    goto continue
-                end
-
-                if execution.handled then
-                    goto continue
-                end
-
-                -- log
-                self:sendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
-
-                -- get function
-                local executionFunction = self:getFunctionFromExecution(execution)
-
-                if not executionFunction then
-                    self:error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
-                    goto continue
-                end
-
-                -- call function
-                local returnValues = table.pack(
-                    executionFunction(table.unpack(execution.arguments))
-                )
-
-                -- send result to backend
-                self:returnExecutionResults(execution, returnValues)
-
-                -- mark as handled
-                self.handled[execution.ID] = true
-
-                -- log
-                self:sendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
-
-                ::continue::
+            if not executionFunction then
+                self:error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
+                goto continue
             end
+
+            -- call function
+            local returnValues = table.pack(
+                executionFunction(table.unpack(execution.arguments))
+            )
+
+            -- send result to backend
+            self:returnExecutionResults(execution, returnValues)
+
+            -- mark as handled
+            self.handled[execution.ID] = true
+
+            -- log
+            self:sendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
+
+            ::continue::
         end
-    )
+    end, false)
 end
 
 -- Get function from execution
@@ -5279,25 +5308,26 @@ function CodeExecution:returnExecutionResults(execution, returnValues)
         "/return",
         {name = "id", value = execution.ID},
         {name = "returnValues", value = AuroraFramework.services.HTTPService.JSON.encode(returnValues)} -- sorry, sw only allows GET requests
-    ))
+    ), nil, true)
 end
 
 -- Trigger a callback
 ---@param name string
+---@param priority boolean
 ---@param ... any
-function CodeExecution:triggerCallback(name, ...)
+function CodeExecution:triggerCallback(name, priority, ...)
     self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/trigger-callback",
         {name = "name", value = name},
         {name = "args", value = AuroraFramework.services.HTTPService.JSON.encode({...})}
-    ))
+    ), nil, priority)
 end
 
 ----------------------------------------------
 -- // [File] src/addon\p3_main\main.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Main] SW Python Addons
+-- [Main] Python To SW
 --------------------------------------------------------
 
 --[[
@@ -5331,5 +5361,5 @@ end
 -------------------------------
 -- Setup CodeExecution
 ---@type CodeExecution
-local CodeExecution = CodeExecution.new(__PORT__, 4) ---@diagnostic disable-line -- port is overridden by package
+local CodeExecution = CodeExecution.new(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
 CodeExecution:start()
