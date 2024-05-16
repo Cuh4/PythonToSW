@@ -93,7 +93,7 @@ class Addon():
         self.__hideFlaskOutput()
         
         # send startup message
-        self.log(f"'{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
+        self.log(f"{self.addonName} (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
         
         # start server
         threading.Thread(target = target).start()
