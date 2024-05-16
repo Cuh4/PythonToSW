@@ -92,9 +92,8 @@ class Addon():
         # hide flask output
         self.__hideFlaskOutput()
         
-        # show message
-        if self.showStartupMessage:
-            self.log("'{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
+        # send startup message
+        self.log(f"'{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
         
         # start server
         threading.Thread(target = target).start()
