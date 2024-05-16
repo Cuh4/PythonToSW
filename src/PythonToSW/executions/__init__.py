@@ -38,6 +38,9 @@ class BaseExecution():
         self.returnValues = []
         self.isWaiting = False
         
+    def __str__(self):
+        return f"{self.ID} ({self.functionName})"
+        
     # Convert this execution to a JSON format
     def _toDict(self):
         return {
