@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8"?><vehicle data_version="3" bodies_id="584"><authors/><bodies><body><components><c d="water_pump"><o r="1,0,0,0,1,0,0,0,1" bc="C2C3C7" ac="C2C3C7" sc="10" max_force_scale="-999999986991104"><vp y="1" z="5"/><logic_slots><slot editor_connected="1"/></logic_slots></o></c></components></body></bodies><logic_node_links/></vehicle>
