@@ -90,6 +90,8 @@ from .getCharacterItem import GetCharacterItem
 from .getCurrency import GetCurrency
 from .getObjectData import GetObjectData
 from .getPlayerCharacter import GetPlayerCharacter
+from .getPlayerLookDirection import GetPlayerLookDirection
+from .getPlayerName import GetPlayerName
 from .getPlayerPos import GetPlayerPos
 from .getPlayers import GetPlayers
 from .getSeasonalEvent import GetSeasonalEvent
@@ -105,6 +107,10 @@ from .getVehicleTankByVoxel import GetVehicleTankByVoxel
 from .isAridDLC import IsAridDLC
 from .isSpaceDLC import IsSpaceDLC
 from .isWeaponsDLC import IsWeaponsDLC
+from .moveGroup import MoveGroup
+from .moveGroupSafe import MoveGroupSafe
+from .moveVehicle import MoveVehicle
+from .moveVehicleSafe import MoveVehicleSafe
 from .notify import Notify
 from .removeAdmin import RemoveAdmin
 from .removeAuth import RemoveAuth
@@ -117,6 +123,7 @@ from .setCharacterItem import SetCharacterItem
 from .setCharacterTooltip import SetCharacterTooltip
 from .setCreatureMoveTarget import SetCreatureMoveTarget
 from .setCurrency import SetCurrency
+from .setGroupPosSafe import SetGroupPosSafe
 from .setOilSpill import SetOilSpill
 from .setPlayerPos import SetPlayerPos
 from .setPopup import SetPopup
@@ -125,6 +132,7 @@ from .setVehicleBatteryByVoxel import SetVehicleBatteryByName
 from .setVehicleEditable import SetVehicleEditable
 from .setVehicleInvulnerable import SetVehicleInvulnerable
 from .setVehiclePos import SetVehiclePos
+from .setVehiclePosSafe import SetVehiclePosSafe
 from .setVehicleShowOnMap import SetVehicleShowOnMap
 from .setVehicleTankByName import SetVehicleTankByName
 from .setVehicleTankByVoxel import SetVehicleTankByVoxel
