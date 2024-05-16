@@ -86,6 +86,7 @@ from .clearVehicles import ClearVehicles
 from .despawnObject import DespawnObject
 from .despawnVehicle import DespawnVehicle
 from .despawnVehicleGroup import DespawnVehicleGroup
+from .getAddonIndex import GetAddonIndex
 from .getCharacterItem import GetCharacterItem
 from .getCurrency import GetCurrency
 from .getObjectData import GetObjectData
@@ -136,11 +137,15 @@ from .setVehiclePosSafe import SetVehiclePosSafe
 from .setVehicleShowOnMap import SetVehicleShowOnMap
 from .setVehicleTankByName import SetVehicleTankByName
 from .setVehicleTankByVoxel import SetVehicleTankByVoxel
+from .spawnAddonVehicle import SpawnAddonVehicle
 from .spawnCharacter import SpawnCharacter
 from .spawnCreature import SpawnCreature
+from .spawnEquipment import SpawnEquipment
 from .spawnExplosion import SpawnExplosion
 from .spawnMeteor import SpawnMeteor
 from .spawnMeteorShower import SpawnMeteorShower
+from .spawnObject import SpawnObject
 from .spawnTsunami import SpawnTsunami
+from .spawnVehicle import SpawnVehicle
 from .spawnVolcano import SpawnVolcano
 from .spawnWhirlpool import SpawnWhirlpool
