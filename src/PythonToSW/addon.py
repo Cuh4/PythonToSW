@@ -185,6 +185,12 @@ class Addon():
             "@vehicle_is_invulnerable": "true" if isInvulnerable else "false",
             "@vehicle_is_show_on_map": "true" if isShowOnMap else "false",
             "@vehicle_is_transponder_active": "true" if isTransponderActive else "false",
+            
+            "spawn_transform" : {
+                "@30" : "0",
+                "@31" : "0",
+                "@32" : "0"
+            },
 
             "spawn_bounds": {
                 "min": {
