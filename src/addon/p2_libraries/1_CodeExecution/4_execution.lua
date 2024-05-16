@@ -113,11 +113,12 @@ end
 
 -- Trigger a callback
 ---@param name string
+---@param priority boolean
 ---@param ... any
-function CodeExecution:triggerCallback(name, ...)
+function CodeExecution:triggerCallback(name, priority, ...)
     self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/trigger-callback",
         {name = "name", value = name},
         {name = "args", value = AuroraFramework.services.HTTPService.JSON.encode({...})}
-    ), nil, true)
+    ), nil, priority)
 end
