@@ -37,7 +37,7 @@ def main():
     addonIndex = addon.execute(PTS.GetAddonIndex())[0]
 
     # Spawn a vehicle at the player's position if they use any command
-    def onCustomCommand(_, peer_id, *__):
+    def onCustomCommand(_, peer_id: int, *__):
         # Prevent creating more loops
         onCustomCommandEvent.disconnectAll()
         
