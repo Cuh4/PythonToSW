@@ -23,22 +23,33 @@ limitations under the License.
 
 # Import PythonToSW
 import PythonToSW as PTS
+import time
 
 # Create addon
-addon = PTS.Addon(addonName = "Vehicles", port = 12752)
+addon = PTS.Addon(addonName = "pts-testing", port = 12752)
 
 # Register vehicles
-addon.registerVehicle("vehicle_1.xml", isStatic = True, isEditable = False, isInvulnerable = True, isShowOnMap = True, isTransponderActive = True) # All of these "is" arguments default to False. Important note: The ID of this vehicle is 1. You can find this out from the name (vehicle_*1*.xml)
+addon.registerVehicle("vehicle_1.xml", isStatic = False, isInvulnerable = False, isShowOnMap = True) # The ID of this vehicle is 1. You can find this out from the name (vehicle_*1*.xml)
 
 # Main code
 def main():
     # Get addon index
     addonIndex = addon.execute(PTS.GetAddonIndex())[0]
-    
-    # Spawn a vehicle at 0, 10, 0
-    addon.execute(
-        PTS.SpawnAddonVehicle(PTS.matrix.new(0, 10, 0), addonIndex, 1)
-    )
+
+    # Spawn a vehicle at the player's position if they use any command
+    def onCustomCommand(_, peer_id, *__):
+        # Prevent creating more loops
+        onCustomCommandEvent.disconnectAll()
+        
+        # Get player position
+        playerPos = addon.execute(PTS.GetPlayerPos(peer_id))[0]
+        
+        # Infinitely spawn vehicles at their position
+        while True:
+            addon.execute(PTS.SpawnAddonVehicle(playerPos, addonIndex, 1))
+            time.sleep(1)
+        
+    onCustomCommandEvent = addon.listen("onCustomCommand", onCustomCommand)
 
 # Start addon
 addon.start(main)
