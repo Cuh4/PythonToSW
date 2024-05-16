@@ -38,13 +38,13 @@ from . import Event
 
 # ---- // Main
 class Addon():
-    def __init__(self, addonName: str, port: int, *, showStartupMessage: bool = True, destinationAddonPath: str = None):
+    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, destinationAddonPath: str = None):
         # main attributes
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
         self.running = False
-        self.showStartupMessage = showStartupMessage
+        self.allowLogging = allowLogging
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
         self.destinationAddonPath = destinationAddonPath or os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
         self.pendingExecutions: dict[str, executions.BaseExecution] = {}
@@ -68,6 +68,13 @@ class Addon():
         # edit script
         self.script = self.script.replace("__PORT__", str(self.port))
         
+    # Send a log (print message)
+    def log(self, message: str):
+        if not self.allowLogging:
+            return
+        
+        print(f"[PythonToSW] {message}")
+        
     # Start the addon
     def start(self, target: "function"):
         if self.running:
@@ -87,7 +94,7 @@ class Addon():
         
         # show message
         if self.showStartupMessage:
-            print(f"[PythonToSW] '{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
+            self.log("'{self.addonName}' (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
         
         # start server
         threading.Thread(target = target).start()
@@ -105,9 +112,11 @@ class Addon():
         
         # add execution
         self.pendingExecutions[execution.ID] = execution
+        self.log(f"Adding execution to queue: {execution}")
         
         # wait for execution to complete
         returnValues = execution._wait()
+        self.log(f"{execution} has complete. Returned: {returnValues}")
         
         if execution._obsolete():
             return
