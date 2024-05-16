@@ -92,6 +92,7 @@ from .despawnVehicleGroup import DespawnVehicleGroup
 from .getAddonIndex import GetAddonIndex
 from .getCharacterItem import GetCharacterItem
 from .getCurrency import GetCurrency
+from .getGameSettings import GetGameSettings
 from .getObjectData import GetObjectData
 from .getPlayerCharacter import GetPlayerCharacter
 from .getPlayerLookDirection import GetPlayerLookDirection
@@ -127,6 +128,7 @@ from .setCharacterItem import SetCharacterItem
 from .setCharacterTooltip import SetCharacterTooltip
 from .setCreatureMoveTarget import SetCreatureMoveTarget
 from .setCurrency import SetCurrency
+from .setGameSetting import SetGameSetting
 from .setGroupPosSafe import SetGroupPosSafe
 from .setOilSpill import SetOilSpill
 from .setPlayerPos import SetPlayerPos
