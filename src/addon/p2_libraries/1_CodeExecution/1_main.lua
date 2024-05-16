@@ -70,7 +70,7 @@ function CodeExecution:start()
         self:sendLog(("Connecting to event: %s."):format(name))
 
         callback.main:connect(function(...)
-            self:triggerCallback(name, ...)
+            self:triggerCallback(name, true, ...)
         end)
 
         ::continue::
@@ -82,7 +82,7 @@ function CodeExecution:start()
             return
         end
 
-        self:triggerCallback("httpReply", ...)
+        self:triggerCallback("httpReply", true, ...)
     end)
 
     -- count up ticks
@@ -96,7 +96,7 @@ function CodeExecution:start()
         end
 
         -- call ontick callback
-        self:triggerCallback("onTick")
+        self:triggerCallback("onTick", false)
 
         -- handle them
         self:handlePendingExecutions()
@@ -130,7 +130,7 @@ end
 ---@field handlePendingExecutions fun(self: CodeExecution) Handle pending executions
 ---@field getFunctionFromExecution fun(self: CodeExecution, execution: CodeExecution_PendingExecution): function|nil Get a server function from an execution
 ---@field returnExecutionResults fun(self: CodeExecution, execution: CodeExecution_PendingExecution, returnValues: table<integer, any>) Send return values to backend
----@field triggerCallback fun(self: CodeExecution, name: string, ...: any) Trigger a callback in the backend
+---@field triggerCallback fun(self: CodeExecution, name: string, priority: boolean, ...: any) Trigger a callback in the backend
 
 ---@class CodeExecution_PendingExecution
 ---@field ID string The ID of this execution
