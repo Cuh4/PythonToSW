@@ -115,7 +115,7 @@ class Addon():
         
         # add execution
         self.pendingExecutions[execution.ID] = execution
-        self.log(f"Adding execution to queue: {execution}")
+        self.log(f"{execution} has been queued.")
         
         # wait for execution to complete
         returnValues = execution._wait()
