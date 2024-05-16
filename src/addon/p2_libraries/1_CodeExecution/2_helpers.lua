@@ -50,8 +50,12 @@ end
 ---@param priority boolean|nil
 ---@return af_services_http_request
 function CodeExecution:sendRequest(URL, callback, priority)
+    -- Send log
+    self:sendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.requestCooldown)))
+
     -- stop here if this is not a priority request and a cooldown is active
     if self.requestCooldown and not priority then
+        self:sendLog("Failed to send request due to cooldown. URL: "..URL)
         return
     end
 
@@ -73,6 +77,8 @@ function CodeExecution:sendRequest(URL, callback, priority)
     end
 
     -- send request
+    self:sendLog("Successfully sent request.")
+
     return AuroraFramework.services.HTTPService.request(
         self.backendPort,
         URL,
