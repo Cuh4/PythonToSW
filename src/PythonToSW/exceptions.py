@@ -1,5 +1,5 @@
 # ----------------------------------------
-# [PythonToSW] Addon
+# [PythonToSW] Exceptions
 # ----------------------------------------
 
 # A Python package that allows you to make Stormworks addons with Python.
@@ -38,4 +38,10 @@ class InvalidExecutionID(Exception):
     pass
 
 class InvalidVehiclePath(Exception):
+    pass
+
+class PathNotFound(Exception):
+    pass
+
+class ExecutionNotFound(Exception):
     pass
