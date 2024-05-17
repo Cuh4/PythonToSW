@@ -56,7 +56,7 @@ for file in os.listdir("."):
         pos += 1
     
     # format into import statement
-    contents.append(f"from .{os.path.splitext(file)[0]} import {className}")
+    contents.append(f"from PythonToSW.executions.{os.path.splitext(file)[0]} import {className}")
     
 # convert contents to string
 contents = "\n".join(contents)
