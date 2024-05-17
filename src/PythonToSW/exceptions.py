@@ -6,6 +6,8 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+A module containing exceptions.
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");

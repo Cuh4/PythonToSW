@@ -6,6 +6,8 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+A module containing an Event class that allows you to create and fire events.
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,31 +28,72 @@ import threading
 
 # ---- // Main
 class Event():
+    """
+    A class that allows you to pack functions together and call them all at once in different threads.
+    
+    >>> event = Event()
+    >>> event.connect(lambda: print("Hello, world!"))
+    >>>
+    >>> event.fire()
+    """
     def __init__(self):
         self.callbacks: list["function"] = []
     
-    # Register a callback to this event
+    """
+    Register a callback to this event.
+    
+    Args:
+        callback: (function) The callback to register.
+    """
     def connect(self, callback: "function"):
         self.callbacks.append(callback)
         
-    # Unregister a callback from this event
+    """
+    Unregister a callback from this event.
+    
+    Args:
+        callback: (function) The callback to unregister.
+        
+    Raises:
+        ValueError: Raised if the callback is not connected to this event.
+    """
     def disconnect(self, callback: "function"):
         self.callbacks.remove(callback)
         
-    # Unregister all callbacks from this event
+    """
+    Unregister all callbacks from this event.
+    """
     def disconnectAll(self):
         self.callbacks = []
         
-    # Get all callbacks connected to this event
+    """
+    Return all callbacks connected to this event.
+    
+    Returns:
+        list[function]: The callbacks connected to this event.
+    """
     def getCallbacks(self):
         return self.callbacks.copy()
 
-    # Fire this event    
+    """
+    Fire all callbacks connected to this event.
+    
+    Args:
+        *args: (list) The arguments to pass to the callbacks.
+        **kwargs: (dict) The keyword arguments to pass to the callbacks.
+    """
     def fire(self, *args, **kwargs):
         for callback in self.getCallbacks():
             self._call(callback, *args, **kwargs)
             
-    # Call a function via thread
+    """
+    Call a function in a new thread.
+    
+    Args:
+        func: (function) The function to call.
+        *args: (list) The arguments to pass to the function.
+        **kwargs: (dict) The keyword arguments to pass to the function.
+    """
     def _call(self, func: "function", *args, **kwargs):
         threading.Thread(
             target = func,

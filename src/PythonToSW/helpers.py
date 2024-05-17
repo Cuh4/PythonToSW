@@ -6,6 +6,8 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+A module containing helper functions used throughout this package.
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,24 +29,67 @@ import xmltodict
 import os
 
 # ---- // Main
-# URL decode a string
+"""
+URL decode a URL encoded string.
+
+Args:
+    string: (str) The URL encoded string to decode.
+    
+Returns:
+    (str) The decoded string.
+"""
 def URLDecode(string: str) -> str:
     return urllib.parse.unquote(string)
 
-# XML encode a dict
+"""
+URL encode a string.
+
+Args:
+    string: (str) The string to URL encode.
+    
+Returns:
+    (str) The URL encoded string.
+"""
 def XMLEncode(dictionary: dict) -> str:
     return xmltodict.unparse(dictionary)
 
-# XML decode a string
+"""
+Decode an XML string into a dictionary.
+
+Args:
+    string: (str) The XML string to decode.
+    
+Returns:
+    (dict) The result of the XML decoding.
+"""
 def XMLDecode(string: str) -> dict:
     return xmltodict.parse(string)
 
-# Quickly read a file
+"""
+Read a file.
+
+Args:
+    path: (str) The path to the file to read.
+    mode: (str = "r") The mode to open the file in.
+
+Returns:
+    (str) The content of the file.
+"""
 def quickRead(path: str, mode: str = "r"):
     with open(path, mode) as f:
         return f.read()
     
-# Quickly write to a file
+"""
+Write to a file, creating the directories if they don't exist.
+
+Args:
+    path: (str) The path to the file to write to.
+    content: (str) The content to write to the file.
+    mode: (str = "w") The mode to open the file in.
+    
+Returns:
+    (int) The result of the write operation.
+"""
 def quickWrite(path: str, content: str, mode: str = "w"):
     directory = os.path.dirname(path)
 

@@ -6,6 +6,8 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+The main module in this package.
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +44,28 @@ from . import Event
 colorama.init()
 
 class Addon():
-    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, destinationAddonPath: str = None):
+    """
+    A class that represents a Stormworks addon.
+    
+    >>> import PythonToSW as PTS
+    >>> addon = PTS.Addon("MyAddon", port = 3000)
+    >>>
+    >>> def main():
+    >>>     addon.execute(PTS.Announce("Server", "Hello World", -1))
+    >>>
+    >>> addon.start(target = main)
+    
+    Args:
+        addonName: (str) The name of the addon.
+        port: (int) The port to listen for requests from the in-game addon on.
+        allowLogging: (bool = True: Whether to allow logging.
+        destinationAddonPath: (str = None) The destination path for the addon. You will need to provide this if you are on a non-Windows OS. Defaults to %APPDATA%\Stormworks\data\missions.
+        
+    Raises:
+        exceptions.InternalError: Raised if the PythonToSW base addon doesn't exist.
+        exceptions.PathNotFound: Raised if the destination addon path does not exist. If this is raised, you likely haven't installed and ran Stormworks. If you have, you will need to manually set the destinationAddonPath argument.
+    """
+    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, destinationAddonPath: str = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")):
         # main attributes
         self.addonName = addonName
         self.port = port
@@ -50,7 +73,7 @@ class Addon():
         self.running = False
         self.allowLogging = allowLogging
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
-        self.destinationAddonPath = destinationAddonPath or os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")
+        self.destinationAddonPath = destinationAddonPath
         self.pendingExecutions: dict[str, executions.BaseExecution] = {}
         self.callbacks: dict[str, Event] = {}
         
@@ -63,7 +86,7 @@ class Addon():
             raise exceptions.InternalError(f"Addon path does not exist: {os.path.abspath(self.addonPath)}")
         
         if not os.path.exists(self.destinationAddonPath):
-            raise exceptions.InternalError(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.\nIf you are on a non-Windows OS, please provide the destinationAddonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
+            raise exceptions.PathNotFound(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.\nIf you are on a non-Windows OS, please provide the destinationAddonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
         
         # edit playlist
         self.playlistEncoded["playlist"]["@name"] = f"[P2SW] {self.addonName}"
@@ -72,14 +95,35 @@ class Addon():
         # edit script
         self.script = self.script.replace("__PORT__", str(self.port))
         
-    # Send a log (print message)
+    """
+    Sends a message to the terminal. It's just a fancy print()
+    
+    Args:
+        message: (str) The message to send.
+    """
     def log(self, message: str):
         if not self.allowLogging:
             return
         
         print(f"{colorama.Fore.BLUE}{colorama.Style.BRIGHT}[PythonToSW - {datetime.now()}]{colorama.Style.RESET_ALL}{colorama.Fore.RESET} {message}")
         
-    # Start the addon
+    """
+    Starts the addon, automatically creating needed files, as well as hosting a HTTP server locally.
+    
+    >>> import PythonToSW as PTS
+    >>> addon = PTS.Addon("MyAddon", port = 3000)
+    >>>
+    >>> def main():
+    >>>     addon.execute(PTS.Announce("Server", "Hello World", -1))
+    >>>
+    >>> addon.start(target = main) # Start the addon. This automatically creates an addon and places it in your Stormworks' addon directory, so you can easily use the addon in a save.
+    
+    Args:
+        target: (function) The function to start the addon with.
+        
+    Raises:
+        exceptions.FailedStartAttempt: Raised if the addon is already running.
+    """
     def start(self, target: "function"):
         if self.running:
             raise exceptions.FailedStartAttempt("Addon is already running")
@@ -103,7 +147,23 @@ class Addon():
         threading.Thread(target = target).start()
         self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
         
-    # Execute a server function in the addon
+    """
+    Sends an execution to the in-game addon.
+    
+    >>> import PythonToSW as PTS
+    >>> addon = PTS.Addon("MyAddon", port = 3000)
+    >>>
+    >>> def main():
+    >>>     addon.execute(PTS.Announce("Server", "Hello World", -1)) # Sends a message to everyone
+    >>>
+    >>> addon.start(target = main)
+    
+    Args:
+        execution: (executions.BaseExecution) The execution to send.
+        
+    Raises:
+        exceptions.FailedExecutionAttempt: Raised if the addon is not running, or if an execution with the same ID already exists.
+    """
     def execute(self, execution: executions.BaseExecution):
         # check if addon is running
         if not self.running:
@@ -130,15 +190,37 @@ class Addon():
         # return
         return returnValues
     
-    # Get a pending execution by its ID
+    """
+    Returns the pending execution with the given ID.
+    
+    Args:
+        executionID: (str) The ID of the execution to return.
+        
+    Returns:
+        (executions.BaseExecution|None) The pending execution with the given ID, or None if it doesn't exist.
+    """
     def getPendingExecution(self, executionID: str) -> executions.BaseExecution|None:
         return self.getPendingExecutions().get(executionID)
         
-    # Get all pending executions
+    """
+    Returns the pending executions.
+    
+    Returns:
+        (dict[str, executions.BaseExecution]) The pending executions, with the keys being the execution IDs.
+    """
     def getPendingExecutions(self) -> dict[str, executions.BaseExecution]:
         return self.pendingExecutions.copy()
     
-    # Remove a pending execution
+    """
+    Removes the pending execution with the given ID.
+    
+    Args:
+        executionID: (str) The ID of the execution to remove.
+        
+    Raises:
+        exceptions.FailedExecutionAttempt: Raised if the execution with the given ID doesn't exist.
+        exceptions.ExecutionNotFound: Raised if no execution with the given ID exists.
+    """
     def removePendingExecution(self, executionID: str):
         # check if addon is running
         if not self.running:
@@ -148,7 +230,7 @@ class Addon():
         execution = self.getPendingExecution(executionID)
         
         if not execution:
-            raise exceptions.InvalidExecutionID(f"Invalid execution ID: {executionID}")
+            raise exceptions.ExecutionNotFound(f"Invalid execution ID: {executionID}")
         
         # halt execution
         execution._halt()
@@ -156,11 +238,31 @@ class Addon():
         # remove it
         self.pendingExecutions.pop(executionID)
     
-    # Register a vehicle. The path must be the path to the vehicle .xml file
+    """
+    Registers a vehicle with the addon.
+    
+    Args:
+        path: (str) The path to the vehicle file.
+        vehicleID: (int) The ID of the vehicle.
+        isStatic: (bool = False) Whether the vehicle is static.
+        isEditable: (bool = False) Whether the vehicle is editable.
+        isInvulnerable: (bool = False) Whether the vehicle is invulnerable.
+        isShowOnMap: (bool = False) Whether the vehicle is shown on the map.
+        isTransponderActive: (bool = False) Whether the vehicle's transponder is active.
+        
+    Raises:
+        exceptions.InvalidVehiclePath: Raised if the path to the vehicle file is invalid (doesn't exist, isn't a file, or isn't an XML file).
+    """
     def registerVehicle(self, path: str, vehicleID: int, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
-        # check if path exists
+        # check if path exists and is valid
         if not os.path.exists(path):
             raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path}")
+        
+        if not os.path.isfile(path):
+            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path} is not a file")
+        
+        if not os.path.splitext(path)[1] == ".xml":
+            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path} is not an XML file")
         
         # validate playlist structure (this is awful)
         root = self.playlistEncoded["playlist"]["locations"]["locations"]["l"]
@@ -226,7 +328,27 @@ class Addon():
         # send log
         self.log(f"Registered vehicle #{vehicleID}.")
         
-    # Listen for a game callback
+    """
+    Listens for a game callback.
+    
+    >>> import PythonToSW as PTS
+    >>> addon = PTS.Addon("MyAddon", port = 3000)
+    >>>
+    >>> def main():
+    >>>     def onTick(game_ticks):
+    >>>         PTS.Announce("Server", "Tick", -1)
+    >>>
+    >>>     addon.listen("onTick", onTick)
+    >>>
+    >>> addon.start(target = main)
+    
+    Args:
+        name: (str) The name of the callback.
+        callback: (function) The callback to listen for.
+        
+    Returns:
+        (Event) The event that was created.
+    """
     def listen(self, name: str, callback: "function") -> Event:
         # send log
         self.log(f"{callback.__name__} is listening for callback: {name}")
@@ -239,20 +361,43 @@ class Addon():
         event.connect(callback)
         return event
         
-    # Get a callback by its name
+    """
+    Get a callback by its name.
+    
+    Args:
+        name: (str) The name of the callback.
+        
+    Returns:
+        (Event|None) The event representing the callback, or None if it doesn't exist.
+    """
     def getCallback(self, name: str) -> Event|None:
         return self.getCallbacks().get(name)
     
-    # Get all callbacks
+    """
+    Get all callbacks.
+    
+    Returns:
+        (dict[str, Event]) A dictionary of events representing callbacks.
+    """
     def getCallbacks(self) -> dict[str, Event]:
         return self.callbacks.copy()
     
-    # Create an event for a game callback if it doesn't exist
+    """
+    Create a callback if it doesn't exist.
+    
+    Args:
+        name: (str) The name of the callback.
+    """
     def __createCallbackIfNotExists(self, name: str):
         if not self.getCallback(name):
             self.callbacks[name] = Event()
         
-    # Setup API routes
+    """
+    Sets up API routes for this addon's HTTP server.
+    
+    Raises:
+        (exceptions.InternalError) Raised if the addon is not running.
+    """
     def __setupRoutes(self):
         # check if addon is running
         if not self.running:
@@ -342,31 +487,51 @@ class Addon():
             # return
             return "Ok", 200
         
-    # Hide flask output
+    """
+    Hides Werkzeug and Flask logging. This is used to hide the Flask server banner and request logs.
+    """
     def __hideFlaskOutput(self):
         logging.getLogger("werkzeug").disabled = True
         self.app.logger.disabled = True
         flask.cli.show_server_banner = lambda *_, **__: None
         
-    # Return parsed playlist.xml
+    """
+    Parses (XML decoded) the addon's playlist.xml file.
+    
+    Returns:
+        (dict) The XML decoded playlist.
+        
+    Raises:
+        (exceptions.PathNotFound) Raised if the playlist file does not exist.
+    """
     def __parsePlaylist(self):
         playlistFile = os.path.join(self.addonPath, "playlist.xml")
         
         if not os.path.exists(playlistFile):
-            raise exceptions.InternalError(f"Playlist file does not exist: {playlistFile}")
+            raise exceptions.PathNotFound(f"Playlist file does not exist: {playlistFile}")
         
         return helpers.XMLDecode(helpers.quickRead(playlistFile))
     
-    # Return script.lua
+    """
+    Parses the addon's script.lua file.
+    
+    Returns:
+        (str) The script contents.
+        
+    Raises:
+        (exceptions.PathNotFound) Raised if the script file does not exist.
+    """
     def __parseScript(self):
         scriptFile = os.path.join(self.addonPath, "script.lua")
         
         if not os.path.exists(scriptFile):
-            raise exceptions.InternalError(f"Script file does not exist: {scriptFile}")
+            raise exceptions.PathNotFound(f"Script file does not exist: {scriptFile}")
         
         return helpers.quickRead(scriptFile)
         
-    # Setup addon
+    """
+    Sets up the addon by writing the playlist and script files to the destination path, as well as setting up vehicles, etc.
+    """
     def __setupAddon(self):
         # set destination path
         secureAddonName = werkzeug.utils.secure_filename(self.addonName)

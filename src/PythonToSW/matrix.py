@@ -6,6 +6,8 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+A module that allows you to create and manipulate matrices.
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +27,17 @@ limitations under the License.
 import math
 
 # ---- // Main
-# Creates a new matrix
+"""
+Creates a new matrix with the given XYZ.
+
+Args:
+    x: (float|int) The X coordinate.
+    y: (float|int) The Y coordinate.
+    z: (float|int) The Z coordinate. 
+    
+Returns:
+    (list) The constructed matrix.
+"""
 def new(x: float|int, y: float|int, z: float|int) -> list:
     return [
         1, 0, 0, 0,
@@ -34,10 +46,29 @@ def new(x: float|int, y: float|int, z: float|int) -> list:
         x, y, z, 1
     ]
     
-# Returns the x, y, and z coordinates of a matrix
+"""
+Returns the X, Y, and Z coordinates of a matrix.
+
+Args:
+    matrix: (list) The matrix to get the XYZ from.
+    
+Returns:
+    (float) The X coordinate.
+    (float) The Y coordinate.
+    (float) The Z coordinate.
+"""
 def getXYZ(matrix: list) -> tuple[float, float, float]:
     return matrix[12], matrix[13], matrix[14]
 
-# Returns the distance between two matrices
+"""
+Returns the distance between two matrices.
+
+Args:
+    matrix1: (list) The first matrix.
+    matrix2: (list) The second matrix.
+    
+Returns:
+    (float) The distance between the two matrices.
+"""
 def distance(matrix1: list, matrix2: list) -> float:
     return math.sqrt((matrix1[12] - matrix2[12])**2 + (matrix1[13] - matrix2[13])**2 + (matrix1[14] - matrix2[14])**2)

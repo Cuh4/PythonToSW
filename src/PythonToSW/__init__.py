@@ -6,6 +6,9 @@
 # Repo: https://github.com/Cuh4/PythonToSW
 
 """
+A Python package that allows you to make Stormworks addons with Python.
+The source code as well as examples can be found at https://github.com/Cuh4/PythonToSW
+
 Copyright (C) 2024 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
