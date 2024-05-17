@@ -58,7 +58,7 @@ class Addon():
     Args:
         addonName: (str) The name of the addon.
         port: (int) The port to listen for requests from the in-game addon on.
-        allowLogging: (bool = True: Whether to allow logging.
+        allowLogging: (bool = True) Whether to allow logging.
         destinationAddonPath: (str = None) The destination path for the addon. You will need to provide this if you are on a non-Windows OS. Defaults to %APPDATA%\Stormworks\data\missions.
         
     Raises:
