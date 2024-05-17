@@ -45,11 +45,11 @@ class BaseExecution():
     >>>             arguments = [group_id, pos]
     >>>         )
     
-    
     Args:
         functionName: (str) The name of the in-game function to call
         arguments: (list) The arguments to pass to the in-game function
     """
+
     def __init__(self, functionName: str, arguments: list = []):
         self.ID = str(uuid4())
         self.functionName = functionName
@@ -62,13 +62,14 @@ class BaseExecution():
     def __str__(self):
         return f"Execution-{self.ID} ({self.functionName})"
         
-    """
-    Converts this execution into a dictionary that can be sent to the addon
-    
-    Returns:
-        (dict) The dictionary representation of this execution
-    """
     def _toDict(self):
+        """
+        Converts this execution into a dictionary that can be sent to the addon
+        
+        Returns:
+            (dict) The dictionary representation of this execution
+        """
+
         return {
             "ID" : self.ID,
             "functionName": self.functionName,
@@ -76,44 +77,48 @@ class BaseExecution():
             "handled": self.handled
         }
         
-    """
-    Marks this execution as handled and saves return values.
-    
-    Args:
-        returnValues: (list) The return values from the in-game function.
-        
-    Raises:
-        exceptions.InternalError: Raised if this method is called when the execution is already handled.
-    """
     def _return(self, returnValues: list):
+        """
+        Marks this execution as handled and saves return values.
+        
+        Args:
+            returnValues: (list) The return values from the in-game function.
+            
+        Raises:
+            exceptions.InternalError: Raised if this method is called when the execution is already handled.
+        """
+
         if self.handled:
             raise exceptions.InternalError("Tried to return after already returning")
         
         self.handled = True
         self.returnValues = returnValues
     
-    """
-    Stops waiting on this execution via _wait() method.
-    """
     def _halt(self):
+        """
+        Stops waiting on this execution via _wait() method.
+        """
+
         self.isWaiting = False
         
-    """
-    Returns whether this execution has been handled.
-    
-    Returns:
-        (bool) Whether this execution has been handled.
-    """
     def _obsolete(self):
+        """
+        Returns whether this execution has been handled.
+        
+        Returns:
+            (bool) Whether this execution has been handled.
+        """
+
         return not self.isWaiting
         
-    """
-    Waits until this execution has been handled and returns the return values.
-    
-    Returns:
-        (list) The return values from the in-game function call.
-    """
     def _wait(self) -> list:
+        """
+        Waits until this execution has been handled and returns the return values.
+        
+        Returns:
+            (list) The return values from the in-game function call.
+        """
+
         self.isWaiting = True
         
         while not self.handled and self.isWaiting:

@@ -36,65 +36,72 @@ class Event():
     >>>
     >>> event.fire()
     """
+
     def __init__(self):
         self.callbacks: list["function"] = []
     
-    """
-    Register a callback to this event.
-    
-    Args:
-        callback: (function) The callback to register.
-    """
     def connect(self, callback: "function"):
+        """
+        Register a callback to this event.
+        
+        Args:
+            callback: (function) The callback to register.
+        """
+
         self.callbacks.append(callback)
         
-    """
-    Unregister a callback from this event.
-    
-    Args:
-        callback: (function) The callback to unregister.
-        
-    Raises:
-        ValueError: Raised if the callback is not connected to this event.
-    """
     def disconnect(self, callback: "function"):
+        """
+        Unregister a callback from this event.
+        
+        Args:
+            callback: (function) The callback to unregister.
+            
+        Raises:
+            ValueError: Raised if the callback is not connected to this event.
+        """
+
         self.callbacks.remove(callback)
         
-    """
-    Unregister all callbacks from this event.
-    """
     def disconnectAll(self):
+        """
+        Unregister all callbacks from this event.
+        """
+
         self.callbacks = []
         
-    """
-    Return all callbacks connected to this event.
-    
-    Returns:
-        list[function]: The callbacks connected to this event.
-    """
     def getCallbacks(self):
+        """
+        Return all callbacks connected to this event.
+        
+        Returns:
+            list[function]: The callbacks connected to this event.
+        """
+
         return self.callbacks.copy()
 
-    """
-    Fire all callbacks connected to this event.
-    
-    Args:
-        *args: (list) The arguments to pass to the callbacks.
-        **kwargs: (dict) The keyword arguments to pass to the callbacks.
-    """
     def fire(self, *args, **kwargs):
+        """
+        Fire all callbacks connected to this event.
+        
+        Args:
+            *args: (list) The arguments to pass to the callbacks.
+            **kwargs: (dict) The keyword arguments to pass to the callbacks.
+        """
+
         for callback in self.getCallbacks():
             self._call(callback, *args, **kwargs)
             
-    """
-    Call a function in a new thread.
-    
-    Args:
-        func: (function) The function to call.
-        *args: (list) The arguments to pass to the function.
-        **kwargs: (dict) The keyword arguments to pass to the function.
-    """
     def _call(self, func: "function", *args, **kwargs):
+        """
+        Call a function in a new thread.
+        
+        Args:
+            func: (function) The function to call.
+            *args: (list) The arguments to pass to the function.
+            **kwargs: (dict) The keyword arguments to pass to the function.
+        """
+
         threading.Thread(
             target = func,
             args = args,

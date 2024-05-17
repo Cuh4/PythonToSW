@@ -29,68 +29,73 @@ import xmltodict
 import os
 
 # ---- // Main
-"""
-URL decode a URL encoded string.
-
-Args:
-    string: (str) The URL encoded string to decode.
-    
-Returns:
-    (str) The decoded string.
-"""
 def URLDecode(string: str) -> str:
+    """
+    URL decode a URL encoded string.
+
+    Args:
+        string: (str) The URL encoded string to decode.
+        
+    Returns:
+        (str) The decoded string.
+    """
+
     return urllib.parse.unquote(string)
 
-"""
-URL encode a string.
-
-Args:
-    string: (str) The string to URL encode.
-    
-Returns:
-    (str) The URL encoded string.
-"""
 def XMLEncode(dictionary: dict) -> str:
+    """
+    URL encode a string.
+
+    Args:
+        string: (str) The string to URL encode.
+        
+    Returns:
+        (str) The URL encoded string.
+    """
+
     return xmltodict.unparse(dictionary)
 
-"""
-Decode an XML string into a dictionary.
-
-Args:
-    string: (str) The XML string to decode.
-    
-Returns:
-    (dict) The result of the XML decoding.
-"""
 def XMLDecode(string: str) -> dict:
+    """
+    Decode an XML string into a dictionary.
+
+    Args:
+        string: (str) The XML string to decode.
+        
+    Returns:
+        (dict) The result of the XML decoding.
+    """
+
     return xmltodict.parse(string)
 
-"""
-Read a file.
-
-Args:
-    path: (str) The path to the file to read.
-    mode: (str = "r") The mode to open the file in.
-
-Returns:
-    (str) The content of the file.
-"""
 def quickRead(path: str, mode: str = "r"):
+    """
+    Read a file.
+
+    Args:
+        path: (str) The path to the file to read.
+        mode: (str = "r") The mode to open the file in.
+
+    Returns:
+        (str) The content of the file.
+    """
+
     with open(path, mode) as f:
         return f.read()
     
-"""
-Write to a file, creating the directories if they don't exist.
-
-Args:
-    path: (str) The path to the file to write to.
-    content: (str) The content to write to the file.
-    mode: (str = "w") The mode to open the file in.
-    
-Returns:
-    (int) The result of the write operation.
-"""
 def quickWrite(path: str, content: str, mode: str = "w"):
+    """
+    Write to a file, creating the directories if they don't exist.
+
+    Args:
+        path: (str) The path to the file to write to.
+        content: (str) The content to write to the file.
+        mode: (str = "w") The mode to open the file in.
+        
+    Returns:
+        (int) The result of the write operation.
+    """
+
     directory = os.path.dirname(path)
 
     if not os.path.exists(directory):
