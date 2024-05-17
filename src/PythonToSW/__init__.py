@@ -25,9 +25,9 @@ limitations under the License.
 """
 
 # ---- // Imports
-from .executions import *
-from .event import Event
-from .addon import Addon
-from . import exceptions
-from . import helpers
-from . import matrix
+from PythonToSW.executions import *
+from PythonToSW.event import Event
+from PythonToSW.addon import Addon
+from PythonToSW import exceptions
+from PythonToSW import helpers
+from PythonToSW import matrix
