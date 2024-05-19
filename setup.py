@@ -28,14 +28,16 @@ from setuptools import setup, find_packages
 # ---- // Variables
 with open(os.path.join(os.path.dirname(__file__), "VERSION"), encoding = "utf-8") as file:
     version = file.read()
-    print(version)
     
 with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding = "utf-8") as file:
     long_description = file.read()
+    
+with open(os.path.join(os.path.dirname(__file__), "requirements.txt"), encoding = "utf-8") as file:
+    requirements = file.read().splitlines()
 
 # ---- // Main
 setup(
-    name= "PythonToSW",
+    name = "PythonToSW",
     version = version,
     author = "Cuh4",
     description = "A package that allows you to create addons in Stormworks with Python, handled through HTTP.",
@@ -49,7 +51,11 @@ setup(
         "Operating System :: OS Independent",
     ],
     
-    install_requires = open("requirements.txt").read().splitlines(),
+    project_urls = {
+        "Source code": "https://github.com/cuh4/PythonToSW"
+    },
+
+    install_requires = requirements,
 
     python_requires = ">=3.12",
     include_package_data = True,
