@@ -23,7 +23,7 @@ limitations under the License.
 
 # ---- // Imports
 from PythonToSW import BaseExecution
-from .. import matrix
+from PythonToSW import matrix
 
 # ---- // Main
 class AddMapObject(BaseExecution):
