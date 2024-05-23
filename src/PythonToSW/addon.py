@@ -24,6 +24,7 @@ limitations under the License.
 """
 
 # ---- // Imports
+from __future__ import annotations
 import os
 import flask
 import flask.cli
@@ -34,17 +35,19 @@ import werkzeug
 import werkzeug.utils
 import colorama
 from datetime import datetime
+from uuid import uuid4
+import time
 
-from . import helpers
-from . import exceptions
-from . import executions
-from . import Event
+from PythonToSW import helpers
+from PythonToSW import exceptions
+from PythonToSW import Event
 
 # ---- // Main
 colorama.init()
 
 class Addon():
-    """
+    # raw string to prevent "SyntaxWarning: invalid escape sequence '\S'" from %appdata% part
+    r"""
     A class that represents a Stormworks addon.
     
     >>> import PythonToSW as PTS
@@ -75,7 +78,7 @@ class Addon():
         self.allowLogging = allowLogging
         self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
         self.destinationAddonPath = destinationAddonPath
-        self.pendingExecutions: dict[str, executions.BaseExecution] = {}
+        self.pendingExecutions: dict[str, BaseExecution] = {}
         self.callbacks: dict[str, Event] = {}
         
         self.playlistEncoded = self._parsePlaylist()
@@ -150,7 +153,7 @@ class Addon():
         threading.Thread(target = target).start()
         self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
         
-    def execute(self, execution: executions.BaseExecution):
+    def execute(self, execution: BaseExecution):
         """
         Sends an execution to the in-game addon.
         
@@ -163,7 +166,7 @@ class Addon():
         >>> addon.start(target = main)
         
         Args:
-            execution: (executions.BaseExecution) The execution to send.
+            execution: (BaseExecution) The execution to send.
             
         Raises:
             exceptions.FailedExecutionAttempt: Raised if the addon is not running, or if an execution with the same ID already exists.
@@ -194,7 +197,7 @@ class Addon():
         # return
         return returnValues
     
-    def getPendingExecution(self, executionID: str) -> executions.BaseExecution|None:
+    def getPendingExecution(self, executionID: str) -> BaseExecution|None:
         """
         Returns the pending execution with the given ID.
         
@@ -202,17 +205,17 @@ class Addon():
             executionID: (str) The ID of the execution to return.
             
         Returns:
-            (executions.BaseExecution|None) The pending execution with the given ID, or None if it doesn't exist.
+            (BaseExecution|None) The pending execution with the given ID, or None if it doesn't exist.
         """
 
         return self.getPendingExecutions().get(executionID)
         
-    def getPendingExecutions(self) -> dict[str, executions.BaseExecution]:
+    def getPendingExecutions(self) -> dict[str, BaseExecution]:
         """
         Returns the pending executions.
         
         Returns:
-            (dict[str, executions.BaseExecution]) The pending executions, with the keys being the execution IDs.
+            (dict[str, BaseExecution]) The pending executions, with the keys being the execution IDs.
         """
 
         return self.pendingExecutions.copy()
@@ -564,3 +567,116 @@ class Addon():
             content = helpers.quickRead(vehicle["path"])
             
             helpers.quickWrite(os.path.join(destinationPath, f"vehicle_{vehicleID}"), content)
+            
+class BaseExecution():
+    """
+    Represents an execution that can be sent to the in-game addon.
+
+    You never really need to use this directly. If there is an in-game
+    function that doesn't have an execution, create an execution that
+    inherits from this. Example:
+    
+    >>> class MoveGroup(BaseExecution):
+    >>>     def __init__(self, group_id: int, pos: list):
+    >>>         super().__init__(
+    >>>             functionName = "moveGroup",
+    >>>             arguments = [group_id, pos]
+    >>>         )
+    
+    Args:
+        functionName: (str) The name of the in-game function to call
+        arguments: (list) The arguments to pass to the in-game function
+    """
+
+    def __init__(self, functionName: str, arguments: list = []):
+        self.ID = str(uuid4())
+        self.functionName = functionName
+        self.arguments = arguments
+        
+        self.handled = False
+        self.returnValues = []
+        self.isWaiting = False
+        
+    def __str__(self):
+        return f"Execution-{self.ID} ({self.functionName})"
+    
+    def execute(self, addon: Addon) -> list:
+        """
+        Send this execution to the in-game addon.
+        Equivalent to: addon.execute(self)
+        
+        Args:
+            addon: (Addon) The addon to send this execution to.
+            
+        Returns:
+            (list) The return values from the in-game function call.
+
+        Raises:
+            exceptions.FailedExecutionAttempt: Raised if the addon is not running, or if an execution with the same ID already exists.
+        """
+
+        return addon.execute(self)
+        
+    def _toDict(self):
+        """
+        Converts this execution into a dictionary that can be sent to the addon
+        
+        Returns:
+            (dict) The dictionary representation of this execution
+        """
+
+        return {
+            "ID" : self.ID,
+            "functionName": self.functionName,
+            "arguments": self.arguments,
+            "handled": self.handled
+        }
+        
+    def _return(self, returnValues: list):
+        """
+        Marks this execution as handled and saves return values.
+        
+        Args:
+            returnValues: (list) The return values from the in-game function.
+            
+        Raises:
+            exceptions.InternalError: Raised if this method is called when the execution is already handled.
+        """
+
+        if self.handled:
+            raise exceptions.InternalError("Tried to return after already returning")
+        
+        self.handled = True
+        self.returnValues = returnValues
+    
+    def _halt(self):
+        """
+        Stops waiting on this execution via _wait() method.
+        """
+
+        self.isWaiting = False
+        
+    def _obsolete(self):
+        """
+        Returns whether this execution has been handled.
+        
+        Returns:
+            (bool) Whether this execution has been handled.
+        """
+
+        return not self.isWaiting
+        
+    def _wait(self) -> list:
+        """
+        Waits until this execution has been handled and returns the return values.
+        
+        Returns:
+            (list) The return values from the in-game function call.
+        """
+
+        self.isWaiting = True
+        
+        while not self.handled and self.isWaiting:
+            time.sleep(0.01)
+            
+        return self.returnValues

@@ -22,7 +22,7 @@ limitations under the License.
 """
 
 # ---- // Imports
-from . import BaseExecution
+from PythonToSW import BaseExecution
 
 # ---- // Main
 class Announce(BaseExecution):

@@ -79,7 +79,7 @@ limitations under the License.
 \"\"\"
 
 # ---- // Imports
-from . import BaseExecution
+from PythonToSW import BaseExecution
 
 # ---- // Main
 {generated}"""

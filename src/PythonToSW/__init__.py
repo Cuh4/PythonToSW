@@ -27,13 +27,12 @@ limitations under the License.
 # ---- // Imports
 # Main
 from PythonToSW.event import Event
-from PythonToSW.addon import Addon
+from PythonToSW.addon import Addon, BaseExecution
 from PythonToSW import exceptions
 from PythonToSW import helpers
 from PythonToSW import matrix
 
 # Executions
-from PythonToSW.executions import BaseExecution
 from PythonToSW.executions.addAdmin import AddAdmin
 from PythonToSW.executions.addAuth import AddAuth
 from PythonToSW.executions.addMapLabel import AddMapLabel
