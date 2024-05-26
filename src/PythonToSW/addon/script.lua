@@ -1,5 +1,5 @@
 ----------------------------------------------
--- // [File] src/addon\p1_dependencies\AuroraFramework.lua
+-- // [File] src\addon\dependencies\AuroraFramework.lua
 ----------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
     -- Aurora Framework | A reliable addon creation framework designed to make addon creation easier.
@@ -44,7 +44,10 @@ g_savedata = {
 			mapObjects = {},
 
 			---@type table<string, af_savedata_screen_ui>
-			screen = {}
+			screen = {},
+
+			---@type table<string, af_savedata_popup>
+			popups = {}
 		},
 
 		---@type table<integer, boolean>
@@ -425,13 +428,7 @@ end
 -- Get a peer ID from a player, or -1 if player is nil
 ---@param player af_services_player_player|nil
 AuroraFramework.libraries.miscellaneous.getPeerID = function(player)
-	local id = -1
-
-	if player then
-		id = player.properties.peer_id
-	end
-
-	return id
+	return player and player.properties.peer_id or -1
 end
 
 -- Returns the value count of a table
@@ -3504,6 +3501,31 @@ AuroraFramework.services.UIService = {
 			ui:attach(mapObject.positionType, mapObject.attachID) -- automatically refreshes ui
 		end
 
+		-- load popups
+		for _, popup in pairs(g_savedata.AuroraFramework.UI.popups) do
+			-- get the player, or nil if the ui is for everyone
+			local player = AuroraFramework.services.playerService.getPlayerByPeerID(popup.peer_id)
+
+			-- if the player the ui was made for isnt in the server, don't create it
+			if not player and popup.peer_id ~= -1 then
+				return
+			end
+
+			-- make the ui
+			local ui = AuroraFramework.services.UIService.createPopupUI(
+				popup.name,
+				popup.text,
+				popup.pos,
+				popup.renderDistance,
+				player,
+				popup.id
+			)
+
+			-- update properties
+			ui.properties.visible = popup.visible
+			ui:attach(popup.positionType, popup.attachID) -- automatically refreshes ui
+		end
+
 		-- load map lines
 		for _, mapLine in pairs(g_savedata.AuroraFramework.UI.mapLines) do
 			-- get the player, or nil if the ui is for everyone
@@ -3617,7 +3639,10 @@ AuroraFramework.services.UIService = {
 		mapObjects = {},
 
 		---@type table<string, af_services_ui_map_line>
-		mapLines = {}
+		mapLines = {},
+
+		---@type table<string, af_services_ui_popup>
+		popups = {}
 	}
 }
 
@@ -3675,6 +3700,133 @@ AuroraFramework.services.UIService.name = function(name, player)
 	end
 
 	return name..player.properties.peer_id
+end
+
+-- Create a popup
+---@param name string
+---@param text string
+---@param pos SWMatrix
+---@param renderDistance number
+---@param player af_services_player_player|nil
+---@param custom_id integer|nil
+---@return af_services_ui_popup
+AuroraFramework.services.UIService.createPopupUI = function(name, text, pos, renderDistance, player, custom_id)
+	-- Get ID
+	local id = custom_id or server.getMapID()
+
+	-- If UI with the same name exists, use the ID from it and overwrite the UI entirely
+	local alreadyExistingUI = AuroraFramework.services.UIService.getPopupUI(name)
+
+	if alreadyExistingUI then
+		id = alreadyExistingUI.properties.id
+		alreadyExistingUI:remove()
+	end
+
+	-- Create UI
+	---@type af_services_ui_popup
+	local ui = AuroraFramework.libraries.class.create(
+		"UIPopup",
+
+		{
+			---@param self af_services_ui_popup
+			refresh = function(self)
+				self:updateSaveData()
+
+				local peerID = AuroraFramework.libraries.miscellaneous.getPeerID(self.properties.player)
+
+				server.setPopup(
+					peerID,
+					self.properties.id,
+					"",
+					self.properties.visible,
+					self.properties.text,
+					self.properties.pos[13],
+					self.properties.pos[14],
+					self.properties.pos[15],
+					self.properties.renderDistance,
+					self.properties.positionType == 1 and self.properties.attachID or 0,
+					self.properties.positionType == 2 and self.properties.attachID or 0
+				)
+			end,
+
+			---@param self af_services_ui_popup
+			remove = function(self)
+				return AuroraFramework.services.UIService.removePopupUI(self.properties.name)
+			end,
+
+			---@param self af_services_ui_popup
+			---@param positionType SWPositionTypeEnum
+			---@param objectOrVehicleID integer
+			attach = function(self, positionType, objectOrVehicleID)
+				self.properties.positionType = positionType
+				self.properties.attachID = objectOrVehicleID
+				self:refresh()
+			end,
+
+			---@param self af_services_ui_popup
+			updateSaveData = function(self)
+				if not AuroraFramework.services.UIService.getPopupUI(self.properties.name) then
+					g_savedata.AuroraFramework.UI.popups[self.properties.name] = nil
+					return
+				end
+
+				g_savedata.AuroraFramework.UI.popups[self.properties.name] = {
+					name = self.properties.name,
+					text = self.properties.text,
+					visible = self.properties.visible,
+					peer_id = AuroraFramework.libraries.miscellaneous.getPeerID(self.properties.player),
+					id = self.properties.id,
+					renderDistance = self.properties.renderDistance,
+					positionType = self.properties.positionType,
+					attachID = self.properties.attachID,
+					pos = self.properties.pos
+				}
+			end
+		},
+
+		{
+			pos = pos,
+			text = text,
+			visible = true,
+			player = player,
+			name = name,
+			id = id,
+			positionType = 0,
+			attachID = 0,
+			renderDistance = renderDistance
+		},
+
+		nil,
+
+		AuroraFramework.services.UIService.UI.popups,
+		name
+	)
+
+	ui:refresh() -- show
+	return ui
+end
+
+-- Get a popup
+---@param name string
+---@return af_services_ui_popup
+AuroraFramework.services.UIService.getPopupUI = function(name)
+	return AuroraFramework.services.UIService.UI.popups[name]
+end
+
+-- Remove a popup
+---@param name string
+AuroraFramework.services.UIService.removePopupUI = function(name)
+	local data = AuroraFramework.services.UIService.getPopupUI(name)
+
+	if not data then
+		return
+	end
+
+	data.properties.visible = false
+	data:refresh() -- hide ui
+
+	AuroraFramework.services.UIService.UI.popups[name] = nil
+	data:updateSaveData() -- remove from savedata
 end
 
 -- Create a Screen UI object
@@ -3765,7 +3917,7 @@ end
 -- Remove a Screen UI object
 ---@param name string
 AuroraFramework.services.UIService.removeScreenUI = function(name)
-	local data = AuroraFramework.services.UIService.UI.screen[name]
+	local data = AuroraFramework.services.UIService.getScreenUI(name)
 
 	if not data then
 		return
@@ -3872,7 +4024,7 @@ end
 -- Remove a Map Label
 ---@param name string
 AuroraFramework.services.UIService.removeMapLabel = function(name)
-	local data = AuroraFramework.services.UIService.UI.mapLabels[name]
+	local data = AuroraFramework.services.UIService.getMapLabel(name)
 
 	if not data then
 		return
@@ -4005,7 +4157,7 @@ end
 -- Remove a Map Line
 ---@param name string
 AuroraFramework.services.UIService.removeMapLine = function(name)
-	local data = AuroraFramework.services.UIService.UI.mapLines[name]
+	local data = AuroraFramework.services.UIService.getMapLine(name)
 
 	if not data then
 		return
@@ -4163,7 +4315,7 @@ end
 -- Remove a Map Object
 ---@param name string
 AuroraFramework.services.UIService.removeMapObject = function(name)
-	local data = AuroraFramework.services.UIService.UI.mapObjects[name]
+	local data = AuroraFramework.services.UIService.getMapObject(name)
 
 	if not data then
 		return
@@ -4741,10 +4893,10 @@ AuroraFramework.ready:connect(function(state)
 end)
 
 ----------------------------------------------
--- // [File] src/addon\p1_dependencies\class.lua
+-- // [File] src\addon\dependencies\class.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Cuh4] Class
+-- [Dependencies] Class
 --------------------------------------------------------
 
 --[[
@@ -4752,15 +4904,25 @@ end)
 
     CREDIT:
         Author: @Cuh4 (GitHub)
-        GitHub Repository: https://github.com/Cuh4/LuaClasses
+        GitHub Repository: https://github.com/Cuh4/PythonToSW (from: https://github.com/Cuh4/LuaClasses)
 
-    Description:
-        A library that adds easy OOP (with support for inheritance!) for Lua without utilizing metatables.
-        Inspired by Python syntax.
+    License:
+        Copyright (C) 2024 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
 
     ----------------------------
 ]]
-
 -------------------------------
 -- // Main
 -------------------------------
@@ -4854,7 +5016,7 @@ end
 ---@class ClassObject: Class An object created from a class
 
 ----------------------------------------------
--- // [File] src/addon\p2_libraries\1_BaseLibrary.lua
+-- // [File] src\addon\libraries\BaseLibrary.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Libraries] Base Library
@@ -4908,7 +5070,7 @@ end
 ---@field getLibraryName fun(self: BaseLibrary): string
 
 ----------------------------------------------
--- // [File] src/addon\p2_libraries\1_CodeExecution\1_main.lua
+-- // [File] src\addon\libraries\CodeExecution\main.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Libraries] Code Execution - Main
@@ -5051,7 +5213,7 @@ end
 ---@field handled boolean Whether the execution has been handled or not
 
 ----------------------------------------------
--- // [File] src/addon\p2_libraries\1_CodeExecution\2_helpers.lua
+-- // [File] src\addon\libraries\CodeExecution\helpers.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Libraries] Code Execution - Helpers
@@ -5142,7 +5304,7 @@ function CodeExecution:sendRequest(URL, callback, priority)
 end
 
 ----------------------------------------------
--- // [File] src/addon\p2_libraries\1_CodeExecution\3_logging.lua
+-- // [File] src\addon\libraries\CodeExecution\logging.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Libraries] Code Execution - Logging
@@ -5196,7 +5358,7 @@ function CodeExecution:error(errorType, errorMessage)
 end
 
 ----------------------------------------------
--- // [File] src/addon\p2_libraries\1_CodeExecution\4_execution.lua
+-- // [File] src\addon\libraries\CodeExecution\execution.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Libraries] Code Execution - Execution
@@ -5324,7 +5486,7 @@ function CodeExecution:triggerCallback(name, priority, ...)
 end
 
 ----------------------------------------------
--- // [File] src/addon\p3_main\main.lua
+-- // [File] src\addon\main\main.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Main] Python To SW
@@ -5336,7 +5498,6 @@ end
     CREDIT:
         Author: @Cuh4 (GitHub)
         GitHub Repository: https://github.com/Cuh4/PythonToSW
-
 
     License:
         Copyright (C) 2024 Cuh4
