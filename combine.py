@@ -7,12 +7,13 @@
 # -----------------------------------------
 import os
 import argparse
+import json
 
 # -----------------------------------------
 # // ---- Variables
 # -----------------------------------------
 parser = argparse.ArgumentParser(
-    description = "Combines all files in a directory into one.",
+    description = "Combines all files in a directory into one. Uses the __order.json file to determine which files to combine and in what order. If no __order.json file is found, all files will be combined.",
 )
 
 # -----------------------------------------
@@ -43,8 +44,22 @@ def pathInList(path: str, paths: list):
 
 # // Get contents of all files in a path
 def recursiveRead(targetDir: str, allowedFileExtensions: list[str], pathExceptions: list[str]) -> dict[str, str]:
+    # check if theres a __order.json file
+    orderJson = os.path.join(targetDir, "__order.json")
+    
+    if os.path.exists(orderJson):
+        toCombine = quickRead(orderJson, "r")
+        
+        try:
+            toCombine = json.loads(toCombine)
+            files = toCombine["order"]
+        except:
+            print(f"{orderJson} is not in the correct format. Ignoring...")
+            files = os.listdir(targetDir)
+    else:
+        files = os.listdir(targetDir)
+    
     # list files
-    files = os.listdir(targetDir)
     contents = {}
     
     # iterate through them
@@ -52,7 +67,12 @@ def recursiveRead(targetDir: str, allowedFileExtensions: list[str], pathExceptio
         # get file-related variables
         _, extension = os.path.splitext(file)
         path = os.path.join(targetDir, file)
-
+        
+        # check if exists
+        if not os.path.exists(path):
+            print(f"{path} does not exist. Ignoring...")
+            continue
+        
         # file is folder, but is an exception
         if pathInList(path, pathExceptions):
             continue

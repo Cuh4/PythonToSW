@@ -1,0 +1,7 @@
+{
+    "order" : [
+        "dependencies",
+        "libraries",
+        "main"
+    ]
+}

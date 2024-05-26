@@ -9,7 +9,6 @@
         Author: @Cuh4 (GitHub)
         GitHub Repository: https://github.com/Cuh4/PythonToSW
 
-
     License:
         Copyright (C) 2024 Cuh4
 

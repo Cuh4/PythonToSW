@@ -1,0 +1,6 @@
+{
+    "order" : [
+        "AuroraFramework.lua",
+        "class.lua"
+    ]
+}
