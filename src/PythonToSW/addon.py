@@ -41,6 +41,7 @@ import time
 from PythonToSW import helpers
 from PythonToSW import exceptions
 from PythonToSW import Event
+from PythonToSW import dataclasses
 
 # ---- // Main
 colorama.init()
@@ -62,35 +63,35 @@ class Addon():
         addonName: (str) The name of the addon.
         port: (int) The port to listen for requests from the in-game addon on.
         allowLogging: (bool = True) Whether to allow logging.
-        destinationAddonPath: (str = None) The destination path for the addon. You will need to provide this if you are on a non-Windows OS. Defaults to %APPDATA%\Stormworks\data\missions.
+        addonPath: (str = None) The path for the addon to be placed in. You will need to provide this if you are on a non-Windows OS. Defaults to %APPDATA%\Stormworks\data\missions.
         
     Raises:
         exceptions.InternalError: Raised if the PythonToSW base addon doesn't exist.
-        exceptions.PathNotFound: Raised if the destination addon path does not exist. If this is raised, you likely haven't installed and ran Stormworks. If you have, you will need to manually set the destinationAddonPath argument.
+        exceptions.PathNotFound: Raised if the addon path does not exist. If this is raised, you likely haven't installed and ran Stormworks. If you have, you will need to manually set the addonPath argument.
     """
 
-    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, destinationAddonPath: str = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")):
+    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, addonPath: str = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")):
         # main attributes
         self.addonName = addonName
         self.port = port
         self.app = flask.Flask(__name__)
         self.running = False
         self.allowLogging = allowLogging
-        self.addonPath = os.path.join(os.path.dirname(__file__), "addon")
-        self.destinationAddonPath = destinationAddonPath
+        self.templateAddonPath = os.path.join(os.path.dirname(__file__), "addon")
+        self.addonPath = addonPath
         self.pendingExecutions: dict[str, BaseExecution] = {}
         self.callbacks: dict[str, Event] = {}
         
         self.playlistEncoded = self._parsePlaylist()
         self.script = self._parseScript()
-        self.vehicles: list[str] = []
+        self.vehicles: list[dataclasses.Vehicle] = []
         
         # check if paths exist
-        if not os.path.exists(self.addonPath):
-            raise exceptions.InternalError(f"Addon path does not exist: {os.path.abspath(self.addonPath)}")
+        if not os.path.exists(self.templateAddonPath):
+            raise exceptions.InternalError(f"Template addon path does not exist: {os.path.abspath(self.templateAddonPath)}")
         
-        if not os.path.exists(self.destinationAddonPath):
-            raise exceptions.PathNotFound(f"Addon destination path does not exist: {os.path.abspath(self.destinationAddonPath)}. Please install and run Stormworks: Build and Rescue.\nIf you are on a non-Windows OS, please provide the destinationAddonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
+        if not os.path.exists(self.addonPath):
+            raise exceptions.PathNotFound(f"Desired addon path does not exist: {os.path.abspath(self.addonPath)}. Please install and run Stormworks: Build and Rescue if you are using the default path.\nIf you are on a non-Windows OS, please provide the addonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
         
         # edit playlist
         self.playlistEncoded["playlist"]["@name"] = f"[P2SW] {self.addonName}"
@@ -182,11 +183,11 @@ class Addon():
         
         # add execution
         self.pendingExecutions[execution.ID] = execution
-        self.log(f"{execution} has been queued.")
+        # self.log(f"{execution} has been queued.")
         
         # wait for execution to complete
         returnValues = execution._wait()
-        self.log(f"{execution} has complete. Returned: {returnValues}")
+        # self.log(f"{execution} has complete. Returned: {returnValues}")
         
         if execution._obsolete():
             return
@@ -282,7 +283,10 @@ class Addon():
             root["components"] = {"c" : []}
         
         # register vehicle
-        self.vehicles.append({"path" : path, "vehicleID" : vehicleID})
+        self.vehicles.append(dataclasses.Vehicle(
+            path = path,
+            vehicleID = vehicleID
+        ))
         
         # add vehicle to playlist
         vehicle = {
@@ -523,7 +527,7 @@ class Addon():
             (exceptions.PathNotFound) Raised if the playlist file does not exist.
         """
 
-        playlistFile = os.path.join(self.addonPath, "playlist.xml")
+        playlistFile = os.path.join(self.templateAddonPath, "playlist.xml")
         
         if not os.path.exists(playlistFile):
             raise exceptions.PathNotFound(f"Playlist file does not exist: {playlistFile}")
@@ -541,7 +545,7 @@ class Addon():
             (exceptions.PathNotFound) Raised if the script file does not exist.
         """
 
-        scriptFile = os.path.join(self.addonPath, "script.lua")
+        scriptFile = os.path.join(self.templateAddonPath, "script.lua")
         
         if not os.path.exists(scriptFile):
             raise exceptions.PathNotFound(f"Script file does not exist: {scriptFile}")
@@ -550,23 +554,21 @@ class Addon():
         
     def _setupAddon(self):
         """
-        Sets up the addon by writing the playlist and script files to the destination path, as well as setting up vehicles, etc.
+        Sets up the addon by writing the playlist and script files to the addon path, as well as setting up vehicles, etc.
         """
 
-        # set destination path
+        # set path
         secureAddonName = werkzeug.utils.secure_filename(self.addonName)
-        destinationPath = os.path.join(self.destinationAddonPath, secureAddonName)
+        path = os.path.join(self.addonPath, secureAddonName)
         
-        # write files to destination
-        helpers.quickWrite(os.path.join(destinationPath, "playlist.xml"), helpers.XMLEncode(self.playlistEncoded))
-        helpers.quickWrite(os.path.join(destinationPath, "script.lua"), self.script)
+        # write files to path
+        helpers.quickWrite(os.path.join(path, "playlist.xml"), helpers.XMLEncode(self.playlistEncoded))
+        helpers.quickWrite(os.path.join(path, "script.lua"), self.script)
         
         # add vehicles to addon directory
         for vehicle in self.vehicles:
-            vehicleID = vehicle["vehicleID"]
-            content = helpers.quickRead(vehicle["path"])
-            
-            helpers.quickWrite(os.path.join(destinationPath, f"vehicle_{vehicleID}"), content)
+            content = helpers.quickRead(vehicle.path)
+            helpers.quickWrite(os.path.join(path, f"vehicle_{vehicle.vehicleID}"), content)
             
 class BaseExecution():
     """
@@ -593,7 +595,7 @@ class BaseExecution():
         self.functionName = functionName
         self.arguments = arguments
         
-        self.handled = False
+        self.Handled = False
         self.returnValues = []
         self.isWaiting = False
         
@@ -629,7 +631,7 @@ class BaseExecution():
             "ID" : self.ID,
             "functionName": self.functionName,
             "arguments": self.arguments,
-            "handled": self.handled
+            "handled": self.Handled
         }
         
     def _return(self, returnValues: list):
@@ -643,10 +645,10 @@ class BaseExecution():
             exceptions.InternalError: Raised if this method is called when the execution is already handled.
         """
 
-        if self.handled:
+        if self.Handled:
             raise exceptions.InternalError("Tried to return after already returning")
         
-        self.handled = True
+        self.Handled = True
         self.returnValues = returnValues
     
     def _halt(self):
@@ -676,7 +678,7 @@ class BaseExecution():
 
         self.isWaiting = True
         
-        while not self.handled and self.isWaiting:
+        while not self.Handled and self.isWaiting:
             time.sleep(0.01)
             
         return self.returnValues
