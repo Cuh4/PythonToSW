@@ -74,4 +74,6 @@ def distance(matrix1: list, matrix2: list) -> float:
         (float) The distance between the two matrices.
     """
 
-    return math.sqrt((matrix1[12] - matrix2[12])**2 + (matrix1[13] - matrix2[13])**2 + (matrix1[14] - matrix2[14])**2)
+    x1, y1, z1 = getXYZ(matrix1)
+    x2, y2, z2 = getXYZ(matrix2)
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
