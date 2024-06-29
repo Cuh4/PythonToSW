@@ -1,7 +1,7 @@
 {
     "order" : [
         "dependencies",
-        "libraries",
-        "main"
+        "classes",
+        "main.lua"
     ]
 }

@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- [Libraries] Code Execution - Execution
+-- [Classes] Code Execution - Execution
 --------------------------------------------------------
 
 --[[
@@ -30,30 +30,42 @@
 -------------------------------
 -- // Main
 -------------------------------
--- Fetch pending executions
-function CodeExecution:handlePendingExecutions()
-    self:sendRequest("/get-pending-executions", function(response, successful)
+
+--[[
+    Represents a pending execution.
+]]
+---@class PendingExecution
+---@field ID string The ID of this execution
+---@field functionName string The name of the function
+---@field arguments table<integer, any> The arguments
+---@field handled boolean Whether the execution has been handled or not
+
+--[[
+    Handles pending executions.
+]]
+function Classes.CodeExecution:HandlePendingExecutions()
+    self:SendRequest("/get-pending-executions", function(response, successful)
         -- success check
         if not successful then
             return
         end
 
         -- get pending executions
-        local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, CodeExecution_PendingExecution>
+        local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, PendingExecution>
 
         if not pendingExecutions then
             return
         end
 
         -- log
-        self:sendLog("Fetched pending executions, processing...")
+        self:SendLog("Fetched pending executions, processing...")
 
         -- iterate through executions
         for _, execution in pairs(pendingExecutions) do
             -- check if we've already handled this execution
-            if self.handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
+            if self.Handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
                 if execution.handled then
-                    self.handled[execution.ID] = nil -- garbage cleanup
+                    self.Handled[execution.ID] = nil -- garbage cleanup
                 end
 
                 goto continue
@@ -64,13 +76,13 @@ function CodeExecution:handlePendingExecutions()
             end
 
             -- log
-            self:sendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
+            self:SendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
 
             -- get function
-            local executionFunction = self:getFunctionFromExecution(execution)
+            local executionFunction = self:GetFunctionFromExecution(execution)
 
             if not executionFunction then
-                self:error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
+                self:Error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
                 goto continue
             end
 
@@ -80,43 +92,49 @@ function CodeExecution:handlePendingExecutions()
             )
 
             -- send result to backend
-            self:returnExecutionResults(execution, returnValues)
+            self:ReturnExecutionResults(execution, returnValues)
 
             -- mark as handled
-            self.handled[execution.ID] = true
+            self.Handled[execution.ID] = true
 
             -- log
-            self:sendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
+            self:SendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
 
             ::continue::
         end
     end, false)
 end
 
--- Get function from execution
----@param execution CodeExecution_PendingExecution
+--[[
+    Get an addon lua function from an execution.
+]]
+---@param execution PendingExecution
 ---@return function
-function CodeExecution:getFunctionFromExecution(execution)
+function Classes.CodeExecution:GetFunctionFromExecution(execution)
     return server[execution.functionName]
 end
 
--- Send return values to backend
----@param execution CodeExecution_PendingExecution
+--[[
+    Send return values to backend.
+]]
+---@param execution PendingExecution
 ---@param returnValues table<integer, any>
-function CodeExecution:returnExecutionResults(execution, returnValues)
-    self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
+function Classes.CodeExecution:ReturnExecutionResults(execution, returnValues)
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/return",
         {name = "id", value = execution.ID},
         {name = "returnValues", value = AuroraFramework.services.HTTPService.JSON.encode(returnValues)} -- sorry, sw only allows GET requests
     ), nil, true)
 end
 
--- Trigger a callback
+--[[
+    Send callback data to backend.
+]]
 ---@param name string
 ---@param priority boolean
 ---@param ... any
-function CodeExecution:triggerCallback(name, priority, ...)
-    self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
+function Classes.CodeExecution:TriggerCallback(name, priority, ...)
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/trigger-callback",
         {name = "name", value = name},
         {name = "args", value = AuroraFramework.services.HTTPService.JSON.encode({...})}

@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- [Libraries] Code Execution - Helpers
+-- [Classes] Code Execution - Helpers
 --------------------------------------------------------
 
 --[[
@@ -30,57 +30,46 @@
 -------------------------------
 -- // Main
 -------------------------------
--- Create a shallow copy of a table
----@generic passedTable: table
----@param tbl passedTable
----@return passedTable
-function CodeExecution:copyTable(tbl)
-    local new = {}
 
-    for index, value in pairs(tbl) do
-        new[index] = value
-    end
-
-    return new
-end
-
--- Send a request
+--[[
+    Send a request to the backend.
+]]
 ---@param URL string
 ---@param callback fun(response: string, successful: boolean)|nil
 ---@param priority boolean|nil
----@return af_services_http_request
-function CodeExecution:sendRequest(URL, callback, priority)
+---@return af_services_http_request|nil
+function Classes.CodeExecution:SendRequest(URL, callback, priority)
     -- Send log
-    self:sendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.requestCooldown)))
+    self:SendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.RequestCooldown)))
 
     -- stop here if this is not a priority request and a cooldown is active
-    if self.requestCooldown and not priority then
-        self:sendLog("Failed to send request due to cooldown. URL: "..URL)
+    if self.RequestCooldown and not priority then
+        self:SendLog("Failed to send request due to cooldown. URL: "..URL)
         return
     end
 
     -- if this is a priority request, then send the request straight away and add a tick cooldown to prevent rate limit
     if priority then
         -- set cooldown
-        self.requestCooldown = true
+        self.RequestCooldown = true
 
         -- remove old cooldown if any
-        if self.requestCooldownDelay then
-            self.requestCooldownDelay:remove()
+        if self.RequestCooldownDelay then
+            self.RequestCooldownDelay:remove()
         end
 
         -- remove cooldown the next tick
-        self.requestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
-            self.requestCooldown = false
-            self.requestCooldownDelay = nil
+        self.RequestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
+            self.RequestCooldown = false
+            self.RequestCooldownDelay = nil
         end)
     end
 
     -- send request
-    self:sendLog("Successfully sent request.")
+    self:SendLog("Successfully sent request.")
 
     return AuroraFramework.services.HTTPService.request(
-        self.backendPort,
+        self.BackendPort,
         URL,
         callback
     )

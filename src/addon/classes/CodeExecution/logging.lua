@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- [Main] Python To SW
+-- [Classes] Code Execution - Logging
 --------------------------------------------------------
 
 --[[
@@ -30,7 +30,26 @@
 -------------------------------
 -- // Main
 -------------------------------
--- Setup CodeExecution
----@type CodeExecution
-local CodeExecution = CodeExecution.new(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
-CodeExecution:start()
+
+--[[
+    Send a log.
+]]
+---@param log string
+function Classes.CodeExecution:SendLog(log)
+    debug.log(("[CodeExecution] %s"):format(log))
+end
+
+--[[
+    Trigger an error in the backend.
+]]
+---@param errorType string
+---@param errorMessage string
+function Classes.CodeExecution:Error(errorType, errorMessage)
+    self:SendLog(("ERROR (%s): %s"):format(errorType, errorMessage))
+
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
+        "/error",
+        {name = "errorType", value = errorType},
+        {name = "errorMessage", value = errorMessage}
+    ), nil, true)
+end

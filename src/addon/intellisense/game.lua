@@ -14,7 +14,7 @@
 ---- // Credit
 ----------------------------------------
 -- Created by: @nameouschangey (GitHub) and @Toast732 (GitHub)
--- Maintained by: @Cuh4 (Discord)
+-- Maintained by: @Cuh4 (GitHub)
 
 -- GitHub Repo: https://github.com/Cuh4/StormworksAddonLuaDocumentation
 
@@ -22,6 +22,21 @@
 ---- // Changelog (dd/mm/yy format)
 ----------------------------------------
 -- Last updated for game version: v1.11.0 (The Commercial Fishing Major Update)
+
+-- 19/06/2024
+--[[
+    - Fixed matrix.rotationToFaceXZ return type should be SWMatrix
+]]
+
+-- 14/06/2024
+--[[
+    - Added missing fluid types to SWTankFluidTypeEnum
+]]
+
+-- 07/06/2024
+--[[
+    - Added `---@meta _` see https://luals.github.io/wiki/annotations/#meta
+]]
 
 -- 12/05/2024
 --[[
@@ -142,9 +157,7 @@
 -------------------------
 -- LUA LSP DIAGNOSTICS SETTINGS
 -------------------------
---- @diagnostic disable: lowercase-global
---- @diagnostic disable: missing-return
---- @diagnostic disable: duplicate-set-field
+---@meta _
 
 -------------------------
 -- DEFINITIONS
@@ -242,7 +255,7 @@ function matrix.multiplyXYZW(matrix1, x, y, z, w) end
 --- Returns the rotation required to face an X Z vector
 --- @param x number
 --- @param z number
---- @return number required_rotation
+--- @return SWMatrix required_rotation
 function matrix.rotationToFaceXZ(x, z) end
 
 
@@ -602,6 +615,9 @@ function onOilSpill(tile_x, tile_z, delta, total, vehicle_id) end
 ---| 7 # steam
 ---| 8 # slurry
 ---| 9 # saturated slurry
+---| 10 # oxygen
+---| 11 # nitrogen
+---| 12 # hydrogen
 
 ---@alias SWResourceTypeEnum
 ---| 0 # coal

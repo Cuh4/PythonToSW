@@ -26,45 +26,78 @@
 
     ----------------------------
 ]]
+
 -------------------------------
 -- // Main
 -------------------------------
 
--- Create a class
+--[[
+    Create a class that objects can be created from.<br>
+    Note that classes can inherit from other classes.
+
+    local MyClass = Class:Create("MyClass")
+
+    function MyClass:Init(name) -- This is called when MyClass:New() is called
+        self.name = name
+    end
+
+    function MyClass:myName()
+        print(self.name)
+    end
+
+    local object = MyClass:New("Cuh4")
+    object:myName() -- "Cuh4"
+]]
 ---@param name string
----@param init fun(self: table, ...: any)
 ---@param parent Class|nil
-function Class(name, init, parent)
-    -- // Class Creation
-    -- Create a class
-    ---@type Class
-    local class = {} ---@diagnostic disable-line
-    class.__name = name
-    class.__parent = parent
-    class.__init = init
+function Class(name, parent)
+    --[[
+        A class that objects can be created from.
 
-    -- Create a function that creates an object from this class
-    ---@param ... any
-    function class.new(...)
-        -- create object
-        ---@type ClassObject
-        local object = {} ---@diagnostic disable-line
-        class:__descend(object, {new = true})
+        local MyClass = Class:Create("MyClass")
 
-        -- call init of object. this init function will provide the needed attributes to the object
-        if object.__init then
-            object.__init(object, ...)
+        function MyClass:Init(name) -- This is called when MyClass.new() is called
+            self.something = true
         end
 
-        -- return the object
+        local object = MyClass:new("Cuh4")
+        print(object.something) -- true
+    ]]
+    ---@class Class
+    ---@field ClassName string The name of this class/object
+    ---@field _Parent Class|nil The parent class that this class inherits from
+    ---@field _IsObject boolean
+    ---@field Init fun(self: Class, ...) A function that initializes objects created from this class
+    local class = {} ---@diagnostic disable-line
+    class.ClassName = name
+    class._Parent = parent
+    class._IsObject = false
+
+    function class:New(...)
+        -- Create class object
+        ---@type Class
+        local object = {} ---@diagnostic disable-line
+        self:_Descend(object, {New = true, Init = true, _Descend = true})
+
+        object._IsObject = true
+
+        -- Call init of object. This init function will provide the needed attributes to the object
+        if self.Init then
+            self.Init(object, ...)
+        end
+
+        -- Return the object
         return object
     end
 
-    -- Create function to provide values from a class or class object to a class object
-    ---@param from Class|ClassObject
-    ---@param object ClassObject
-    ---@param exceptions table
-    function class.__descend(from, object, exceptions)
+    --[[
+        Copies attributes and methods from one object to another.<br>
+        Used internally. Do not use in your code.
+    ]]
+    ---@param from Class
+    ---@param object Class
+    ---@param exceptions table<integer, string>
+    function class._Descend(from, object, exceptions)
         for index, value in pairs(from) do
             if exceptions[index] then
                 goto continue
@@ -80,40 +113,37 @@ function Class(name, init, parent)
         end
     end
 
-    -- // Class Methods
-    -- Create method to initialize and inherit from parent
-    function class:initializeParent(...)
-        if not self.__parent then
+    --[[
+        Creates an object from the parent class and copies it to this object.<br>
+        Use this in the :Init() method of a class that inherits from a parent class.<br>
+        Any args provided will be passed to the :Init()
+    ]]
+    function class:InitializeParent(...)
+        -- Check if this was called from an object
+        if not self.IsSameType then
             return
         end
 
-        local object = self.__parent.new(...)
-        self.__descend(object, self, {})
+        -- Check if there is a parent
+        if not self._IsObject then
+            return
+        end
+
+        -- Create an object from the parent class
+        local object = self._Parent:New(...)
+
+        -- Copy and bring new attributes and methods down from the new parent object to this object
+        self._Descend(object, self, {New = true, Init = true, _Descend = true})
     end
 
-    -- Create comparison method
-    ---@param object ClassObject
-    function class:isSameType(object)
-        return self.__name == object.__name
+    --[[
+        Returns if a class/object is the same type as another.
+    ]]
+    ---@param other Class
+    ---@return boolean
+    function class:IsSameType(other)
+        return type(other) == "table" and other.ClassName ~= nil and self.ClassName == other.ClassName
     end
 
-    -- // Finalization
-    -- Return the class
     return class
 end
-
--------------------------------
--- // Intellisense
--------------------------------
-
----@class Class A class that can be used for OOP. use the .new() function to create an object from this class
----@field __name string The name of this class
----@field __init fun(self: ClassObject, ...) A function that initializes objects created from this class
----@field __parent Class|nil The parent class that this class inherits from
----
----@field new fun(...: any): ClassObject A function to create an object from this class
----@field __descend fun(from: Class|ClassObject, object: ClassObject, exceptions: table<any, boolean>) A helper function that copies important values from the class to an object
----@field initializeParent fun(self: ClassObject, ...: any) A method that initializes the parent class for this object
----@field isSameType fun(self: ClassObject, object: ClassObject): boolean A method that returns whether an object is identical to this one
-
----@class ClassObject: Class An object created from a class

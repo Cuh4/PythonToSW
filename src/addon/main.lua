@@ -1,5 +1,5 @@
 --------------------------------------------------------
--- [Libraries] Base Library
+-- [Main] Python To SW
 --------------------------------------------------------
 
 --[[
@@ -30,21 +30,6 @@
 -------------------------------
 -- // Main
 -------------------------------
----@type BaseLibrary
-BaseLibrary = Class("BaseLibrary", function(self, libraryName)
-    self.libraryName = libraryName
-    self.isLibrary = true
-end)
 
-function BaseLibrary:getLibraryName()
-    return self.libraryName
-end
-
--------------------------------
--- // Intellisense
--------------------------------
----@class BaseLibrary: Class
----@field libraryName string
----@field isLibrary boolean
----
----@field getLibraryName fun(self: BaseLibrary): string
+local CodeExecution = Classes.CodeExecution:New(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
+CodeExecution:Start()

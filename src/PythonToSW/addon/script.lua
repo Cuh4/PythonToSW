@@ -4923,45 +4923,78 @@ end)
 
     ----------------------------
 ]]
+
 -------------------------------
 -- // Main
 -------------------------------
 
--- Create a class
+--[[
+    Create a class that objects can be created from.<br>
+    Note that classes can inherit from other classes.
+
+    local MyClass = Class:Create("MyClass")
+
+    function MyClass:Init(name) -- This is called when MyClass:New() is called
+        self.name = name
+    end
+
+    function MyClass:myName()
+        print(self.name)
+    end
+
+    local object = MyClass:New("Cuh4")
+    object:myName() -- "Cuh4"
+]]
 ---@param name string
----@param init fun(self: table, ...: any)
 ---@param parent Class|nil
-function Class(name, init, parent)
-    -- // Class Creation
-    -- Create a class
-    ---@type Class
-    local class = {} ---@diagnostic disable-line
-    class.__name = name
-    class.__parent = parent
-    class.__init = init
+function Class(name, parent)
+    --[[
+        A class that objects can be created from.
 
-    -- Create a function that creates an object from this class
-    ---@param ... any
-    function class.new(...)
-        -- create object
-        ---@type ClassObject
-        local object = {} ---@diagnostic disable-line
-        class:__descend(object, {new = true})
+        local MyClass = Class:Create("MyClass")
 
-        -- call init of object. this init function will provide the needed attributes to the object
-        if object.__init then
-            object.__init(object, ...)
+        function MyClass:Init(name) -- This is called when MyClass.new() is called
+            self.something = true
         end
 
-        -- return the object
+        local object = MyClass:new("Cuh4")
+        print(object.something) -- true
+    ]]
+    ---@class Class
+    ---@field ClassName string The name of this class/object
+    ---@field _Parent Class|nil The parent class that this class inherits from
+    ---@field _IsObject boolean
+    ---@field Init fun(self: Class, ...) A function that initializes objects created from this class
+    local class = {} ---@diagnostic disable-line
+    class.ClassName = name
+    class._Parent = parent
+    class._IsObject = false
+
+    function class:New(...)
+        -- Create class object
+        ---@type Class
+        local object = {} ---@diagnostic disable-line
+        self:_Descend(object, {New = true, Init = true, _Descend = true})
+
+        object._IsObject = true
+
+        -- Call init of object. This init function will provide the needed attributes to the object
+        if self.Init then
+            self.Init(object, ...)
+        end
+
+        -- Return the object
         return object
     end
 
-    -- Create function to provide values from a class or class object to a class object
-    ---@param from Class|ClassObject
-    ---@param object ClassObject
-    ---@param exceptions table
-    function class.__descend(from, object, exceptions)
+    --[[
+        Copies attributes and methods from one object to another.<br>
+        Used internally. Do not use in your code.
+    ]]
+    ---@param from Class
+    ---@param object Class
+    ---@param exceptions table<integer, string>
+    function class._Descend(from, object, exceptions)
         for index, value in pairs(from) do
             if exceptions[index] then
                 goto continue
@@ -4977,49 +5010,46 @@ function Class(name, init, parent)
         end
     end
 
-    -- // Class Methods
-    -- Create method to initialize and inherit from parent
-    function class:initializeParent(...)
-        if not self.__parent then
+    --[[
+        Creates an object from the parent class and copies it to this object.<br>
+        Use this in the :Init() method of a class that inherits from a parent class.<br>
+        Any args provided will be passed to the :Init()
+    ]]
+    function class:InitializeParent(...)
+        -- Check if this was called from an object
+        if not self.IsSameType then
             return
         end
 
-        local object = self.__parent.new(...)
-        self.__descend(object, self, {})
+        -- Check if there is a parent
+        if not self._IsObject then
+            return
+        end
+
+        -- Create an object from the parent class
+        local object = self._Parent:New(...)
+
+        -- Copy and bring new attributes and methods down from the new parent object to this object
+        self._Descend(object, self, {New = true, Init = true, _Descend = true})
     end
 
-    -- Create comparison method
-    ---@param object ClassObject
-    function class:isSameType(object)
-        return self.__name == object.__name
+    --[[
+        Returns if a class/object is the same type as another.
+    ]]
+    ---@param other Class
+    ---@return boolean
+    function class:IsSameType(other)
+        return type(other) == "table" and other.ClassName ~= nil and self.ClassName == other.ClassName
     end
 
-    -- // Finalization
-    -- Return the class
     return class
 end
 
--------------------------------
--- // Intellisense
--------------------------------
-
----@class Class A class that can be used for OOP. use the .new() function to create an object from this class
----@field __name string The name of this class
----@field __init fun(self: ClassObject, ...) A function that initializes objects created from this class
----@field __parent Class|nil The parent class that this class inherits from
----
----@field new fun(...: any): ClassObject A function to create an object from this class
----@field __descend fun(from: Class|ClassObject, object: ClassObject, exceptions: table<any, boolean>) A helper function that copies important values from the class to an object
----@field initializeParent fun(self: ClassObject, ...: any) A method that initializes the parent class for this object
----@field isSameType fun(self: ClassObject, object: ClassObject): boolean A method that returns whether an object is identical to this one
-
----@class ClassObject: Class An object created from a class
-
 ----------------------------------------------
--- // [File] src\addon\libraries\BaseLibrary.lua
+-- // [File] src\addon\classes\init.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Libraries] Base Library
+-- [Classes] Init
 --------------------------------------------------------
 
 --[[
@@ -5050,83 +5080,91 @@ end
 -------------------------------
 -- // Main
 -------------------------------
----@type BaseLibrary
-BaseLibrary = Class("BaseLibrary", function(self, libraryName)
-    self.libraryName = libraryName
-    self.isLibrary = true
-end)
 
-function BaseLibrary:getLibraryName()
-    return self.libraryName
+--[[
+    A table containing classes.
+]]
+Classes = {}
+
+----------------------------------------------
+-- // [File] src\addon\classes\CodeExecution\main.lua
+----------------------------------------------
+--------------------------------------------------------
+-- [Classes] Code Execution - Main
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author: @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/Cuh4/PythonToSW
+
+    License:
+        Copyright (C) 2024 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    A library for interacting with the PythonToSW backend.
+]]
+---@class CodeExecution
+---@field New fun(backendPort: number, executionTickRate: number): CodeExecution
+---@field BackendPort number
+---@field ExecutionTickRate number
+---@field TickTimer number
+---@field Started boolean
+---@field Handled table<string, boolean>
+---@field RequestCooldown boolean
+---@field RequestCooldownDelay af_services_timer_delay|nil
+Classes.CodeExecution = Class("CodeExecution")
+
+--[[
+    Initializes code execution class objects.
+]]
+---@param backendPort integer
+---@param executionTickRate number
+function Classes.CodeExecution:Init(backendPort, executionTickRate)
+    self.BackendPort = backendPort
+    self.ExecutionTickRate = executionTickRate
+    self.TickTimer = 0
+    self.Started = false
+    self.Handled = {}
+    self.RequestCooldown = false
 end
 
--------------------------------
--- // Intellisense
--------------------------------
----@class BaseLibrary: Class
----@field libraryName string
----@field isLibrary boolean
----
----@field getLibraryName fun(self: BaseLibrary): string
-
-----------------------------------------------
--- // [File] src\addon\libraries\CodeExecution\main.lua
-----------------------------------------------
---------------------------------------------------------
--- [Libraries] Code Execution - Main
---------------------------------------------------------
-
 --[[
-    ----------------------------
-
-    CREDIT:
-        Author: @Cuh4 (GitHub)
-        GitHub Repository: https://github.com/Cuh4/PythonToSW
-
-    License:
-        Copyright (C) 2024 Cuh4
-
-        Licensed under the Apache License, Version 2.0 (the "License");
-        you may not use this file except in compliance with the License.
-        You may obtain a copy of the License at
-
-            http://www.apache.org/licenses/LICENSE-2.0
-
-        Unless required by applicable law or agreed to in writing, software
-        distributed under the License is distributed on an "AS IS" BASIS,
-        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        See the License for the specific language governing permissions and
-        limitations under the License.
-
-    ----------------------------
+    Starts the library, listening for callbacks and handling pending executions.
 ]]
-
--------------------------------
--- // Main
--------------------------------
----@type CodeExecution
-CodeExecution = Class("CodeExecution", function(self, backendPort, executionTickRate)
-    self.backendPort = backendPort
-    self.executionTickRate = executionTickRate
-    self.tickTimer = 0
-    self.started = false
-    self.handled = {}
-    self.requestCooldown = false
-end, BaseLibrary)
-
--- Start the code execution
-function CodeExecution:start()
+function Classes.CodeExecution:Start()
     -- error check
-    if self.started then
-        self:error("Addon", "Attempted to start code execution when it has already started.")
+    if self.Started then
+        self:Error("Addon", "Attempted to start code execution when it has already started.")
         return
     end
 
     -- log
-    self:sendLog("Started.")
+    self:SendLog("Started.")
 
     -- set started
-    self.started = true
+    self.Started = true
 
     -- callback functionality
     local exceptions = {
@@ -5141,10 +5179,10 @@ function CodeExecution:start()
         end
 
         -- connect to event and trigger backend callback
-        self:sendLog(("Connecting to event: %s."):format(name))
+        self:SendLog(("Connecting to event: %s."):format(name))
 
         callback.main:connect(function(...)
-            self:triggerCallback(name, true, ...)
+            self:TriggerCallback(name, true, ...)
         end)
 
         ::continue::
@@ -5152,71 +5190,39 @@ function CodeExecution:start()
 
     -- manually handle http reply
     AuroraFramework.callbacks.httpReply.main:connect(function(port, ...)
-        if port == 0 or port == self.backendPort then -- port 0 returns response the very next tick. not good for http!
+        if port == 0 or port == self.BackendPort then -- port 0 returns response the very next tick. not good for http!
             return
         end
 
-        self:triggerCallback("httpReply", true, ...)
+        self:TriggerCallback("httpReply", true, ...)
     end)
 
     -- count up ticks
     AuroraFramework.callbacks.onTick.main:connect(function()
         -- increment ticks
-        self.tickTimer = self.tickTimer + 1
+        self.TickTimer = self.TickTimer + 1
 
         -- check if we should handle pending executions
-        if self.tickTimer < self.executionTickRate then
+        if self.TickTimer < self.ExecutionTickRate then
             return
         end
 
         -- call ontick callback
-        self:triggerCallback("onTick", false)
+        self:TriggerCallback("onTick", false)
 
         -- handle them
-        self:handlePendingExecutions()
+        self:HandlePendingExecutions()
 
         -- reset timer
-        self.tickTimer = 0
+        self.TickTimer = 0
     end)
 end
 
--------------------------------
--- // Intellisense
--------------------------------
----@class CodeExecution: BaseLibrary
----@field backendPort number
----@field executionTickRate number
----@field tickTimer number
----@field started boolean
----@field handled table<string, boolean>
----@field requestCooldown boolean
----@field requestCooldownDelay af_services_timer_delay|nil
----
----
----@field start fun(self: CodeExecution) Start fetching pending executions and executing them
----
----@field copyTable fun(self: CodeExecution, tbl: table): table Copy a table
----@field sendRequest fun(self: CodeExecution, URL: string, callback: fun(response: string, successful: boolean)|nil, priority: boolean|nil): af_services_http_request Send a GET request
----
----@field sendLog fun(self: CodeExecution, log: string) Send a log
----@field error fun(self: CodeExecution, errorType: string, errorMessage: string) Trigger an error in the backend
----
----@field handlePendingExecutions fun(self: CodeExecution) Handle pending executions
----@field getFunctionFromExecution fun(self: CodeExecution, execution: CodeExecution_PendingExecution): function|nil Get a server function from an execution
----@field returnExecutionResults fun(self: CodeExecution, execution: CodeExecution_PendingExecution, returnValues: table<integer, any>) Send return values to backend
----@field triggerCallback fun(self: CodeExecution, name: string, priority: boolean, ...: any) Trigger a callback in the backend
-
----@class CodeExecution_PendingExecution
----@field ID string The ID of this execution
----@field functionName string The name of the function
----@field arguments table<integer, any> The arguments
----@field handled boolean Whether the execution has been handled or not
-
 ----------------------------------------------
--- // [File] src\addon\libraries\CodeExecution\helpers.lua
+-- // [File] src\addon\classes\CodeExecution\helpers.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Libraries] Code Execution - Helpers
+-- [Classes] Code Execution - Helpers
 --------------------------------------------------------
 
 --[[
@@ -5247,67 +5253,56 @@ end
 -------------------------------
 -- // Main
 -------------------------------
--- Create a shallow copy of a table
----@generic passedTable: table
----@param tbl passedTable
----@return passedTable
-function CodeExecution:copyTable(tbl)
-    local new = {}
 
-    for index, value in pairs(tbl) do
-        new[index] = value
-    end
-
-    return new
-end
-
--- Send a request
+--[[
+    Send a request to the backend.
+]]
 ---@param URL string
 ---@param callback fun(response: string, successful: boolean)|nil
 ---@param priority boolean|nil
----@return af_services_http_request
-function CodeExecution:sendRequest(URL, callback, priority)
+---@return af_services_http_request|nil
+function Classes.CodeExecution:SendRequest(URL, callback, priority)
     -- Send log
-    self:sendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.requestCooldown)))
+    self:SendLog(("Sending request to %s. | Priority: %s | Is Cooldown: %s"):format(URL, tostring(priority), tostring(self.RequestCooldown)))
 
     -- stop here if this is not a priority request and a cooldown is active
-    if self.requestCooldown and not priority then
-        self:sendLog("Failed to send request due to cooldown. URL: "..URL)
+    if self.RequestCooldown and not priority then
+        self:SendLog("Failed to send request due to cooldown. URL: "..URL)
         return
     end
 
     -- if this is a priority request, then send the request straight away and add a tick cooldown to prevent rate limit
     if priority then
         -- set cooldown
-        self.requestCooldown = true
+        self.RequestCooldown = true
 
         -- remove old cooldown if any
-        if self.requestCooldownDelay then
-            self.requestCooldownDelay:remove()
+        if self.RequestCooldownDelay then
+            self.RequestCooldownDelay:remove()
         end
 
         -- remove cooldown the next tick
-        self.requestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
-            self.requestCooldown = false
-            self.requestCooldownDelay = nil
+        self.RequestCooldownDelay = AuroraFramework.services.timerService.delay.create(0, function()
+            self.RequestCooldown = false
+            self.RequestCooldownDelay = nil
         end)
     end
 
     -- send request
-    self:sendLog("Successfully sent request.")
+    self:SendLog("Successfully sent request.")
 
     return AuroraFramework.services.HTTPService.request(
-        self.backendPort,
+        self.BackendPort,
         URL,
         callback
     )
 end
 
 ----------------------------------------------
--- // [File] src\addon\libraries\CodeExecution\logging.lua
+-- // [File] src\addon\classes\CodeExecution\logging.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Libraries] Code Execution - Logging
+-- [Classes] Code Execution - Logging
 --------------------------------------------------------
 
 --[[
@@ -5338,19 +5333,24 @@ end
 -------------------------------
 -- // Main
 -------------------------------
--- Send a log
+
+--[[
+    Send a log.
+]]
 ---@param log string
-function CodeExecution:sendLog(log)
+function Classes.CodeExecution:SendLog(log)
     debug.log(("[CodeExecution] %s"):format(log))
 end
 
--- Send error to backend
+--[[
+    Trigger an error in the backend.
+]]
 ---@param errorType string
 ---@param errorMessage string
-function CodeExecution:error(errorType, errorMessage)
-    self:sendLog(("ERROR (%s): %s"):format(errorType, errorMessage))
+function Classes.CodeExecution:Error(errorType, errorMessage)
+    self:SendLog(("ERROR (%s): %s"):format(errorType, errorMessage))
 
-    self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/error",
         {name = "errorType", value = errorType},
         {name = "errorMessage", value = errorMessage}
@@ -5358,10 +5358,10 @@ function CodeExecution:error(errorType, errorMessage)
 end
 
 ----------------------------------------------
--- // [File] src\addon\libraries\CodeExecution\execution.lua
+-- // [File] src\addon\classes\CodeExecution\execution.lua
 ----------------------------------------------
 --------------------------------------------------------
--- [Libraries] Code Execution - Execution
+-- [Classes] Code Execution - Execution
 --------------------------------------------------------
 
 --[[
@@ -5392,30 +5392,42 @@ end
 -------------------------------
 -- // Main
 -------------------------------
--- Fetch pending executions
-function CodeExecution:handlePendingExecutions()
-    self:sendRequest("/get-pending-executions", function(response, successful)
+
+--[[
+    Represents a pending execution.
+]]
+---@class PendingExecution
+---@field ID string The ID of this execution
+---@field functionName string The name of the function
+---@field arguments table<integer, any> The arguments
+---@field handled boolean Whether the execution has been handled or not
+
+--[[
+    Handles pending executions.
+]]
+function Classes.CodeExecution:HandlePendingExecutions()
+    self:SendRequest("/get-pending-executions", function(response, successful)
         -- success check
         if not successful then
             return
         end
 
         -- get pending executions
-        local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, CodeExecution_PendingExecution>
+        local pendingExecutions = AuroraFramework.services.HTTPService.JSON.decode(response) ---@type table<integer, PendingExecution>
 
         if not pendingExecutions then
             return
         end
 
         -- log
-        self:sendLog("Fetched pending executions, processing...")
+        self:SendLog("Fetched pending executions, processing...")
 
         -- iterate through executions
         for _, execution in pairs(pendingExecutions) do
             -- check if we've already handled this execution
-            if self.handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
+            if self.Handled[execution.ID] then -- this is in place because the "/return" http request takes time, and this may take enough time that we get the same execution again before it is recognized as handled by "/return" request
                 if execution.handled then
-                    self.handled[execution.ID] = nil -- garbage cleanup
+                    self.Handled[execution.ID] = nil -- garbage cleanup
                 end
 
                 goto continue
@@ -5426,13 +5438,13 @@ function CodeExecution:handlePendingExecutions()
             end
 
             -- log
-            self:sendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
+            self:SendLog(("Processing execution: %s (%s)"):format(execution.ID, execution.functionName))
 
             -- get function
-            local executionFunction = self:getFunctionFromExecution(execution)
+            local executionFunction = self:GetFunctionFromExecution(execution)
 
             if not executionFunction then
-                self:error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
+                self:Error("Execution", ("Function name in execution is invalid, got: %s"):format(execution.functionName))
                 goto continue
             end
 
@@ -5442,43 +5454,49 @@ function CodeExecution:handlePendingExecutions()
             )
 
             -- send result to backend
-            self:returnExecutionResults(execution, returnValues)
+            self:ReturnExecutionResults(execution, returnValues)
 
             -- mark as handled
-            self.handled[execution.ID] = true
+            self.Handled[execution.ID] = true
 
             -- log
-            self:sendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
+            self:SendLog(("Handled execution %s. Sent return values back."):format(execution.ID))
 
             ::continue::
         end
     end, false)
 end
 
--- Get function from execution
----@param execution CodeExecution_PendingExecution
+--[[
+    Get an addon lua function from an execution.
+]]
+---@param execution PendingExecution
 ---@return function
-function CodeExecution:getFunctionFromExecution(execution)
+function Classes.CodeExecution:GetFunctionFromExecution(execution)
     return server[execution.functionName]
 end
 
--- Send return values to backend
----@param execution CodeExecution_PendingExecution
+--[[
+    Send return values to backend.
+]]
+---@param execution PendingExecution
 ---@param returnValues table<integer, any>
-function CodeExecution:returnExecutionResults(execution, returnValues)
-    self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
+function Classes.CodeExecution:ReturnExecutionResults(execution, returnValues)
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/return",
         {name = "id", value = execution.ID},
         {name = "returnValues", value = AuroraFramework.services.HTTPService.JSON.encode(returnValues)} -- sorry, sw only allows GET requests
     ), nil, true)
 end
 
--- Trigger a callback
+--[[
+    Send callback data to backend.
+]]
 ---@param name string
 ---@param priority boolean
 ---@param ... any
-function CodeExecution:triggerCallback(name, priority, ...)
-    self:sendRequest(AuroraFramework.services.HTTPService.URLArgs(
+function Classes.CodeExecution:TriggerCallback(name, priority, ...)
+    self:SendRequest(AuroraFramework.services.HTTPService.URLArgs(
         "/trigger-callback",
         {name = "name", value = name},
         {name = "args", value = AuroraFramework.services.HTTPService.JSON.encode({...})}
@@ -5486,7 +5504,7 @@ function CodeExecution:triggerCallback(name, priority, ...)
 end
 
 ----------------------------------------------
--- // [File] src\addon\main\main.lua
+-- // [File] src\addon\main.lua
 ----------------------------------------------
 --------------------------------------------------------
 -- [Main] Python To SW
@@ -5520,7 +5538,6 @@ end
 -------------------------------
 -- // Main
 -------------------------------
--- Setup CodeExecution
----@type CodeExecution
-local CodeExecution = CodeExecution.new(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
-CodeExecution:start()
+
+local CodeExecution = Classes.CodeExecution:New(__PORT__, 3) ---@diagnostic disable-line -- port is overridden by package
+CodeExecution:Start()
