@@ -30,5 +30,8 @@ from dataclasses import dataclass
 # ---- // Main
 @dataclass
 class Vehicle():
+    """
+    Dataclass that represents a vehicle that can be spawned by an addon.
+    """
     path: str
     vehicleID: int
