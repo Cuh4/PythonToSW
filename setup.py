@@ -52,7 +52,7 @@ setup(
     ],
     
     project_urls = {
-        "Source code": "https://github.com/cuh4/PythonToSW"
+        "Source code": "https://github.com/Cuh4/PythonToSW"
     },
 
     install_requires = requirements,
