@@ -27,6 +27,7 @@ limitations under the License.
 # ---- // Imports
 # Main
 from PythonToSW.event import Event
+from PythonToSW import dataclasses
 from PythonToSW.addon import Addon, BaseExecution
 from PythonToSW import exceptions
 from PythonToSW import helpers
