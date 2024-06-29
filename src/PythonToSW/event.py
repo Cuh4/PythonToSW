@@ -35,6 +35,7 @@ class Event():
     >>> event.connect(lambda: print("Hello, world!"))
     >>>
     >>> event.fire()
+    "Hello, world!"
     """
 
     def __init__(self):
