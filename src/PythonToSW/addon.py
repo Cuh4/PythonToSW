@@ -595,7 +595,7 @@ class BaseExecution():
         self.functionName = functionName
         self.arguments = arguments
         
-        self.Handled = False
+        self.handled = False
         self.returnValues = []
         self.isWaiting = False
         
@@ -631,7 +631,7 @@ class BaseExecution():
             "ID" : self.ID,
             "functionName": self.functionName,
             "arguments": self.arguments,
-            "handled": self.Handled
+            "handled": self.handled
         }
         
     def _return(self, returnValues: list):
@@ -645,10 +645,10 @@ class BaseExecution():
             exceptions.InternalError: Raised if this method is called when the execution is already handled.
         """
 
-        if self.Handled:
+        if self.handled:
             raise exceptions.InternalError("Tried to return after already returning")
         
-        self.Handled = True
+        self.handled = True
         self.returnValues = returnValues
     
     def _halt(self):
@@ -678,7 +678,7 @@ class BaseExecution():
 
         self.isWaiting = True
         
-        while not self.Handled and self.isWaiting:
+        while not self.handled and self.isWaiting:
             time.sleep(0.01)
             
         return self.returnValues
