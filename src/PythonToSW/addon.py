@@ -86,6 +86,13 @@ class Addon():
         self.script = self._parseScript()
         self.vehicles: list[dataclasses.Vehicle] = []
         
+        # validate addon name
+        validatedAddonName, validationRequired = self._validateAddonName(addonName)
+        
+        if validationRequired:
+            self.log(f"Your addon name contained invalid characters and was corrected. Was: {addonName} | Now: {validatedAddonName}.")
+            self.addonName = validatedAddonName
+        
         # check if paths exist
         if not os.path.exists(self.templateAddonPath):
             raise exceptions.InternalError(f"Template addon path does not exist: {os.path.abspath(self.templateAddonPath)}")
@@ -213,7 +220,7 @@ class Addon():
         
     def getPendingExecutions(self) -> dict[str, BaseExecution]:
         """
-        Returns the pending executions.
+        Returns all pending executions.
         
         Returns:
             (dict[str, BaseExecution]) The pending executions, with the keys being the execution IDs.
@@ -399,6 +406,21 @@ class Addon():
         """
 
         return self.callbacks.copy()
+    
+    @staticmethod
+    def _validateAddonName(name: str) -> tuple[str, bool]:
+        """
+        Validates an addon name, replacing any invalid characters if needed.
+        
+        Args:
+            name: (str) The name of the addon.
+            
+        Returns:
+            (tuple[str, bool]) The validated name and a boolean indicating whether the name was changed.
+        """
+        
+        validated = name.replace(" ", "").replace("/", "").replace("\\", "").replace("\n", "").replace("\r", "")
+        return validated, validated != name
     
     def _createCallbackIfNotExists(self, name: str):
         """
