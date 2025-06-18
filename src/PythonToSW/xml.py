@@ -19,33 +19,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# // Imports
+import xmltodict
+
 # // Main
-class PTSException(Exception):
+def encode(dictionary: dict) -> str:
     """
-    Base class for all exceptions in PythonToSW.
-    """
+    XML encode a dictionary into an XML string.
 
-    def __init__(self, message: str):
-        """
-        Initializes a new instance of the `PTSException` class.
+    Args:
+        dictionary (dict): The dictionary to encode.
         
-        Args:
-            message (str): The error message for the exception.
-        """
+    Returns:
+        str: The encoded XML string.
+    """
 
-        super().__init__(message)
-        self.message = message
+    return xmltodict.unparse(dictionary)
 
-    def __str__(self):
-        """
-        Returns a string representation of the exception.
-        """
+def decode(string: str) -> dict:
+    """
+    Decode an XML string into a dictionary.
 
-        return f"PythonToSW Exception: {self.message}"
-    
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
+    Args:
+        string (str): The XML string to decode.
+        
+    Returns:
+       dict: The decoded dictionary.
+    """
 
-        return f"PTSException(message={self.message})"
+    return xmltodict.parse(string)

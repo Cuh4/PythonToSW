@@ -1,8 +1,0 @@
-{
-    "order" : [
-        "main.lua",
-        "helpers.lua",
-        "logging.lua",
-        "execution.lua"
-    ]
-}

@@ -19,33 +19,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# // Main
-class PTSException(Exception):
-    """
-    Base class for all exceptions in PythonToSW.
-    """
+# // Variables
+from __future__ import annotations
+from abc import abstractmethod
 
-    def __init__(self, message: str):
+# // Main
+class Value():
+    """
+    Base class for all values in PythonToSW.
+    """
+    
+    @staticmethod
+    def is_value(instance: Value):
         """
-        Initializes a new instance of the `PTSException` class.
+        Checks if the instance is a value.
         
         Args:
-            message (str): The error message for the exception.
+            instance (Value): The instance to check.
+        
+        Returns:
+            bool: True if the instance is a value, False otherwise.
         """
+        
+        return isinstance(instance, Value)
 
-        super().__init__(message)
-        self.message = message
-
-    def __str__(self):
+    @abstractmethod
+    def build(self):
         """
-        Returns a string representation of the exception.
+        Builds the value into a format suitable for Stormworks.
+        
+        Returns:
+            The built value.
         """
-
-        return f"PythonToSW Exception: {self.message}"
+        
+        raise NotImplementedError("The build method must be implemented by subclasses.")
     
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
-
-        return f"PTSException(message={self.message})"
+from .matrix import Matrix

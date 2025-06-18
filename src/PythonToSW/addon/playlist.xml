@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<playlist file_store="4" name="" folder_path="">
+<playlist file_store="4" name="$FORMATTED_ADDON_NAME" folder_path="data/missions/$ADDON_NAME">
 	<locations location_id_counter="1" component_id_counter="1">
 		<locations>
 			<l id="1" name="OCEAN" env_mod_spawn_num="1">

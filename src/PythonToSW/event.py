@@ -1,14 +1,10 @@
-# ----------------------------------------
-# [PythonToSW] Event
-# ----------------------------------------
-
-# A Python package that allows you to make Stormworks addons with Python.
-# Repo: https://github.com/Cuh4/PythonToSW
-
 """
-A module containing an Event class that allows you to create and fire events.
+----------------------------------------------
+PythonToSW: A Python package that allows you to make Stormworks addons with Python.
+https://github.com/Cuh4/PythonToSW
+----------------------------------------------
 
-Copyright (C) 2024 Cuh4
+Copyright (C) 2025 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,88 +19,111 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# ---- // Imports
-import threading
+# // Imports
+from threading import Thread
+import inspect
+from typing import Callable
 
-# ---- // Main
+# // Main
 class Event():
     """
-    A class that allows you to pack functions together and call them all at once in different threads.
-    
-    >>> event = Event()
-    >>> event.connect(lambda: print("Hello, world!"))
-    >>>
-    >>> event.fire()
-    "Hello, world!"
+    An event that functional callbacks can subscribe to (+ with async support!)
     """
 
     def __init__(self):
-        self.callbacks: list["function"] = []
+        """
+        Initializes a new instance of the `Event` class.
+        """    
     
-    def connect(self, callback: "function"):
+        self._callbacks = []
+
+    def subscribe(self, callback: Callable):
         """
-        Register a callback to this event.
+        Subscribe to this event.
         
         Args:
-            callback: (function) The callback to register.
+            callback (Callable): The callback to subscribe
+        """    
+        
+        self._callbacks.append(callback)
+    
+    def unsubscribe(self, callback: Callable):
         """
+        Unsubscribe a callback from this event.
 
-        self.callbacks.append(callback)
-        
-    def disconnect(self, callback: "function"):
-        """
-        Unregister a callback from this event.
-        
         Args:
-            callback: (function) The callback to unregister.
-            
-        Raises:
-            ValueError: Raised if the callback is not connected to this event.
-        """
-
-        self.callbacks.remove(callback)
+            callback (Callable): The callback to unsubscribe
+        """        
         
-    def disconnectAll(self):
-        """
-        Unregister all callbacks from this event.
-        """
-
-        self.callbacks = []
-        
-    def getCallbacks(self):
-        """
-        Return all callbacks connected to this event.
-        
-        Returns:
-            list[function]: The callbacks connected to this event.
-        """
-
-        return self.callbacks.copy()
-
+        self._callbacks.remove(callback)
+    
     def fire(self, *args, **kwargs):
         """
-        Fire all callbacks connected to this event.
+        Fire this event (non-async callbacks only).
         
         Args:
-            *args: (list) The arguments to pass to the callbacks.
-            **kwargs: (dict) The keyword arguments to pass to the callbacks.
+            *args: The arguments to pass to the callbacks
+            **kwargs: The keyword arguments to pass to the callbacks
+        """        
+        
+        for callback in self._callbacks:
+            if not inspect.iscoroutinefunction(callback):
+                callback(*args, **kwargs)
+                
+    def fire_threaded(self, *args, **kwargs):
         """
-
-        for callback in self.getCallbacks():
-            self._call(callback, *args, **kwargs)
-            
-    def _call(self, func: "function", *args, **kwargs):
-        """
-        Call a function in a new thread.
+        Fire this event in a separate thread (non-async callbacks only).
         
         Args:
-            func: (function) The function to call.
-            *args: (list) The arguments to pass to the function.
-            **kwargs: (dict) The keyword arguments to pass to the function.
+            *args: The arguments to pass to the callbacks
+            **kwargs: The keyword arguments to pass to the callbacks
+        """        
+        
+        thread = Thread(target = self.fire, args = args, kwargs = kwargs, daemon = True)
+        thread.start()
+                
+    async def fire_async(self, *args, **kwargs):
         """
-
-        threading.Thread(
-            target = func,
-            args = args,
-            kwargs = kwargs
-        ).start()
+        Fire this event (async callbacks only).
+        
+        Args:
+            *args: The arguments to pass to the callbacks
+            **kwargs: The keyword arguments to pass to the callbacks
+        """        
+        
+        for callback in self._callbacks:
+            if inspect.iscoroutinefunction(callback):
+                await callback(*args, **kwargs)
+    
+    def __add__(self, callback: Callable):
+        """
+        Subscribe to this event using the `+=` operator.
+        
+        Args:
+            callback (Callable): The callback to subscribe
+        """    
+        
+        self.subscribe(callback)
+        return self
+    
+    def __sub__(self, callback: Callable):
+        """
+        Unsubscribe a callback from this event using the `-=` operator.
+        
+        Args:
+            callback (Callable): The callback to unsubscribe
+        """    
+        
+        self.unsubscribe(callback)
+        return self
+    
+    def __call__(self, *args, **kwargs):
+        """
+        Fire this event using the `()` operator.
+        
+        Args:
+            *args: The arguments to pass to the callbacks
+            **kwargs: The keyword arguments to pass to the callbacks
+        """    
+        
+        self.fire(*args, **kwargs)

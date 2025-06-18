@@ -19,33 +19,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# // Imports
+import logging
+
+from coloredlogs import install as _install
+
 # // Main
-class PTSException(Exception):
+logger = logging.getLogger("cuhHub")
+
+console_handler = logging.StreamHandler()
+logger.addHandler(console_handler)
+
+def install(level: int):
     """
-    Base class for all exceptions in PythonToSW.
+    Install colored logs with the specified log level.
+
+    Args:
+        level (int): The log level to set.
     """
-
-    def __init__(self, message: str):
-        """
-        Initializes a new instance of the `PTSException` class.
-        
-        Args:
-            message (str): The error message for the exception.
-        """
-
-        super().__init__(message)
-        self.message = message
-
-    def __str__(self):
-        """
-        Returns a string representation of the exception.
-        """
-
-        return f"PythonToSW Exception: {self.message}"
     
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
+    _install(level = level, logger = logger, fmt = "%(asctime)s - %(levelname)s - %(message)s")
 
-        return f"PTSException(message={self.message})"
+def set_log_level(level: int):
+    """
+    Set the log level for the logger.
+    
+    Args:
+        level (int): The log level to set.
+    """
+    
+    install(level)
+    logger.setLevel(level)
+    console_handler.setLevel(level)

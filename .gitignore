@@ -1,8 +1,10 @@
-src/addon/script.lua
-src/test.py
-__pycache__/
+# Cache
+*.pyc
+__pycache__
 
+# Distribution files
+build
 dist
-*.egg-info
 
-TODO.txt
+# Testing
+src/test.py

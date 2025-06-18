@@ -19,33 +19,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# // Imports
+import pytest
+
 # // Main
-class PTSException(Exception):
-    """
-    Base class for all exceptions in PythonToSW.
-    """
-
-    def __init__(self, message: str):
-        """
-        Initializes a new instance of the `PTSException` class.
-        
-        Args:
-            message (str): The error message for the exception.
-        """
-
-        super().__init__(message)
-        self.message = message
-
-    def __str__(self):
-        """
-        Returns a string representation of the exception.
-        """
-
-        return f"PythonToSW Exception: {self.message}"
-    
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
-
-        return f"PTSException(message={self.message})"

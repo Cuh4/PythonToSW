@@ -1,6 +1,0 @@
-{
-    "order" : [
-        "init.lua",
-        "CodeExecution"
-    ]
-}

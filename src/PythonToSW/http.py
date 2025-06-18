@@ -19,33 +19,47 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# // Imports
+from urllib.parse import (
+    quote,
+    unquote
+)
+
+from uuid import uuid4
+
 # // Main
-class PTSException(Exception):
+def generate_uuid() -> str:
     """
-    Base class for all exceptions in PythonToSW.
-    """
-
-    def __init__(self, message: str):
-        """
-        Initializes a new instance of the `PTSException` class.
-        
-        Args:
-            message (str): The error message for the exception.
-        """
-
-        super().__init__(message)
-        self.message = message
-
-    def __str__(self):
-        """
-        Returns a string representation of the exception.
-        """
-
-        return f"PythonToSW Exception: {self.message}"
+    Generate a random UUID.
     
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
+    Returns:
+        str: The generated UUID as a string.
+    """
+    
+    return str(uuid4())
 
-        return f"PTSException(message={self.message})"
+def url_encode(string: str) -> str:
+    """
+    URL encode a string.
+    
+    Args:
+        string (str): The string to URL encode.
+        
+    Returns:
+        str: The URL encoded string.
+    """
+
+    return quote(string)
+
+def url_decode(string: str) -> str:
+    """
+    URL decode a URL encoded string.
+    
+    Args:
+        string (str): The URL encoded string to decode.
+        
+    Returns:
+        str: The decoded string.
+    """
+
+    return unquote(string)
