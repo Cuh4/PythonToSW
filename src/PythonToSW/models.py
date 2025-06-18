@@ -35,6 +35,7 @@ from typing import (
 
 from concurrent.futures import Future
 
+from . import CallEnum
 from . import Value
 
 # // Main
@@ -48,7 +49,7 @@ class Call(BaseModel):
     )
     
     id: str
-    name: str
+    name: CallEnum
     arguments: list[Union[Any, Value]]
     future: Future = Field(exclude = True)
     

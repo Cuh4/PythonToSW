@@ -39,6 +39,10 @@ from .log import logger
 from .event import Event
 from .values import *
 
+from .enums import (
+    CallEnum
+)
+
 from .models import (
     Call
 )

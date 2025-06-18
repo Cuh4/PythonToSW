@@ -41,6 +41,7 @@ from . import xml
 from . import http
 from . import Event
 from . import logger
+from . import CallEnum
 
 from .models import (
     Call
@@ -280,12 +281,12 @@ class Addon():
         call.future.set_result(tuple(return_values))
         del self.calls[call.id]
         
-    def call(self, function: str, *args) -> tuple[Any, ...]:
+    def call(self, function: CallEnum, *args) -> tuple[Any, ...]:
         """
         Calls a `server.` function in the addon.
         
         Args:
-            function (str): The name of the function to call.
+            function (CallEnum): The name of the function to call.
             *args: The arguments to pass to the function.
         
         Returns:
