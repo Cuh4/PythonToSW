@@ -23,10 +23,12 @@ limitations under the License.
 from __future__ import annotations
 
 import os
-
+import json
 from fastapi import FastAPI
 import uvicorn
+from typing import Any, Callable
 from logging import WARNING
+from concurrent.futures import Future
 
 from . import (
     ADDON_SCRIPT_CONTENT,
@@ -41,8 +43,7 @@ from . import Event
 from . import logger
 
 from .models import (
-    Call,
-    Return
+    Call
 )
 
 # // Main
@@ -77,6 +78,9 @@ class Addon():
             "script.lua" : ADDON_SCRIPT_CONTENT,
             "playlist.xml" : ADDON_PLAYLIST_CONTENT
         }
+        
+        self.calls: dict[str, Call] = {}
+        self.callbacks: dict[str, Event] = {}
 
         self.app = FastAPI()
         
@@ -161,6 +165,68 @@ class Addon():
             
         self._info(f"Addon created/updated successfully at: {self.path}")
     
+    def _create_endpoints(self):
+        """
+        Creates the FastAPI endpoints for the addon.
+        """
+        
+        @self.app.get("/calls")
+        def calls():
+            """
+            Returns a list of all calls made to the addon.
+            """
+
+            return [call.model_dump_json(indent = 4) for call in self.calls.values()]
+        
+        @self.app.get("/calls/{call_id}/return")
+        def call_return(call_id: str, return_values: str):
+            """
+            Handles the return values from a call to the addon.
+            
+            Args:
+                call_id (str): The ID of the call.
+                return_values (str): The return values from the call, serialized as a JSON string.
+            """
+            
+            if call_id not in self.calls:
+                self._error(f"Call with ID {call_id} not found.")
+                return ""
+            
+            try:
+                return_values = json.loads(return_values)
+            except json.JSONDecodeError as exception:
+                self._error(f"Failed to decode return values: {exception}")
+                return ""
+            
+            call = self.calls[call_id]
+            self._handle_call(call, return_values)
+
+            return ""
+            
+        @self.app.get("/callback/{name}")
+        def callback(name: str, arguments: str):
+            """
+            Handles a callback from the Stormworks game.
+            
+            Args:
+                name (str): The name of the callback.
+                arguments (str): The arguments passed to the callback, serialized as a JSON string.
+            """
+            
+            if name not in self.callbacks: # that's fine
+                return ""
+            
+            try:
+                arguments = json.loads(arguments)
+            except json.JSONDecodeError as exception:
+                self._error(f"Failed to decode callback arguments: {exception}")
+                return ""
+            
+            callback = self.callbacks[name]
+            callback(arguments)
+            
+            return ""
+    
     def _on_start(self):
         """
         Internal handler for the FastAPI app startup event.
@@ -186,3 +252,55 @@ class Addon():
             port = self.port,
             log_level = WARNING
         )
+        
+    def connect(self, name: str, callback: Callable):
+        """
+        Connects a callback to a specific event in the addon.
+        
+        Args:
+            name (str): The name of the event to connect to, e.g "onTick".
+            callback (Callable): The callback function to call when the event is fired.
+        """
+        
+        if name not in self.callbacks:
+            self.callbacks[name] = Event()
+        
+        self.callbacks[name] += callback
+        self._info(f"Connected callback to event: {name}")
+        
+    def _handle_call(self, call: Call, return_values: list[Any]):
+        """
+        Handles the finalization of a call to a `server.` function in the addon.
+        
+        Args:
+            call (Call): The call to handle.
+            return_values (list[Any]): The return values from the call.
+        """
+        
+        call.future.set_result(tuple(return_values))
+        del self.calls[call.id]
+        
+    def call(self, function: str, *args) -> tuple[Any, ...]:
+        """
+        Calls a `server.` function in the addon.
+        
+        Args:
+            function (str): The name of the function to call.
+            *args: The arguments to pass to the function.
+        
+        Returns:
+            tuple[Any, ...]: Whatever the function returns.
+        """
+        
+        call_id = http.generate_uuid()
+
+        call = Call(
+            id = call_id,
+            name = function,
+            arguments = list(args),
+            future = Future()
+        )
+
+        self.calls[call_id] = call
+
+        return call.future.result()

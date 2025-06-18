@@ -40,8 +40,7 @@ from .event import Event
 from .values import *
 
 from .models import (
-    Call,
-    Return
+    Call
 )
 
 from .addon import (

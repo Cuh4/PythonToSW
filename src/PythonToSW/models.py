@@ -22,6 +22,7 @@ limitations under the License.
 # // Imports
 from pydantic import (
     BaseModel,
+    Field,
     field_serializer,
     SerializationInfo,
     ConfigDict
@@ -31,6 +32,8 @@ from typing import (
     Union,
     Any
 )
+
+from concurrent.futures import Future
 
 from . import Value
 
@@ -47,6 +50,7 @@ class Call(BaseModel):
     id: str
     name: str
     arguments: list[Union[Any, Value]]
+    future: Future = Field(exclude = True)
     
     @field_serializer("arguments")
     def serialize_arguments(self, arguments: Union[Any, Value], _info: SerializationInfo):
@@ -66,11 +70,3 @@ class Call(BaseModel):
                 arguments[index] = argument.build()
                 
         return arguments
-    
-class Return(BaseModel):
-    """
-    Represents a return value from a function in the addon.
-    """
-    
-    id: str
-    value: Union[dict, list, str, int, float, bool, None]
