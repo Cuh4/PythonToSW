@@ -21,10 +21,11 @@ limitations under the License.
 
 # // Variables
 from __future__ import annotations
-from abc import abstractmethod
+from typing import Any
+from abc import abstractmethod, ABCMeta
 
 # // Main
-class Value():
+class Value(metaclass = ABCMeta):
     """
     Base class for all values in PythonToSW.
     """
@@ -48,10 +49,30 @@ class Value():
         """
         Builds the value into a format suitable for Stormworks.
         
+        Raises:
+            NotImplementedError: If the method is not implemented by a subclass.
+        
         Returns:
             The built value.
         """
         
-        raise NotImplementedError("The build method must be implemented by subclasses.")
+        raise NotImplementedError("The `build` method must be implemented by subclasses.")
+    
+    @abstractmethod
+    def rebuild(cls, value: Any) -> Value:
+        """
+        Creates a value from the serialized variant (`.build()` return value).
+        
+        Args:
+            value (Any): The value to convert.
+            
+        Raises:
+            NotImplementedError: If the method is not implemented by a subclass.
+        
+        Returns:
+            Value: The converted value.
+        """
+        
+        raise NotImplementedError("The `rebuild` method must be implemented by subclasses.")
     
 from .matrix import Matrix

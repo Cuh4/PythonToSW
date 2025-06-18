@@ -60,6 +60,33 @@ class Matrix(Value):
             0, 0, 1, 0,
             self.x, self.y, self.z, 1
         ]
+        
+    @classmethod
+    def rebuild(cls, value: list) -> Matrix:
+        """
+        Rebuilds a matrix from a Stormworks value.
+
+        Args:
+            value (list): The Stormworks value to rebuild from.
+            
+        Raises:
+            ValueError: If the value does not have the expected length of 16 elements.
+
+        Returns:
+            Matrix: The rebuilt matrix.
+        """
+        
+        if not isinstance(value, list):
+            raise ValueError("Invalid matrix value type. Expected a list.")
+
+        if len(value) != 16:
+            raise ValueError("Invalid matrix value length. Expected 16 elements.")
+
+        return cls(
+            x = value[12],
+            y = value[13],
+            z = value[14]
+        )
 
     def distance(self, other: Matrix) -> float:
         """
