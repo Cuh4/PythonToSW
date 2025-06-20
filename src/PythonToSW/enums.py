@@ -23,6 +23,8 @@ limitations under the License.
 from enum import Enum
 
 # // Main
+__all__ = ["CallEnum"]
+
 class CallEnum(Enum):
     """
     An enum for all the available calls in Stormworks.
