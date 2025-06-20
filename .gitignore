@@ -2,6 +2,9 @@
 *.pyc
 __pycache__
 
+# Code-Generated
+src/PythonToSW/addon-persistence
+
 # Distribution files
 build
 dist
