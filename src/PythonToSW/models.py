@@ -39,7 +39,10 @@ from . import CallEnum
 from . import BaseValue
 
 # // Main
-__all__ = ["Call", "Token"]
+__all__ = [
+    "Call",
+    "Token"
+]
 
 class Token(BaseModel):
     """

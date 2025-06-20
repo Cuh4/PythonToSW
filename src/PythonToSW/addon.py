@@ -62,6 +62,11 @@ from . import (
 )
 
 # // Main
+__all__ = [
+    "Addon",
+    "TOKEN_EXPIRY_SECONDS"
+]
+
 TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
 
 class Addon():

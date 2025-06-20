@@ -23,7 +23,9 @@ limitations under the License.
 from enum import Enum
 
 # // Main
-__all__ = ["CallEnum"]
+__all__ = [
+    "CallEnum"
+]
 
 class CallEnum(Enum):
     """
