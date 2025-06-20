@@ -266,15 +266,23 @@ class Addon():
         """
         
         @self.router.get(
+            "/ok",
+            response_model = str
+        )
+        def alive() -> str:
+            """
+            Performs nothing. This is for the in-game addon to find out if we're alive.
+            """
+            
+            return "ok"
+        
+        @self.router.get(
             "/calls",
             response_model = list[Call]
         )
         def calls() -> list[Call]:
             """
-            Returns a list of all calls made to the addon.
-            
-            Returns:
-                list[Call]: A list of calls made to the addon, serialized as JSON.
+            Returns a list of all unprocessed calls for the in-game addon.
             """
 
             return [*self.calls.values()]
@@ -285,11 +293,7 @@ class Addon():
         )
         def call_return(call_id: str, return_values: str) -> str:
             """
-            Handles the return values from a call to the addon.
-            
-            Args:
-                call_id (str): The ID of the call.
-                return_values (str): The return values from the call, serialized as a JSON string.
+            Completes a call.
             """
             
             if call_id not in self.calls:
@@ -313,11 +317,7 @@ class Addon():
         )
         def callback(name: str, arguments: str):
             """
-            Handles a callback from the Stormworks game.
-            
-            Args:
-                name (str): The name of the callback.
-                arguments (str): The arguments passed to the callback, serialized as a JSON string.
+            Handles a callback from the in-game addon.
             """
             
             if name not in self.callbacks: # that's fine
@@ -339,13 +339,10 @@ class Addon():
         )
         def error(message: str):
             """
-            Raises any errors propagated from the addon.
-            
-            Args:
-                message (str): The error message.
+            Propagates errors from the in-game addon to here.
             """
             
-            self._error(f"{message} (from addon)")
+            self._error(f"{message} (from in-game)")
             return ""
         
         self.app.include_router(self.router)

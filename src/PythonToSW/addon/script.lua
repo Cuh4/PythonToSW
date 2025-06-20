@@ -11959,6 +11959,16 @@ SWToPython.Uplink = Noir.Services:CreateService(
 ]]
 function SWToPython.Uplink:ServiceInit()
     --[[
+        The status of the PythonToSW server.
+    ]]
+    self.Alive = false
+
+    --[[
+        How often to check if the PythonToSW server is alive.
+    ]]
+    self.AliveCheckTickInterval = 5
+
+    --[[
         The port of the PythonToSW server.
     ]]
     ---@diagnostic disable-next-line: undefined-global
@@ -12042,6 +12052,10 @@ function SWToPython.Uplink:ServiceStart()
     Noir.Services.TaskService:AddTickTask(function()
         self:HandleCalls()
     end, self.TickInterval, nil, true)
+
+    Noir.Services.TaskService:AddTickTask(function()
+        self:CheckAlive()
+    end, self.AliveCheckTickInterval, nil, true)
 end
 
 --[[
@@ -12050,7 +12064,13 @@ end
 ---@param endpoint string
 ---@param params table<string, any>
 ---@param callback fun(response: any)|nil
-function SWToPython.Uplink:Request(endpoint, params, callback)
+---@param error_callback fun(response: NoirHTTPResponse)|nil
+---@param overrideAliveCheck boolean|nil
+function SWToPython.Uplink:Request(endpoint, params, callback, error_callback, overrideAliveCheck)
+    if not self.Alive and not overrideAliveCheck then
+        return
+    end
+
     print("HTTP > "..endpoint)
 
     params["token"] = self.Token
@@ -12066,6 +12086,11 @@ function SWToPython.Uplink:Request(endpoint, params, callback)
         self.Port,
         function (response)
             if not response:IsOk() then
+                if error_callback then
+                    error_callback(response)
+                    return
+                end
+
                 warn("Failed to send request to PythonToSW server: "..response.Text)
                 return
             end
@@ -12104,6 +12129,12 @@ end
 function SWToPython.Uplink:HandleCalls()
     ---@param calls table<integer, SWToPython.Call>
     self:Request("/calls", {}, function(calls)
+        for handled, _ in pairs(self.HandledCalls) do
+            if not calls[handled] then -- PythonToSW server has deleted the handled call which can take a bit after we actually handle it,
+                self.HandledCalls[handled] = nil -- so we dont need to keep track of it anymore
+            end
+        end
+
         for _, _call in pairs(calls) do
             local call = SWToPython.Classes.Call:FromTable(_call)
             self:HandleCall(call)
@@ -12151,6 +12182,17 @@ function SWToPython.Uplink:HandleCallbacks()
         if self.Ticks % self.TickInterval == 0 then
             self:ForwardCallback("onTick", self.Callbacks)
         end
+    end)
+end
+
+--[[
+    Checks if the PythonToSW server is alive.
+]]
+function SWToPython.Uplink:CheckAlive()
+    self:Request("/ok", {}, function(response)
+        self.Alive = true
+    end, function()
+        self.Alive = false
     end)
 end
 
