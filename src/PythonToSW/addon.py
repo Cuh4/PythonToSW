@@ -54,7 +54,11 @@ from . import http
 from . import logger
 from . import Event
 from . import Persistence
-from . import CallEnum
+
+from . import (
+    CallEnum,
+    CallbackEnum
+)
 
 from . import (
     Call,
@@ -106,7 +110,7 @@ class Addon():
         }
         
         self.calls: dict[str, Call] = {}
-        self.callbacks: dict[str, Event] = {}
+        self.callbacks: dict[CallbackEnum, Event] = {}
 
         self.app = FastAPI(title = self._format_name(), docs_url = None, redoc_url = None, openapi_url = None)
         self.router = APIRouter(dependencies = [Depends(self._token_dependency)])
@@ -399,12 +403,12 @@ class Addon():
         except Exception as exception:
             raise PTSCallbackException(f"Something went wrong with the `{name}` event. Are your callbacks expecting the right amount of arguments?") from exception
         
-    def connect(self, name: str, callback: Callable):
+    def connect(self, name: CallbackEnum, callback: Callable):
         """
-        Connects a callback to a specific event in the addon.
+        Connects the passed callable argument to a specific game callback.
         
         Args:
-            name (str): The name of the event to connect to, e.g "onTick".
+            name (CallbackEnum): The in-game callback to connect to
             callback (Callable): The callback function to call when the event is fired.
         """
         
@@ -412,7 +416,7 @@ class Addon():
             self.callbacks[name] = Event()
         
         self.callbacks[name] += callback
-        self._info(f"Connected callback to event: {name}")
+        self._info(f"Connected callback to game callback: {name}")
         
     def _handle_call(self, call: Call, return_values: list[Any]):
         """
