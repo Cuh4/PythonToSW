@@ -34,7 +34,6 @@ class CallbackEnum(Enum):
     """
     
     ONCLEAROILSPILL = "onClearOilSpill"
-    ONTICK = "onTick"
     ONCREATE = "onCreate"
     ONDESTROY = "onDestroy"
     ONCUSTOMCOMMAND = "onCustomCommand"
