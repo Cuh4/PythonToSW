@@ -44,12 +44,8 @@ from .models import *
 ADDON_SCRIPT_CONTENT = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "script.lua"), "r")
 ADDON_PLAYLIST_CONTENT = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "playlist.xml"), "r")
 
-from .addon import (
-    Addon
-)
+from .addon import *
 
 # // Main
 from logging import INFO as _INFO
 log.install(_INFO)
-
-logger.info("PythonToSW says hello!")
