@@ -19,33 +19,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+# // Imports
+from fastapi import HTTPException
+
 # // Main
 class PTSException(Exception):
     """
     Base class for all exceptions in PythonToSW.
     """
 
-    def __init__(self, message: str):
+class PTSCallbackException(PTSException):
+    """
+    Raised when something goes wrong with addon callbacks.
+    """
+    
+class PTSHTTPException(PTSException, HTTPException):
+    """
+    Exception class for HTTP errors in PythonToSW.
+    Inherits from both `PTSException` and FastAPI's `HTTPException`.
+    """
+
+    def __init__(self, status_code: int, detail: str):
         """
-        Initializes a new instance of the `PTSException` class.
+        Initializes a new instance of the `PTSHTTPException` class.
         
         Args:
-            message (str): The error message for the exception.
+            status_code (int): The HTTP status code for the exception.
+            detail (str): The detail message for the exception.
         """
 
-        super().__init__(message)
-        self.message = message
-
-    def __str__(self):
-        """
-        Returns a string representation of the exception.
-        """
-
-        return f"PythonToSW Exception: {self.message}"
-    
-    def __repr__(self):
-        """
-        Returns a string representation of the exception for debugging.
-        """
-
-        return f"PTSException(message={self.message})"
+        PTSException.__init__(self, detail)
+        HTTPException.__init__(self, status_code = status_code, detail = detail)

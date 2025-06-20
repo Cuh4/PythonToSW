@@ -24,7 +24,14 @@ from __future__ import annotations
 
 import os
 import json
-from fastapi import FastAPI
+
+from fastapi import (
+    FastAPI,
+    Query,
+    Depends,
+    APIRouter
+)
+
 import uvicorn
 from typing import Any, Callable
 from logging import WARNING
@@ -35,8 +42,12 @@ from . import (
     ADDON_PLAYLIST_CONTENT
 )
 
+from .exceptions import (
+    PTSCallbackException,
+    PTSHTTPException
+)
+
 from . import io
-from . import exceptions
 from . import xml
 from . import http
 from . import Event
@@ -58,7 +69,8 @@ class Addon():
         name: str,
         *,
         port: int,
-        path: str|None = r"%appdata%/Stormworks/data/missions"
+        path: str|None = r"%appdata%/Stormworks/data/missions",
+        uvicorn_log_level: int = WARNING
     ):
         r"""
         Initializes a new instance of the `Addon` class.
@@ -66,7 +78,8 @@ class Addon():
         Args:
             name (str): The name of the addon. This should be unique and not conflict with other addons.
             port (int): The port to run the addon on.
-            path (str | None, optional): The path to the addon data. Defaults to "\%appdata\%/Stormworks/data/missions".
+            path (str | None, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
+            uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
         """
         
         self.name = name
@@ -83,9 +96,21 @@ class Addon():
         self.calls: dict[str, Call] = {}
         self.callbacks: dict[str, Event] = {}
 
-        self.app = FastAPI()
+        self.app = FastAPI(title = self._format_name(), docs_url = None, redoc_url = None, openapi_url = None)
+        self.router = APIRouter(dependencies = [Depends(self._token_dependency)])
+        self.uvicorn_log_level = uvicorn_log_level
         
         self.on_start = Event()
+    
+    def _validate_name(self, name: str):
+        """
+        Validates the name of the addon.
+        
+        Args:
+            name (str): The name of the addon.
+        """
+        
+        return name.replace("/", "").replace("\r", "").replace("\n", "").replace("\\", "")
         
     def _debug(self, message: str):
         """
@@ -148,7 +173,7 @@ class Addon():
             str: The content with placeholders replaced.
         """
         
-        return content.replace("$FORMATTED_ADDON_NAME", self._format_name()).replace("$ADDON_NAME", self.name).replace("$REQUEST_TOKEN", self.token)
+        return content.replace("__FORMATTED_ADDON_NAME", f"{self._format_name()}").replace("__ADDON_NAME", self.name).replace("__REQUEST_TOKEN", f"\"{self.token}\"").replace("__PORT", str(self.port))
     
     def _create_addon(self):
         """
@@ -166,21 +191,49 @@ class Addon():
             
         self._info(f"Addon created/updated successfully at: {self.path}")
     
+    def _token_dependency(self, token: str = Query()):
+        """
+        A FastAPI dependency for checking the request token.
+        
+        Args:
+            token (str): The token to check for in the query parameters.
+            
+        Raises:
+            PTSHTTPException: If the token does not match the expected token.
+        
+        Returns:
+            str: The token if it exists, otherwise raises an PTSHTTPException.
+        """
+        
+        if token != self.token:
+            raise PTSHTTPException(401, "no_auth: Invalid token provided.")
+        
+        return token
+    
     def _create_endpoints(self):
         """
         Creates the FastAPI endpoints for the addon.
         """
         
-        @self.app.get("/calls")
-        def calls():
+        @self.router.get(
+            "/calls",
+            response_model = list[Call]
+        )
+        def calls() -> list[Call]:
             """
             Returns a list of all calls made to the addon.
+            
+            Returns:
+                list[Call]: A list of calls made to the addon, serialized as JSON.
             """
 
-            return [call.model_dump_json(indent = 4) for call in self.calls.values()]
+            return [*self.calls.values()]
         
-        @self.app.get("/calls/{call_id}/return")
-        def call_return(call_id: str, return_values: str):
+        @self.router.get(
+            "/calls/{call_id}/return",
+            response_model = str
+        )
+        def call_return(call_id: str, return_values: str) -> str:
             """
             Handles the return values from a call to the addon.
             
@@ -204,7 +257,10 @@ class Addon():
 
             return ""
             
-        @self.app.get("/callback/{name}")
+        @self.router.get(
+            "/callbacks/{name}",
+            response_model = str
+        )
         def callback(name: str, arguments: str):
             """
             Handles a callback from the Stormworks game.
@@ -223,10 +279,26 @@ class Addon():
                 self._error(f"Failed to decode callback arguments: {exception}")
                 return ""
             
-            callback = self.callbacks[name]
-            callback(arguments)
+            self._handle_callback(name, arguments)
             
             return ""
+        
+        @self.router.get(
+            "/error",
+            response_model = str
+        )
+        def error(message: str):
+            """
+            Raises any errors propagated from the addon.
+            
+            Args:
+                message (str): The error message.
+            """
+            
+            self._error(f"{message} (from addon)")
+            return ""
+        
+        self.app.include_router(self.router)
     
     def _on_start(self):
         """
@@ -234,7 +306,7 @@ class Addon():
         """
         
         self._info("Started!")
-        self.on_start.fire()
+        self.on_start.fire_threaded()
         
     def start(self):
         """
@@ -244,15 +316,36 @@ class Addon():
         self._info(f"Starting on port {self.port}...")     
         
         self._create_addon()
+        self._create_endpoints()
         
         self.app.add_event_handler("startup", self._on_start)
         
         uvicorn.run(
             self.app,
-            host = "127.0.0.1",
+            host = "localhost",
             port = self.port,
-            log_level = WARNING
+            log_level = self.uvicorn_log_level
         )
+        
+    def _handle_callback(self, name: str, arguments: list[Any]):
+        """
+        Handles a callback from Stormworks and fires the corresponding event (if any)
+        
+        Args:
+            name (str): The name of the callback.
+            arguments (list[Any]): The arguments passed to the callback.
+            
+        Raises:
+            PTSCallbackException: If the event does not exist.
+        """
+        
+        if name not in self.callbacks:
+            return
+        
+        try:
+            self.callbacks[name].fire_threaded(*arguments)
+        except Exception as exception:
+            raise PTSCallbackException(f"Something went wrong with the `{name}` event. Are your callbacks expecting the right amount of arguments?") from exception
         
     def connect(self, name: str, callback: Callable):
         """
