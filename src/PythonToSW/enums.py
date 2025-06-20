@@ -24,8 +24,57 @@ from enum import Enum
 
 # // Main
 __all__ = [
-    "CallEnum"
+    "CallEnum",
+    "CallbackEnum"
 ]
+
+class CallbackEnum(Enum):
+    """
+    An enum for all the available callbacks in Stormworks.
+    """
+    
+    ONCLEAROILSPILL = "onClearOilSpill"
+    ONTICK = "onTick"
+    ONCREATE = "onCreate"
+    ONDESTROY = "onDestroy"
+    ONCUSTOMCOMMAND = "onCustomCommand"
+    ONCHATMESSAGE = "onChatMessage"
+    ONPLAYERJOIN = "onPlayerJoin"
+    ONPLAYERSIT = "onPlayerSit"
+    ONPLAYERUNSIT = "onPlayerUnsit"
+    ONCHARACTERSIT = "onCharacterSit"
+    ONCHARACTERUNSIT = "onCharacterUnsit"
+    ONCHARACTERPICKUP = "onCharacterPickup"
+    ONCREATURESIT = "onCreatureSit"
+    ONCREATUREUNSIT = "onCreatureUnsit"
+    ONCREATUREPICKUP = "onCreaturePickup"
+    ONEQUIPMENTPICKUP = "onEquipmentPickup"
+    ONEQUIPMENTDROP = "onEquipmentDrop"
+    ONPLAYERRESPAWN = "onPlayerRespawn"
+    ONPLAYERLEAVE = "onPlayerLeave"
+    ONToggleMAP = "onToggleMap"
+    ONPLAYERDIE = "onPlayerDie"
+    ONVEHICLESPAWN = "onVehicleSpawn"
+    ONGROUPSPAWN = "onGroupSpawn"
+    ONVEHICLEDESPAWN = "onVehicleDespawn"
+    ONVEHICLELOAD = "onVehicleLoad"
+    ONVEHICLEUNLOAD = "onVehicleUnload"
+    ONVEHICLETELEPORT = "onVehicleTeleport"
+    ONOBJECTLOAD = "onObjectLoad"
+    ONOBJECTUNLOAD = "onObjectUnload"
+    ONBUTTONPRESS = "onButtonPress"
+    ONSPAWNADDONCOMPONENT = "onSpawnAddonComponent"
+    ONVEHICLEDAMAGED = "onVehicleDamaged"
+    HTTPREPLY = "httpReply"
+    ONFIREEXTINGUISHED = "onFireExtinguished"
+    ONFORESTFIRESPAWNED = "onForestFireSpawned"
+    ONFORESTFIREEXTINGUISHED = "onForestFireExtinguished"
+    ONTORNADO = "onTornado"
+    ONMETEOR = "onMeteor"
+    ONTUNAMI = "onTsunami"
+    ONWHIRLPOOL = "onWhirlpool"
+    ONVOLCANO = "onVolcano"
+    ONOILSPILL = "onOilSpill"
 
 class CallEnum(Enum):
     """
