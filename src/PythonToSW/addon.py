@@ -32,6 +32,7 @@ from fastapi import (
     APIRouter
 )
 
+import threading
 import uvicorn
 import time
 from typing import Any, Callable
@@ -68,10 +69,12 @@ from . import (
 # // Main
 __all__ = [
     "Addon",
-    "TOKEN_EXPIRY_SECONDS"
+    "TOKEN_EXPIRY_SECONDS",
+    "TPS"
 ]
 
 TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
+TPS = 1 / 30 # how many times a second to call onTick event
 
 class Addon():
     """
@@ -117,6 +120,7 @@ class Addon():
         self.uvicorn_log_level = uvicorn_log_level
         
         self.on_start = Event()
+        self.on_tick = Event()
         
     def _generate_token(self) -> str:
         """
@@ -287,14 +291,14 @@ class Addon():
         
         @self.router.get(
             "/calls",
-            response_model = list[Call]
+            response_model = dict[str, Call]
         )
         def calls() -> list[Call]:
             """
             Returns a list of all unprocessed calls for the in-game addon.
             """
 
-            return [*self.calls.values()]
+            return self.calls
         
         @self.router.get(
             "/calls/{call_id}/return",
@@ -329,13 +333,16 @@ class Addon():
             Handles a callback from the in-game addon.
             """
             
-            if name not in self.callbacks: # that's fine
-                return ""
-            
             try:
                 arguments = json.loads(arguments)
             except json.JSONDecodeError as exception:
                 self._error(f"Failed to decode callback arguments: {exception}")
+                return ""
+            
+            try:
+                name = CallbackEnum(name)
+            except ValueError as exception:
+                self._error(f"Unknown callback name of {name}")
                 return ""
             
             self._handle_callback(name, arguments)
@@ -356,12 +363,23 @@ class Addon():
         
         self.app.include_router(self.router)
     
+    def _on_tick(self):
+        """
+        Fires the `on_tick` event on a separate thread.
+        """
+        
+        while True:
+            self.on_tick.fire_threaded()
+            time.sleep(TPS)
+    
     def _on_start(self):
         """
         Internal handler for the FastAPI app startup event.
         """
         
         self._info("Started!")
+
+        threading.Thread(target = self._on_tick, daemon = True).start()
         self.on_start.fire_threaded()
         
     def start(self):
@@ -383,12 +401,12 @@ class Addon():
             log_level = self.uvicorn_log_level
         )
         
-    def _handle_callback(self, name: str, arguments: list[Any]):
+    def _handle_callback(self, name: CallbackEnum, arguments: list[Any]):
         """
         Handles a callback from Stormworks and fires the corresponding event (if any)
         
         Args:
-            name (str): The name of the callback.
+            name (CallbackEnum): The name of the callback.
             arguments (list[Any]): The arguments passed to the callback.
             
         Raises:
