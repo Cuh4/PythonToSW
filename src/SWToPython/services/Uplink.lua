@@ -51,6 +51,11 @@ function SWToPython.Uplink:ServiceInit()
     self.AliveCheckTickInterval = 5
 
     --[[
+        How often to check if the PythonToSW server is alive when the PythonToSW server is not alive.
+    ]]
+    self.AliveCheckWhenNotAliveTickInterval = 5 * 64
+
+    --[[
         The port of the PythonToSW server.
     ]]
     ---@diagnostic disable-next-line: undefined-global
@@ -63,7 +68,7 @@ function SWToPython.Uplink:ServiceInit()
     self.Token = __REQUEST_TOKEN
 
     --[[
-        The tick interval between handling calls, forwarding `onTick`, etc.
+        The tick interval between handling calls, etc.
     ]]
     self.TickInterval = 4 -- Must be >2
 
@@ -121,7 +126,7 @@ function SWToPython.Uplink:ServiceInit()
     --[[
         A table of handled calls by IDs.
     ]]
-    ---@type table<string, boolean>
+    ---@type table<string, SWToPython.HandledCall>
     self.HandledCalls = {}
 end
 
@@ -131,13 +136,33 @@ end
 function SWToPython.Uplink:ServiceStart()
     self:HandleCallbacks()
 
-    Noir.Services.TaskService:AddTickTask(function()
+    --[[
+        A repeated task for handling incoming calls.
+    ]]
+    self.CallHandlerTask = Noir.Services.TaskService:AddTickTask(function()
         self:HandleCalls()
     end, self.TickInterval, nil, true)
 
-    Noir.Services.TaskService:AddTickTask(function()
+    --[[
+        A repeated task for checking if the PythonToSW server is alive.
+    ]]
+    self.CheckAliveTask = Noir.Services.TaskService:AddTickTask(function()
+        if self.Alive then
+            self.CheckAliveTask:SetDuration(self.AliveCheckTickInterval)
+        else
+            -- request timeout takes a while and we don't want to hog http queue, so this is in place to prevent that
+            self.CheckAliveTask:SetDuration(self.AliveCheckWhenNotAliveTickInterval)
+        end
+
         self:CheckAlive()
     end, self.AliveCheckTickInterval, nil, true)
+
+    --[[
+        A connection to onTick. Used for repeated, low-perf impact, non-HTTP operations
+    ]]
+    self.OnTickConnection = Noir.Callbacks:Connect("onTick", function()
+        self:CleanupHandledCalls()
+    end)
 end
 
 --[[
@@ -146,14 +171,11 @@ end
 ---@param endpoint string
 ---@param params table<string, any>
 ---@param callback fun(response: any)|nil
----@param error_callback fun(response: NoirHTTPResponse)|nil
 ---@param overrideAliveCheck boolean|nil
-function SWToPython.Uplink:Request(endpoint, params, callback, error_callback, overrideAliveCheck)
+function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveCheck)
     if not self.Alive and not overrideAliveCheck then
         return
     end
-
-    print("HTTP > "..endpoint)
 
     params["token"] = self.Token
 
@@ -168,24 +190,21 @@ function SWToPython.Uplink:Request(endpoint, params, callback, error_callback, o
         self.Port,
         function (response)
             if not response:IsOk() then
-                if error_callback then
-                    error_callback(response)
-                    return
-                end
+                warn(endpoint.." > Failed to send request to PythonToSW server: "..response.Text)
+                self.Alive = false
 
-                warn("Failed to send request to PythonToSW server: "..response.Text)
                 return
             end
 
             local data = response:JSON()
 
             if not data then
-                warn("Failed to parse response from PythonToSW server: "..response.Text)
+                warn(endpoint.." > Failed to parse response from PythonToSW server: "..response.Text)
                 return
             end
 
             if data["detail"] and Noir.Libraries.String:StartsWith(data["detail"], "no_auth") then
-                warn("Can't send request. Outdated token. Try `?reload_scripts`.")
+                warn(endpoint.." > Can't send request. Outdated token. Try `?reload_scripts`.")
                 return
             end
 
@@ -206,17 +225,22 @@ function SWToPython.Uplink:PropagateError(message)
 end
 
 --[[
+    Cleans up any handled calls.
+]]
+function SWToPython.Uplink:CleanupHandledCalls()
+    for index, handledCall in pairs(self.HandledCalls) do
+        if handledCall:HasExpired() then
+            self.HandledCalls[index] = nil
+        end
+    end
+end
+
+--[[
     Handles any incoming calls from the PythonToSW server.
 ]]
 function SWToPython.Uplink:HandleCalls()
-    ---@param calls table<integer, SWToPython.Call>
+    ---@param calls table<string, SWToPython.Call>
     self:Request("/calls", {}, function(calls)
-        for handled, _ in pairs(self.HandledCalls) do
-            if not calls[handled] then -- PythonToSW server has deleted the handled call which can take a bit after we actually handle it,
-                self.HandledCalls[handled] = nil -- so we dont need to keep track of it anymore
-            end
-        end
-
         for _, _call in pairs(calls) do
             local call = SWToPython.Classes.Call:FromTable(_call)
             self:HandleCall(call)
@@ -225,7 +249,7 @@ function SWToPython.Uplink:HandleCalls()
 end
 
 --[[
-    Handles a call
+    Handles a call.
 ]]
 ---@param call SWToPython.Call
 function SWToPython.Uplink:HandleCall(call)
@@ -236,7 +260,7 @@ function SWToPython.Uplink:HandleCall(call)
     local result = {call:Call()}
     self:Request("/calls/"..call.ID.."/return", {return_values = result})
 
-    self.HandledCalls[call.ID] = true
+    self.HandledCalls[call.ID] = SWToPython.Classes.HandledCall:New(call.ID)
 end
 
 --[[
@@ -257,23 +281,17 @@ function SWToPython.Uplink:HandleCallbacks()
             self:ForwardCallback(callbackName, ...)
         end)
     end
-
-    Noir.Callbacks:Connect("onTick", function (...)
-        self.Ticks = self.Ticks + 1
-
-        if self.Ticks % self.TickInterval == 0 then
-            self:ForwardCallback("onTick", self.Callbacks)
-        end
-    end)
 end
 
 --[[
     Checks if the PythonToSW server is alive.
 ]]
 function SWToPython.Uplink:CheckAlive()
+    if self.Alive then
+        return
+    end
+
     self:Request("/ok", {}, function(response)
         self.Alive = true
-    end, function()
-        self.Alive = false
-    end)
+    end, true)
 end

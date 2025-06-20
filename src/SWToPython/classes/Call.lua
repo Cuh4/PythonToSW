@@ -24,7 +24,7 @@
 -------------------------------
 
 --[[
-    A class representing a response from the backend conversion service.
+    A class representing a call from the PythonToSW server
 ]]
 ---@class SWToPython.Call: NoirDataclass
 ---@field New fun(self: SWToPython.Call, ID: string, name: string, arguments: table): SWToPython.Call
