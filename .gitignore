@@ -10,4 +10,5 @@ build
 dist
 
 # Testing
+tests/dump
 src/test.py

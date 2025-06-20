@@ -21,5 +21,31 @@ limitations under the License.
 
 # // Imports
 import pytest
+from concurrent.futures import Future
+
+import PythonToSW
 
 # // Main
+def _test_value(value: PythonToSW.BaseValue):
+    """
+    Tests the serialization of a value.
+    
+    Args:
+        value (PythonToSW.BaseValue): The value to process.
+    """
+    
+    call = PythonToSW.Call(
+        id = "test",
+        name = PythonToSW.CallEnum.ADDADMIN,
+        arguments = [value],
+        future = Future()
+    )
+    
+    assert call.model_dump()["arguments"][0] == value.build(), f"{value.__class__.__name__} serialization failed."
+    
+def test_matrix_serialization():
+    """
+    Tests the automatic serialization of matrices.
+    """
+
+    _test_value(PythonToSW.Matrix(1, 5, 2))
