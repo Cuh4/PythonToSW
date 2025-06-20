@@ -36,9 +36,19 @@ from typing import (
 from concurrent.futures import Future
 
 from . import CallEnum
-from . import Value
+from . import BaseValue
 
 # // Main
+__all__ = ["Call", "Token"]
+
+class Token(BaseModel):
+    """
+    Represents a token for an addon.
+    """
+    
+    token: str
+    set_at: float
+
 class Call(BaseModel):
     """
     Represents a call to a function in the addon.
@@ -50,16 +60,16 @@ class Call(BaseModel):
     
     id: str
     name: CallEnum
-    arguments: list[Union[Any, Value]]
+    arguments: list[Union[Any, BaseValue]]
     future: Future = Field(exclude = True)
     
     @field_serializer("arguments")
-    def serialize_arguments(self, arguments: Union[Any, Value], _info: SerializationInfo):
+    def serialize_arguments(self, arguments: Union[Any, BaseValue], _info: SerializationInfo):
         """
         Validates the arguments to ensure they are of type Value.
         
         Args:
-            arguments (Union[Any, Value]): The list of arguments to validate.
+            arguments (Union[Any, BaseValue]): The list of arguments to validate.
             _info (SerializationInfo): Serialization information.
         
         Returns:
@@ -67,7 +77,7 @@ class Call(BaseModel):
         """
         
         for index, argument in enumerate(arguments):
-            if Value.is_value(argument):
+            if BaseValue.is_value(argument):
                 arguments[index] = argument.build()
                 
         return arguments

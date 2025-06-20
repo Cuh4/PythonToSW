@@ -33,13 +33,15 @@ from fastapi import (
 )
 
 import uvicorn
+import time
 from typing import Any, Callable
 from logging import WARNING
 from concurrent.futures import Future
 
 from . import (
     ADDON_SCRIPT_CONTENT,
-    ADDON_PLAYLIST_CONTENT
+    ADDON_PLAYLIST_CONTENT,
+    PACKAGE_PATH
 )
 
 from .exceptions import (
@@ -48,17 +50,20 @@ from .exceptions import (
 )
 
 from . import io
-from . import xml
 from . import http
-from . import Event
 from . import logger
+from . import Event
+from . import Persistence
 from . import CallEnum
 
-from .models import (
-    Call
+from . import (
+    Call,
+    Token
 )
 
 # // Main
+TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
+
 class Addon():
     """
     A class representing a Stormworks addon.
@@ -86,7 +91,9 @@ class Addon():
         self.port = port
         self.path = os.path.join(os.path.expandvars(path), self.name)
         
-        self.token = http.generate_uuid()
+        self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
+        
+        self.token = self._get_token()
         
         self.files = {
             "script.lua" : ADDON_SCRIPT_CONTENT,
@@ -101,6 +108,49 @@ class Addon():
         self.uvicorn_log_level = uvicorn_log_level
         
         self.on_start = Event()
+        
+    def _generate_token(self) -> str:
+        """
+        Generates a new token for this addon.
+        This overwrites persistence data. Call this carefully.
+        
+        Returns:
+            str: The generated token.
+        """
+        
+        token = Token(
+            token = http.generate_uuid(),
+            set_at = time.time()
+        )
+
+        self.persistence.set("token", token.model_dump())
+        return token.token
+        
+    def _get_token(self) -> str:
+        """
+        Returns the request token for this addon.
+
+        Tokens are saved and reused temporarily per-addon.
+        This is to prevent the addon user having to reload
+        the in-game addon every time the addon is started
+        as the token would be regenerated.
+        
+        Returns:
+            str: The generated token.
+        """
+        
+        token = self.persistence.get("token")
+        
+        if token is None:
+            return self._generate_token()
+        
+        token = Token.model_validate(token)
+        
+        if time.time() > token.set_at + TOKEN_EXPIRY_SECONDS:
+            self._warn("Request token expired, creating a new one.")
+            return self._generate_token()
+        else:
+            return token.token
     
     def _validate_name(self, name: str):
         """
