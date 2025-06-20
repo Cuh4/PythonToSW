@@ -19,15 +19,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# // Variables
+# // Imports
 from __future__ import annotations
 
 import math
-
-from . import Value
+from . import BaseValue
 
 # // Main
-class Matrix(Value):
+class Matrix(BaseValue):
     """
     A class representing a matrix in Stormworks.
     """

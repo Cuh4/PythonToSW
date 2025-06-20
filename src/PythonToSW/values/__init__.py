@@ -19,60 +19,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# // Variables
-from __future__ import annotations
-from typing import Any
-from abc import abstractmethod, ABCMeta
-
-# // Main
-class Value(metaclass = ABCMeta):
-    """
-    Base class for all values in PythonToSW.
-    """
-    
-    @staticmethod
-    def is_value(instance: Value):
-        """
-        Checks if the instance is a value.
-        
-        Args:
-            instance (Value): The instance to check.
-        
-        Returns:
-            bool: True if the instance is a value, False otherwise.
-        """
-        
-        return isinstance(instance, Value)
-
-    @abstractmethod
-    def build(self):
-        """
-        Builds the value into a format suitable for Stormworks.
-        
-        Raises:
-            NotImplementedError: If the method is not implemented by a subclass.
-        
-        Returns:
-            The built value.
-        """
-        
-        raise NotImplementedError("The `build` method must be implemented by subclasses.")
-    
-    @abstractmethod
-    def rebuild(cls, value: Any) -> Value:
-        """
-        Creates a value from the serialized variant (`.build()` return value).
-        
-        Args:
-            value (Any): The value to convert.
-            
-        Raises:
-            NotImplementedError: If the method is not implemented by a subclass.
-        
-        Returns:
-            Value: The converted value.
-        """
-        
-        raise NotImplementedError("The `rebuild` method must be implemented by subclasses.")
-    
+# // Imports
+from .base import BaseValue
 from .matrix import Matrix
