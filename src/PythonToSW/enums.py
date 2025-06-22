@@ -51,7 +51,7 @@ class CallbackEnum(Enum):
     ONEQUIPMENTDROP = "onEquipmentDrop"
     ONPLAYERRESPAWN = "onPlayerRespawn"
     ONPLAYERLEAVE = "onPlayerLeave"
-    ONToggleMAP = "onToggleMap"
+    ONTOGGLEMAP = "onToggleMap"
     ONPLAYERDIE = "onPlayerDie"
     ONVEHICLESPAWN = "onVehicleSpawn"
     ONGROUPSPAWN = "onGroupSpawn"
