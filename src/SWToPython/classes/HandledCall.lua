@@ -46,7 +46,7 @@ function SWToPython.Classes.HandledCall:Init(ID)
     self.HandledAt = Noir.Services.TaskService:GetTimeSeconds()
 
     --[[
-        How long until this handled call can be cleaned up.
+        How long until this handled call can be cleaned up (seconds).
     ]]
     self.ExpiresAfter = 60
 end
