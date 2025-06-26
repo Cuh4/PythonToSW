@@ -177,18 +177,23 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
         return
     end
 
+    -- Pass token with request
     params["token"] = self.Token
 
+
+    -- JSON encode certain data
     for key, value in pairs(params) do
         if type(value) == "table" then
             params[key] = Noir.Libraries.JSON:Encode(value)
         end
     end
 
+    -- Send the request
     Noir.Services.HTTPService:GET(
         endpoint..Noir.Libraries.HTTP:URLParameters(params),
         self.Port,
         function (response)
+            -- if the request failed, the server is likely down. we'll validate this later
             if not response:IsOk() then
                 warn(endpoint.." > Failed to send request to PythonToSW server: "..response.Text)
                 self.Alive = false
@@ -196,6 +201,7 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
                 return
             end
 
+            -- decode the data
             local data = response:JSON()
 
             if not data then
