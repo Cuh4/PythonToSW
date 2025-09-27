@@ -36,7 +36,7 @@ def _test_value(value: PythonToSW.BaseValue):
     
     call = PythonToSW.Call(
         id = "test",
-        name = PythonToSW.CallEnum.ADDADMIN,
+        name = PythonToSW.CallEnum.ADD_ADMIN,
         arguments = [value],
         future = Future()
     )
