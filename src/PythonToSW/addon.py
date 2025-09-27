@@ -77,7 +77,7 @@ __all__ = [
 
 TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
 TPS = 1 / 26 # how many times a second to call onTick event
-OK_TIME_THRESHOLD = 5 # how many seconds since the last `/ok` request from the addon need to pass before considering the addon as not alive
+OK_TIME_THRESHOLD = 0.5 # how many seconds since the last `/ok` request from the addon need to pass before considering the addon as not alive
 
 class Addon():
     """
@@ -121,7 +121,12 @@ class Addon():
         self.callbacks: dict[CallbackEnum, Event] = {}
 
         self.app = FastAPI(title = self.name, docs_url = None, redoc_url = None, openapi_url = None)
-        self.router = APIRouter(dependencies = [Depends(self._token_dependency)])
+    
+        self.router = APIRouter(dependencies = [
+            Depends(self._token_dependency),
+            Depends(self._update_ok_dependency)
+        ])
+    
         self.uvicorn_log_level = uvicorn_log_level
         
         self.on_start = Event()
@@ -291,6 +296,14 @@ class Addon():
         
         return token
     
+    def _update_ok_dependency(self):
+        """
+        A FastAPI dependency for updating the `last_ok` attribute whenever
+        we receive a request.
+        """
+        
+        self._update_last_ok()
+    
     def _create_endpoints(self):
         """
         Creates the FastAPI endpoints for the addon.
@@ -302,11 +315,9 @@ class Addon():
         )
         def alive() -> str:
             """
-            This is for the in-game addon to find out if we're alive, and for
-            this to find out if the in-game addon is alive.
+            Performs nothing. Used by in-game addon to check if we're alive.
             """
             
-            self._update_last_ok()
             return "ok"
         
         @self.router.get(
