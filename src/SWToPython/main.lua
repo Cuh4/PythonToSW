@@ -37,7 +37,7 @@ end
 ]]
 ---@param message any
 ---@param ... any
-info = function(message, ...)
+print = function(message, ...)
     return Noir.Libraries.Logging:Info("Info", message, ...)
 end
 
