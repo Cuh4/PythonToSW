@@ -1,5 +1,12 @@
 {
     "Lua.workspace.ignoreDir": [
         "/src/PythonToSW/addon/*.lua"
+    ],
+
+    "Lua.diagnostics.disable": [
+        "duplicate-doc-alias",
+        "duplicate-doc-field",
+        "duplicate-doc-param",
+        "lowercase-global"
     ]
 }
