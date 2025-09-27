@@ -1,2 +1,2 @@
 @ECHO OFF
-poetry publish
+twine upload dist/*

@@ -1,0 +1,4 @@
+include src/PythonToSW/addon/*
+include README.md
+include VERSION
+include requirements.txt
