@@ -35,8 +35,8 @@ def quick_read(path: str, mode: str = "r"):
         str: The content of the file.
     """
 
-    with open(path, mode) as f:
-        return f.read()
+    with open(path, mode) as file:
+        return file.read()
     
 def quick_write(path: str, content: str, mode: str = "w"):
     """
@@ -53,5 +53,5 @@ def quick_write(path: str, content: str, mode: str = "w"):
     if not os.path.exists(directory):
         os.makedirs(directory, exist_ok = True)
     
-    with open(path, mode) as f:
-        f.write(content)
+    with open(path, mode) as file:
+        file.write(content)
