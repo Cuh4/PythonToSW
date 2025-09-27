@@ -12217,6 +12217,10 @@ function SWToPython.Uplink:SetAlive(alive)
         info("Uplink:SetAlive(): PythonToSW server is alive.")
     else
         warn("Uplink:SetAlive(): PythonToSW server is not alive.")
+
+        for index, handledCall in pairs(self.HandledCalls) do
+            self.HandledCalls[index] = nil
+        end
     end
 end
 
