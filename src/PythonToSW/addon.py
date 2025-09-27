@@ -71,11 +71,13 @@ from . import (
 __all__ = [
     "Addon",
     "TOKEN_EXPIRY_SECONDS",
-    "TPS"
+    "TPS",
+    "OK_TIME_THRESHOLD"
 ]
 
 TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
 TPS = 1 / 26 # how many times a second to call onTick event
+OK_TIME_THRESHOLD = 5 # how many seconds since the last `/ok` request from the addon need to pass before considering the addon as not alive
 
 class Addon():
     """
@@ -104,6 +106,7 @@ class Addon():
         self.port = port
         self.path = os.path.join(os.path.expandvars(path), self.name)
         self.started = False
+        self.last_ok = 0
         
         self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
         
@@ -261,6 +264,13 @@ class Addon():
             io.quick_write(path, self._replace_content(content), mode = "w")
             
         self._info(f"Addon created/updated successfully at: {self.path}")
+        
+    def _update_last_ok(self):
+        """
+        Updates the `last_ok` attribute.
+        """
+        
+        self.last_ok = time.time()
     
     def _token_dependency(self, token: str = Query()):
         """
@@ -292,9 +302,11 @@ class Addon():
         )
         def alive() -> str:
             """
-            Performs nothing. This is for the in-game addon to find out if we're alive.
+            This is for the in-game addon to find out if we're alive, and for
+            this to find out if the in-game addon is alive.
             """
             
+            self._update_last_ok()
             return "ok"
         
         @self.router.get(
@@ -377,7 +389,9 @@ class Addon():
         """
         
         while True:
-            self.on_tick.fire_threaded()
+            if self.is_addon_alive():
+                self.on_tick.fire_threaded()
+            
             time.sleep(TPS)
     
     def _on_start(self):
@@ -389,6 +403,16 @@ class Addon():
 
         threading.Thread(target = self._on_tick, daemon = True).start()
         self.on_start.fire_threaded()
+        
+    def is_addon_alive(self) -> bool:
+        """
+        Checks if the addon is alive.
+        
+        Returns:
+            bool: True if the addon is alive, False otherwise.
+        """
+        
+        return time.time() - self.last_ok < OK_TIME_THRESHOLD
         
     def start(self, on_start: Callable = None):
         """
