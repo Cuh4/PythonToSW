@@ -390,7 +390,7 @@ class Addon():
         threading.Thread(target = self._on_tick, daemon = True).start()
         self.on_start.fire_threaded()
         
-    def start(self):
+    def start(self, on_startup: Callable = None):
         """
         Starts the addon.
         
@@ -406,6 +406,9 @@ class Addon():
         self.started = True
         self._create_addon()
         self._create_endpoints()
+        
+        if on_startup is not None:
+            self.on_start += on_startup
         
         self.app.add_event_handler("startup", self._on_start)
         
@@ -463,7 +466,7 @@ class Addon():
         call.future.set_result(tuple(return_values))
         del self.calls[call.id]
         
-    def call(self, function: CallEnum, *args) -> tuple[Any, ...]:
+    def call(self, function: CallEnum, *args) -> Any:
         """
         Calls a `server.` function in the addon.
         
