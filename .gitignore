@@ -6,8 +6,8 @@ __pycache__
 src/PythonToSW/addon-persistence
 
 # Distribution files
-build
 dist
+*.egg-info
 
 # Testing
 tests/dump
