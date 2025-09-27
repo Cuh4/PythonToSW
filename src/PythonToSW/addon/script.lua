@@ -38,6 +38,11 @@ SWToPython.Classes = {}
 ]]
 SWToPython.Enums = {}
 
+--[[
+    A table containing libraries used throughout the addon.
+]]
+SWToPython.Libs = {}
+
 --------------------------------------------------------
 -- [Noir] Definition
 --------------------------------------------------------
@@ -11964,7 +11969,7 @@ function SWToPython.Classes.HandledCall:Init(ID)
     self.HandledAt = Noir.Services.TaskService:GetTimeSeconds()
 
     --[[
-        How long until this handled call can be cleaned up.
+        How long until this handled call can be cleaned up (seconds).
     ]]
     self.ExpiresAfter = 60
 end
@@ -12022,17 +12027,12 @@ function SWToPython.Uplink:ServiceInit()
     --[[
         The status of the PythonToSW server.
     ]]
-    self.Alive = false
+    self.Alive = true
 
     --[[
         How often to check if the PythonToSW server is alive.
     ]]
-    self.AliveCheckTickInterval = 5
-
-    --[[
-        How often to check if the PythonToSW server is alive when the PythonToSW server is not alive.
-    ]]
-    self.AliveCheckWhenNotAliveTickInterval = 5 * 64
+    self.AliveCheckTickInterval = 12 * 64
 
     --[[
         The port of the PythonToSW server.
@@ -12126,13 +12126,6 @@ function SWToPython.Uplink:ServiceStart()
         A repeated task for checking if the PythonToSW server is alive.
     ]]
     self.CheckAliveTask = Noir.Services.TaskService:AddTickTask(function()
-        if self.Alive then
-            self.CheckAliveTask:SetDuration(self.AliveCheckTickInterval)
-        else
-            -- request timeout takes a while and we don't want to hog http queue, so this is in place to prevent that
-            self.CheckAliveTask:SetDuration(self.AliveCheckWhenNotAliveTickInterval)
-        end
-
         self:CheckAlive()
     end, self.AliveCheckTickInterval, nil, true)
 
@@ -12156,34 +12149,48 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
         return
     end
 
+    -- Pass token with request
     params["token"] = self.Token
 
+    -- JSON encode certain data
     for key, value in pairs(params) do
         if type(value) == "table" then
             params[key] = Noir.Libraries.JSON:Encode(value)
         end
     end
 
+    -- Send the request
     Noir.Services.HTTPService:GET(
         endpoint..Noir.Libraries.HTTP:URLParameters(params),
         self.Port,
         function (response)
+            -- http queue fuckery
+            if not self.Alive and not overrideAliveCheck then
+                return
+            end
+
+            -- if the request failed, the server is likely down. we'll validate this later
             if not response:IsOk() then
-                warn(endpoint.." > Failed to send request to PythonToSW server: "..response.Text)
-                self.Alive = false
+                if not self.Alive then
+                    return
+                end
+
+                warn("Uplink:Request(): Request returned not ok. Proceeding to assume the PythonToSW server is down. Response: %s", response.Text)
+                self:SetAlive(false)
 
                 return
             end
 
+            -- decode the data
             local data = response:JSON()
 
             if not data then
-                warn(endpoint.." > Failed to parse response from PythonToSW server: "..response.Text)
+                warn("Uplink:Request(): Failed to parse response from request to '%s' on PythonToSW server. Response: %s", endpoint, response.Text)
                 return
             end
 
             if data["detail"] and Noir.Libraries.String:StartsWith(data["detail"], "no_auth") then
-                warn(endpoint.." > Can't send request. Outdated token. Try `?reload_scripts`.")
+                warn("Uplink:Request(): Can't send request. Outdated token. Try `?reload_scripts`.")
                 return
             end
 
@@ -12195,11 +12202,30 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
 end
 
 --[[
+    Sets if the PythonToSW server is alive.
+]]
+---@param alive boolean
+function SWToPython.Uplink:SetAlive(alive)
+    if self.Alive == alive then
+        warn("Uplink:SetAlive(): Attempted to set alive to what it is already.")
+        return
+    end
+
+    self.Alive = alive
+
+    if self.Alive then
+        info("Uplink:SetAlive(): PythonToSW server is alive.")
+    else
+        warn("Uplink:SetAlive(): PythonToSW server is not alive.")
+    end
+end
+
+--[[
     Propagates an error to the PythonToSW server.
 ]]
 ---@param message string
 function SWToPython.Uplink:PropagateError(message)
-    warn("Uplink > Error Propagation > "..message)
+    warn("Uplink:PropagateError(): "..message)
     self:Request("/error", {message = message})
 end
 
@@ -12270,8 +12296,10 @@ function SWToPython.Uplink:CheckAlive()
         return
     end
 
+    info("Uplink:CheckAlive(): Checking if PythonToSW server is alive...")
+
     self:Request("/ok", {}, function(response)
-        self.Alive = true
+        self:SetAlive(true)
     end, true)
 end
 
@@ -12314,8 +12342,8 @@ end
 ]]
 ---@param message any
 ---@param ... any
-print = function(message, ...)
-    return Noir.Libraries.Logging:Info("Print", message, ...)
+info = function(message, ...)
+    return Noir.Libraries.Logging:Info("Info", message, ...)
 end
 
 Noir.Libraries.Logging:SetMode("DebugLog")
