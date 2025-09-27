@@ -64,7 +64,7 @@ class Call(BaseModel):
     id: str
     name: CallEnum
     arguments: list[Union[Any, BaseValue]]
-    future: Future = Field(exclude = True)
+    future: Future = Field(default_factory = Future, exclude = True)
     
     @field_serializer("arguments")
     def serialize_arguments(self, arguments: Union[Any, BaseValue], _info: SerializationInfo):
