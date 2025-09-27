@@ -47,7 +47,8 @@ from . import (
 
 from .exceptions import (
     PTSCallbackException,
-    PTSHTTPException
+    PTSHTTPException,
+    PTSLifecycleException
 )
 
 from . import io
@@ -74,7 +75,7 @@ __all__ = [
 ]
 
 TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
-TPS = 1 / 30 # how many times a second to call onTick event
+TPS = 1 / 26 # how many times a second to call onTick event
 
 class Addon():
     """
@@ -102,6 +103,7 @@ class Addon():
         self.name = name
         self.port = port
         self.path = os.path.join(os.path.expandvars(path), self.name)
+        self.started = False
         
         self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
         
@@ -115,7 +117,7 @@ class Addon():
         self.calls: dict[str, Call] = {}
         self.callbacks: dict[CallbackEnum, Event] = {}
 
-        self.app = FastAPI(title = self._format_name(), docs_url = None, redoc_url = None, openapi_url = None)
+        self.app = FastAPI(title = self.name, docs_url = None, redoc_url = None, openapi_url = None)
         self.router = APIRouter(dependencies = [Depends(self._token_dependency)])
         self.uvicorn_log_level = uvicorn_log_level
         
@@ -161,6 +163,7 @@ class Addon():
         
         if time.time() > token.set_at + TOKEN_EXPIRY_SECONDS:
             self._warn("Request token expired, creating a new one.")
+            self._warn("If you are having issues, please run `?reload_scripts` in-game so the addon can get the updated token.")
             return self._generate_token()
         else:
             return token.token
@@ -236,7 +239,12 @@ class Addon():
             str: The content with placeholders replaced.
         """
         
-        return content.replace("__FORMATTED_ADDON_NAME", f"{self._format_name()}").replace("__ADDON_NAME", self.name).replace("__REQUEST_TOKEN", f"\"{self.token}\"").replace("__PORT", str(self.port))
+        return (
+            content.replace("__FORMATTED_ADDON_NAME", f"{self._format_name()}")
+            .replace("__ADDON_NAME", self.name)
+            .replace("__REQUEST_TOKEN", f"\"{self.token}\"")
+            .replace("__PORT", str(self.port))
+        )
     
     def _create_addon(self):
         """
@@ -269,7 +277,7 @@ class Addon():
         """
         
         if token != self.token:
-            raise PTSHTTPException(401, "no_auth: Invalid token provided.")
+            raise PTSHTTPException(401, "no_auth", "Invalid token provided.")
         
         return token
     
@@ -293,7 +301,7 @@ class Addon():
             "/calls",
             response_model = dict[str, Call]
         )
-        def calls() -> list[Call]:
+        def calls() -> dict[str, Call]:
             """
             Returns a list of all unprocessed calls for the in-game addon.
             """
@@ -377,7 +385,7 @@ class Addon():
         Internal handler for the FastAPI app startup event.
         """
         
-        self._info("Started!")
+        self._info(f"Started {self.name} on port {self.port}.")
 
         threading.Thread(target = self._on_tick, daemon = True).start()
         self.on_start.fire_threaded()
@@ -385,10 +393,17 @@ class Addon():
     def start(self):
         """
         Starts the addon.
+        
+        Raises:
+            PTSLifecycleException: If the addon has already started.
         """
+        
+        if self.started:
+            raise PTSLifecycleException("Addon has already started. Cannot start it more than once.")
         
         self._info(f"Starting on port {self.port}...")     
         
+        self.started = True
         self._create_addon()
         self._create_endpoints()
         
@@ -465,8 +480,7 @@ class Addon():
         call = Call(
             id = call_id,
             name = function,
-            arguments = list(args),
-            future = Future()
+            arguments = list(args)
         )
 
         self.calls[call_id] = call
