@@ -37,3 +37,8 @@ SWToPython.Classes = {}
     A table containing enums used throughout the addon.
 ]]
 SWToPython.Enums = {}
+
+--[[
+    A table containing libraries used throughout the addon.
+]]
+SWToPython.Libs = {}
