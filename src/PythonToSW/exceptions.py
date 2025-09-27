@@ -33,20 +33,26 @@ class PTSCallbackException(PTSException):
     Raised when something goes wrong with addon callbacks.
     """
     
+class PTSLifecycleException(PTSException):
+    """
+    Raised when something goes wrong with addon lifecycle.
+    """
+    
 class PTSHTTPException(PTSException, HTTPException):
     """
     Exception class for HTTP errors in PythonToSW.
     Inherits from both `PTSException` and FastAPI's `HTTPException`.
     """
 
-    def __init__(self, status_code: int, detail: str):
+    def __init__(self, status_code: int, type: str, detail: str):
         """
         Initializes a new instance of the `PTSHTTPException` class.
         
         Args:
             status_code (int): The HTTP status code for the exception.
+            type (str): The type of the exception.
             detail (str): The detail message for the exception.
         """
 
         PTSException.__init__(self, detail)
-        HTTPException.__init__(self, status_code = status_code, detail = detail)
+        HTTPException.__init__(self, status_code = status_code, detail = f"{type}: {detail}")
