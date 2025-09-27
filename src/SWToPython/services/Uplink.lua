@@ -151,6 +151,15 @@ function SWToPython.Uplink:ServiceStart()
     self.OnTickConnection = Noir.Callbacks:Connect("onTick", function()
         self:CleanupHandledCalls()
     end)
+
+    -- Load handled calls from previous session
+    Noir.Services.HoarderService:LoadAll(
+        self,
+        "HandledCalls",
+        self.HandledCalls,
+        SWToPython.Classes.HandledCall,
+        {}
+    )
 end
 
 --[[
@@ -230,7 +239,7 @@ function SWToPython.Uplink:SetAlive(alive)
     self.Alive = alive
 
     if self.Alive then
-        info("Uplink:SetAlive(): PythonToSW server is alive.")
+        print("Uplink:SetAlive(): PythonToSW server is alive.")
     else
         warn("Uplink:SetAlive(): PythonToSW server is not alive.")
 
@@ -285,7 +294,10 @@ function SWToPython.Uplink:HandleCall(call)
     local result = {call:Call()}
     self:Request("/calls/"..call.ID.."/return", {return_values = result})
 
-    self.HandledCalls[call.ID] = SWToPython.Classes.HandledCall:New(call.ID)
+    local handledCall = SWToPython.Classes.HandledCall:New(call.ID)
+    self.HandledCalls[call.ID] = handledCall
+
+    handledCall:Hoard(self, "HandledCalls")
 end
 
 --[[
@@ -316,7 +328,7 @@ function SWToPython.Uplink:CheckAlive()
         return
     end
 
-    info("Uplink:CheckAlive(): Checking if PythonToSW server is alive...")
+    print("Uplink:CheckAlive(): Checking if PythonToSW server is alive...")
 
     self:Request("/ok", {}, function(response)
         self:SetAlive(true)
