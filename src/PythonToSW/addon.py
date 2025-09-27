@@ -390,7 +390,7 @@ class Addon():
         threading.Thread(target = self._on_tick, daemon = True).start()
         self.on_start.fire_threaded()
         
-    def start(self, on_startup: Callable = None):
+    def start(self, on_start: Callable = None):
         """
         Starts the addon.
         
@@ -407,8 +407,8 @@ class Addon():
         self._create_addon()
         self._create_endpoints()
         
-        if on_startup is not None:
-            self.on_start += on_startup
+        if on_start is not None:
+            self.on_start += on_start
         
         self.app.add_event_handler("startup", self._on_start)
         
