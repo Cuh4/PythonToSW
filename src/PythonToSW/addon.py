@@ -41,8 +41,7 @@ from dataclasses import dataclass
 
 from . import (
     ADDON_SCRIPT_CONTENT,
-    ADDON_PLAYLIST_CONTENT,
-    PACKAGE_PATH
+    ADDON_PLAYLIST_CONTENT
 )
 
 from .exceptions import (
@@ -91,9 +90,10 @@ class Addon():
     def __init__(
         self,
         name: str,
+        path: str,
         *,
         port: int,
-        path: str|None = r"%appdata%/Stormworks/data/missions",
+        sw_addons_path: str|None = r"%appdata%/Stormworks/data/missions",
         uvicorn_log_level: int = WARNING,
         force_new_token: bool = False,
         constants: AddonConstants = None
@@ -103,8 +103,9 @@ class Addon():
         
         Args:
             name (str): The name of the addon. This should be unique and not conflict with other addons.
+            path (str): The path to store data for this addon in.
             port (int): The port to run the addon on.
-            path (str | None, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
+            sw_addons_path (str | None, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
             uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
             force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
             constants (AddonConstants, optional): Constants to be used by the addon.
@@ -112,12 +113,13 @@ class Addon():
         
         self.name = name
         self.port = port
-        self.path = os.path.join(os.path.expandvars(path), self.name)
+        self.path = path
+        self.sw_addons_path: str = os.path.expandvars(sw_addons_path)
         self.started = False
         self.last_ok = 0
         self.constants = constants or AddonConstants()
         
-        self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
+        self.persistence = Persistence(os.path.join(self.path, self.name) + ".json")
         
         self.force_new_token = force_new_token
         self.token = self._get_token()
@@ -272,16 +274,16 @@ class Addon():
         Creates the addon directory structure.
         """
         
-        if not os.path.exists(self.path):
-            os.makedirs(self.path, exist_ok = True)
+        if not os.path.exists(self.sw_addons_path):
+            os.makedirs(self.sw_addons_path, exist_ok = True)
         
         for file, content in self.files.items():
             self._info(f"Creating/updating file: {file}")
             
-            path = os.path.join(self.path, file)
+            path = os.path.join(self.sw_addons_path, file)
             io.quick_write(path, self._replace_content(content), mode = "w")
             
-        self._info(f"Addon created/updated successfully at: {self.path}")
+        self._info(f"Addon created/updated successfully at: {self.sw_addons_path}")
         
     def _update_last_ok(self):
         """
