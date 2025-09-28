@@ -12,6 +12,7 @@ dist
 # Testing
 tests/dump
 src/test.py
+src/Testing.json
 
 # Dev
 TODO.md
