@@ -114,7 +114,7 @@ class Addon():
         self.name = name
         self.port = port
         self.path = path
-        self.sw_addons_path: str = os.path.expandvars(sw_addons_path)
+        self.sw_addons_path: str = os.path.join(os.path.expandvars(sw_addons_path), self.name)
         self.started = False
         self.last_ok = 0
         self.constants = constants or AddonConstants()
