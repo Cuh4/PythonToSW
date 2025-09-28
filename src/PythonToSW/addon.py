@@ -37,7 +37,7 @@ import uvicorn
 import time
 from typing import Any, Callable
 from logging import WARNING
-from concurrent.futures import Future
+from dataclasses import dataclass
 
 from . import (
     ADDON_SCRIPT_CONTENT,
@@ -69,15 +69,19 @@ from . import (
 
 # // Main
 __all__ = [
-    "Addon",
-    "TOKEN_EXPIRY_SECONDS",
-    "TPS",
-    "OK_TIME_THRESHOLD"
+    "AddonConstants",
+    "Addon"
 ]
 
-TOKEN_EXPIRY_SECONDS = 12 * 60 * 60 # how long addon request tokens take to expire
-TPS = 1 / 26 # how many times a second to call onTick event
-OK_TIME_THRESHOLD = 0.5 # how many seconds since the last `/ok` request from the addon need to pass before considering the addon as not alive
+@dataclass(frozen = True)
+class AddonConstants():
+    """
+    Constants used by PythonToSW addons.
+    """
+    
+    TOKEN_EXPIRY_SECONDS: float = 12 * 60 * 60
+    TPS: float = 1 / 26
+    OK_TIME_THRESHOLD: float = 0.5
 
 class Addon():
     """
@@ -90,7 +94,9 @@ class Addon():
         *,
         port: int,
         path: str|None = r"%appdata%/Stormworks/data/missions",
-        uvicorn_log_level: int = WARNING
+        uvicorn_log_level: int = WARNING,
+        force_new_token: bool = False,
+        constants: AddonConstants = None
     ):
         r"""
         Initializes a new instance of the `Addon` class.
@@ -100,6 +106,8 @@ class Addon():
             port (int): The port to run the addon on.
             path (str | None, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
             uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
+            force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
+            constants (AddonConstants, optional): Constants to be used by the addon.
         """
         
         self.name = name
@@ -110,6 +118,7 @@ class Addon():
         
         self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
         
+        self.force_new_token = force_new_token
         self.token = self._get_token()
         
         self.files = {
@@ -131,6 +140,8 @@ class Addon():
         
         self.on_start = Event()
         self.on_tick = Event()
+        
+        self.constants = constants or AddonConstants()
         
     def _generate_token(self) -> str:
         """
@@ -167,9 +178,12 @@ class Addon():
         if token is None:
             return self._generate_token()
         
+        if self.force_new_token:
+            return self._generate_token()
+        
         token = Token.model_validate(token)
         
-        if time.time() > token.set_at + TOKEN_EXPIRY_SECONDS:
+        if time.time() > token.set_at + self.constants.TOKEN_EXPIRY_SECONDS:
             self._warn("Request token expired, creating a new one.")
             self._warn("If you are having issues, please run `?reload_scripts` in-game so the addon can get the updated token.")
             return self._generate_token()
@@ -403,7 +417,7 @@ class Addon():
             if self.is_addon_alive():
                 self.on_tick.fire_threaded()
             
-            time.sleep(TPS)
+            time.sleep(self.constants.TPS)
     
     def _on_start(self):
         """
@@ -423,7 +437,7 @@ class Addon():
             bool: True if the addon is alive, False otherwise.
         """
         
-        return time.time() - self.last_ok < OK_TIME_THRESHOLD
+        return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD
         
     def start(self, on_start: Callable = None):
         """
