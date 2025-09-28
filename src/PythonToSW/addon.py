@@ -115,6 +115,7 @@ class Addon():
         self.path = os.path.join(os.path.expandvars(path), self.name)
         self.started = False
         self.last_ok = 0
+        self.constants = constants or AddonConstants()
         
         self.persistence = Persistence(os.path.join(PACKAGE_PATH, "addon-persistence", self.name) + ".json")
         
@@ -140,8 +141,6 @@ class Addon():
         
         self.on_start = Event()
         self.on_tick = Event()
-        
-        self.constants = constants or AddonConstants()
         
     def _generate_token(self) -> str:
         """
