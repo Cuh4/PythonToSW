@@ -43,5 +43,12 @@ end
 
 Noir.Libraries.Logging:SetMode("DebugLog")
 
+-- Disable most built-in services
+Noir.Services:RemoveBuiltInServices({
+    "TaskService",
+    "HTTPService",
+    "HoarderService"
+})
+
 -- Start Noir
 Noir:Start()
