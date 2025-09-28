@@ -973,7 +973,7 @@ function server.setPopup(peer_id, ui_id, name, is_show, text, x, y, z, render_di
 ---@param is_show boolean If the popup is currently being shown
 ---@param text string The text inside the popup. You can fit 13 characters in a line before it will wrap.
 ---@param horizontal_offset number The offset on the horizontal axis. Ranges from -1 (left) to 1 (right)
----@param vertical_offset number The offset on the vertical axis. Ranges from -1 (Bottom) to 1(Top)
+---@param vertical_offset number The offset on the vertical axis. Ranges from -1 (Top) to 1 (Bottom)
 function server.setPopupScreen(peer_id, ui_id, name, is_show, text, horizontal_offset, vertical_offset) end
 
 -- Will remove popups that have been assigned to a player
@@ -1183,7 +1183,7 @@ function server.setCharacterItem(object_id, slot, equipment_id, is_active, integ
 -- Returns the id of the equipment that the character has in the provided slot
 ---@param object_id number The unique id of the character to check
 ---@param slot_number SWSlotNumberEnum number
----@return number equipment_id, boolean is_success
+---@return SWEquipmentTypeEnum equipment_id, boolean is_success
 function server.getCharacterItem(object_id, slot_number) end
 
 ---@alias SWOutfitTypeEnum
