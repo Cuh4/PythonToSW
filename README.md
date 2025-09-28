@@ -21,7 +21,7 @@ class State():
     ticks = 0
     count = 0
 
-addon = Addon(name = "Testing", port = 2000)
+addon = Addon("Testing", path = ".", port = 2000)
 state = State()
 
 def on_player_join(steam_id: int, name: str, peer_id: int, is_admin: bool, is_auth: bool):
