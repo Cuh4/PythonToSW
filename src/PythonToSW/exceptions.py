@@ -27,6 +27,11 @@ class PTSException(Exception):
     """
     Base class for all exceptions in PythonToSW.
     """
+    
+class PTSCallException(PTSException):
+    """
+    Raised when something goes wrong with addon calls.
+    """
 
 class PTSCallbackException(PTSException):
     """
