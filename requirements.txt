@@ -1,6 +1,6 @@
 click==8.1.7
 coloredlogs==15.0.1
-fastapi==0.117.1
+fastapi==0.118.0
 pydantic==2.11.9
 pytest==8.3.4
 rich==14.1.0
