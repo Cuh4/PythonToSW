@@ -27,20 +27,26 @@
     A class representing a call from the PythonToSW server that has been handled.
 ]]
 ---@class SWToPython.HandledCall: NoirHoardable
----@field New fun(self: SWToPython.HandledCall, ID: string): SWToPython.HandledCall
+---@field New fun(self: SWToPython.HandledCall, ID: string, returnValues: table<integer, any>): SWToPython.HandledCall
 SWToPython.Classes.HandledCall = Noir.Class("HandledCall", Noir.Classes.Hoardable)
 
 --[[
     Initializes new HandledCall instances.
 ]]
 ---@param ID string The ID of the call
-function SWToPython.Classes.HandledCall:Init(ID)
+---@param returnValues table<integer, any> The return values of the call
+function SWToPython.Classes.HandledCall:Init(ID, returnValues)
     self:InitFrom(Noir.Classes.Hoardable, ID)
 
     --[[
         The ID of the call.
     ]]
     self.ID = ID
+
+    --[[
+        The return values of the call.
+    ]]
+    self.ReturnValues = returnValues
 
     --[[
         The time the call was handled.
