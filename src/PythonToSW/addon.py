@@ -24,6 +24,13 @@ from __future__ import annotations
 
 import os
 import json
+import threading
+import uvicorn
+import time
+from typing import Any, Callable
+from logging import WARNING
+from dataclasses import dataclass
+from concurrent.futures import TimeoutError
 
 from fastapi import (
     FastAPI,
@@ -31,13 +38,6 @@ from fastapi import (
     Depends,
     APIRouter
 )
-
-import threading
-import uvicorn
-import time
-from typing import Any, Callable
-from logging import WARNING
-from dataclasses import dataclass
 
 from . import (
     ADDON_SCRIPT_CONTENT,
@@ -47,7 +47,8 @@ from . import (
 from .exceptions import (
     PTSCallbackException,
     PTSHTTPException,
-    PTSLifecycleException
+    PTSLifecycleException,
+    PTSCallException
 )
 
 from . import io
@@ -80,7 +81,8 @@ class AddonConstants():
     
     TOKEN_EXPIRY_SECONDS: float = 12 * 60 * 60
     TPS: float = 1 / 26
-    OK_TIME_THRESHOLD: float = 0.5
+    OK_TIME_THRESHOLD_SECONDS: float = 0.5
+    CALL_TIMEOUT_SECONDS: int = 5
 
 class Addon():
     """
@@ -347,28 +349,28 @@ class Addon():
             return self.calls
         
         @self.router.get(
-            "/calls/{call_id}/return",
+            "/calls/return",
             response_model = str
         )
-        def call_return(call_id: str, return_values: str) -> str:
+        def calls_return(call_returns: str) -> str:
             """
-            Completes a call.
+            Completes calls in batch.
             """
-            
-            if call_id not in self.calls:
-                self._error(f"Call with ID {call_id} not found.")
-                return ""
             
             try:
-                return_values = json.loads(return_values)
+                call_returns: dict[str, list[Any]] = json.loads(call_returns)
             except json.JSONDecodeError as exception:
-                self._error(f"Failed to decode return values: {exception}")
-                return ""
+                self._error(f"Failed to decode call returns: {exception}")
+                raise PTSHTTPException(400, "json_error", "Failed to decode call returns.")
             
-            call = self.calls[call_id]
-            self._handle_call(call, return_values)
+            for call_id, return_values in call_returns.items():
+                if call_id not in self.calls:
+                    self._error(f"Call with ID {call_id} not found, skipping.")
+                    continue
+                
+                self._handle_call(self.calls[call_id], return_values)
 
-            return ""
+            return "ok"
             
         @self.router.get(
             "/callbacks/{name}",
@@ -383,17 +385,17 @@ class Addon():
                 arguments = json.loads(arguments)
             except json.JSONDecodeError as exception:
                 self._error(f"Failed to decode callback arguments: {exception}")
-                return ""
+                raise PTSHTTPException(400, "json_error", "Failed to decode callback arguments.")
             
             try:
                 name = CallbackEnum(name)
             except ValueError as exception:
                 self._error(f"Unknown callback name of {name}")
-                return ""
+                raise PTSHTTPException(400, "unknown_callback", f"Unknown callback name of {name}")
             
             self._handle_callback(name, arguments)
             
-            return ""
+            return "ok"
         
         @self.router.get(
             "/error",
@@ -405,7 +407,7 @@ class Addon():
             """
             
             self._error(f"{message} (from in-game)")
-            return ""
+            return "ok"
         
         self.app.include_router(self.router)
     
@@ -438,7 +440,7 @@ class Addon():
             bool: True if the addon is alive, False otherwise.
         """
         
-        return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD
+        return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
         
     def start(self, on_start: Callable = None):
         """
@@ -537,5 +539,11 @@ class Addon():
         )
 
         self.calls[call_id] = call
+        
+        while not self.is_addon_alive():
+            time.sleep(0.01)
 
-        return call.future.result()
+        try:
+            return call.future.result(self.constants.CALL_TIMEOUT_SECONDS)
+        except TimeoutError as exception:
+            raise PTSCallException(f"Call with ID {call_id} timed out.") from exception
