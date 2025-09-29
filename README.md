@@ -49,7 +49,7 @@ def on_start():
     Called when the addon starts.
     """
     
-    players: dict = addon.call(CallEnum.GET_PLAYERS)[0]
+    players: list = addon.call(CallEnum.GET_PLAYERS)[0]
 
     for player in players:
         on_player_join(
