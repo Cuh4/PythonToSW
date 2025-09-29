@@ -60,7 +60,7 @@ class Call(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed = True
     )
-    
+
     id: str
     name: CallEnum
     arguments: list[Union[Any, BaseValue]]
