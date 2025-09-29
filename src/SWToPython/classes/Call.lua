@@ -40,7 +40,7 @@ SWToPython.Classes.Call = Noir.Libraries.Dataclasses:New("Call", {
 --[[
     Calls the `server.` function in the addon and returns the result.
 ]]
----@return any
+---@return SWToPython.HandledCall?
 function SWToPython.Classes.Call:Call()
     local func = server[self.Name]
 
@@ -49,7 +49,8 @@ function SWToPython.Classes.Call:Call()
         return
     end
 
-    return func(table.unpack(self.Arguments))
+    local returns = {func(table.unpack(self.Arguments))}
+    return SWToPython.Classes.HandledCall:New(self.ID, returns)
 end
 
 --[[
