@@ -12793,7 +12793,7 @@ SWToPython.Classes.Call = Noir.Libraries.Dataclasses:New("Call", {
 --[[
     Calls the `server.` function in the addon and returns the result.
 ]]
----@return any
+---@return SWToPython.HandledCall?
 function SWToPython.Classes.Call:Call()
     local func = server[self.Name]
 
@@ -12802,7 +12802,8 @@ function SWToPython.Classes.Call:Call()
         return
     end
 
-    return func(table.unpack(self.Arguments))
+    local returns = {func(table.unpack(self.Arguments))}
+    return SWToPython.Classes.HandledCall:New(self.ID, returns)
 end
 
 --[[
@@ -12847,20 +12848,26 @@ end
     A class representing a call from the PythonToSW server that has been handled.
 ]]
 ---@class SWToPython.HandledCall: NoirHoardable
----@field New fun(self: SWToPython.HandledCall, ID: string): SWToPython.HandledCall
+---@field New fun(self: SWToPython.HandledCall, ID: string, returnValues: table<integer, any>): SWToPython.HandledCall
 SWToPython.Classes.HandledCall = Noir.Class("HandledCall", Noir.Classes.Hoardable)
 
 --[[
     Initializes new HandledCall instances.
 ]]
 ---@param ID string The ID of the call
-function SWToPython.Classes.HandledCall:Init(ID)
+---@param returnValues table<integer, any> The return values of the call
+function SWToPython.Classes.HandledCall:Init(ID, returnValues)
     self:InitFrom(Noir.Classes.Hoardable, ID)
 
     --[[
         The ID of the call.
     ]]
     self.ID = ID
+
+    --[[
+        The return values of the call.
+    ]]
+    self.ReturnValues = returnValues
 
     --[[
         The time the call was handled.
@@ -13015,9 +13022,10 @@ function SWToPython.Uplink:ServiceStart()
     self:HandleCallbacks()
 
     --[[
-        A repeated task for handling incoming calls.
+        A repeated task for handling calls.
     ]]
     self.CallHandlerTask = Noir.Services.TaskService:AddTickTask(function()
+        self:HandleCallReturns()
         self:HandleCalls()
     end, self.TickInterval, nil, true)
 
@@ -13036,18 +13044,6 @@ function SWToPython.Uplink:ServiceStart()
     end)
 
     -- Load handled calls from previous session
-    Noir.Services.HoarderService:AddCheckpoint(
-        self,
-        SWToPython.Classes.HandledCall,
-
-        ---@param instance SWToPython.HandledCall
-        function(instance)
-            print("loading handled call: %s", instance.ID)
-            print(instance)
-            return true
-        end
-    )
-
     Noir.Services.HoarderService:LoadAll(
         self,
         "HandledCalls",
@@ -13114,6 +13110,11 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
                 return
             end
 
+            if data["detail"] then
+                warn("Uplink:Request(): Sent request, but got an error from PythonToSW server: %s", data["detail"])
+                return
+            end
+
             if callback then
                 callback(data)
             end
@@ -13138,8 +13139,8 @@ function SWToPython.Uplink:SetAlive(alive)
     else
         warn("Uplink:SetAlive(): PythonToSW server is not alive.")
 
-        for index, handledCall in pairs(self.HandledCalls) do
-            self.HandledCalls[index] = nil
+        for _, handledCall in pairs(self.HandledCalls) do
+            self:RemoveHandledCall(handledCall)
         end
     end
 end
@@ -13154,14 +13155,42 @@ function SWToPython.Uplink:PropagateError(message)
 end
 
 --[[
+    Removes a handled call.
+]]
+---@param handledCall SWToPython.HandledCall
+function SWToPython.Uplink:RemoveHandledCall(handledCall)
+    self.HandledCalls[handledCall.ID] = nil
+end
+
+--[[
     Cleans up any handled calls.
 ]]
 function SWToPython.Uplink:CleanupHandledCalls()
-    for index, handledCall in pairs(self.HandledCalls) do
+    for _, handledCall in pairs(self.HandledCalls) do
         if handledCall:HasExpired() then
-            self.HandledCalls[index] = nil
+            self:RemoveHandledCall(handledCall)
         end
     end
+end
+
+--[[
+    Handles returning the results of calls to the PythonToSW server.
+]]
+function SWToPython.Uplink:HandleCallReturns()
+    local handledCalls = self.HandledCalls
+
+    ---@type table<string, table<integer, any>>
+    local callReturns = {}
+
+    for _, handledCall in pairs(handledCalls) do
+        callReturns[handledCall.ID] = handledCall.ReturnValues
+    end
+
+    self:Request("/calls/return", {call_returns = callReturns}, function(response)
+        for _, handledCall in pairs(self.HandledCalls) do
+            self:RemoveHandledCall(handledCall)
+        end
+    end)
 end
 
 --[[
@@ -13186,12 +13215,14 @@ function SWToPython.Uplink:HandleCall(call)
         return
     end
 
-    local result = {call:Call()}
-    self:Request("/calls/"..call.ID.."/return", {return_values = result})
+    local handledCall = call:Call()
 
-    local handledCall = SWToPython.Classes.HandledCall:New(call.ID)
-    self.HandledCalls[call.ID] = handledCall
+    if not handledCall then
+        warn("Uplink:HandleCall(): Failed to handle call. ID: %s", call.ID)
+        return
+    end
 
+    self.HandledCalls[handledCall.ID] = handledCall
     handledCall:Hoard(self, "HandledCalls")
 end
 
@@ -13274,6 +13305,13 @@ print = function(message, ...)
 end
 
 Noir.Libraries.Logging:SetMode("DebugLog")
+
+-- Disable most built-in services
+Noir.Services:RemoveBuiltInServices({
+    "TaskService",
+    "HTTPService",
+    "HoarderService"
+})
 
 -- Start Noir
 Noir:Start()
