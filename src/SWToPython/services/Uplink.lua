@@ -132,9 +132,10 @@ function SWToPython.Uplink:ServiceStart()
     self:HandleCallbacks()
 
     --[[
-        A repeated task for handling incoming calls.
+        A repeated task for handling calls.
     ]]
     self.CallHandlerTask = Noir.Services.TaskService:AddTickTask(function()
+        self:HandleCallReturns()
         self:HandleCalls()
     end, self.TickInterval, nil, true)
 
@@ -219,6 +220,11 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
                 return
             end
 
+            if data["detail"] then
+                warn("Uplink:Request(): Sent request, but got an error from PythonToSW server: %s", data["detail"])
+                return
+            end
+
             if callback then
                 callback(data)
             end
@@ -243,8 +249,8 @@ function SWToPython.Uplink:SetAlive(alive)
     else
         warn("Uplink:SetAlive(): PythonToSW server is not alive.")
 
-        for index, handledCall in pairs(self.HandledCalls) do
-            self.HandledCalls[index] = nil
+        for _, handledCall in pairs(self.HandledCalls) do
+            self:RemoveHandledCall(handledCall)
         end
     end
 end
@@ -259,14 +265,42 @@ function SWToPython.Uplink:PropagateError(message)
 end
 
 --[[
+    Removes a handled call.
+]]
+---@param handledCall SWToPython.HandledCall
+function SWToPython.Uplink:RemoveHandledCall(handledCall)
+    self.HandledCalls[handledCall.ID] = nil
+end
+
+--[[
     Cleans up any handled calls.
 ]]
 function SWToPython.Uplink:CleanupHandledCalls()
-    for index, handledCall in pairs(self.HandledCalls) do
+    for _, handledCall in pairs(self.HandledCalls) do
         if handledCall:HasExpired() then
-            self.HandledCalls[index] = nil
+            self:RemoveHandledCall(handledCall)
         end
     end
+end
+
+--[[
+    Handles returning the results of calls to the PythonToSW server.
+]]
+function SWToPython.Uplink:HandleCallReturns()
+    local handledCalls = self.HandledCalls
+
+    ---@type table<string, table<integer, any>>
+    local callReturns = {}
+
+    for _, handledCall in pairs(handledCalls) do
+        callReturns[handledCall.ID] = handledCall.ReturnValues
+    end
+
+    self:Request("/calls/return", {call_returns = callReturns}, function(response)
+        for _, handledCall in pairs(self.HandledCalls) do
+            self:RemoveHandledCall(handledCall)
+        end
+    end)
 end
 
 --[[
@@ -291,12 +325,14 @@ function SWToPython.Uplink:HandleCall(call)
         return
     end
 
-    local result = {call:Call()}
-    self:Request("/calls/"..call.ID.."/return", {return_values = result})
+    local handledCall = call:Call()
 
-    local handledCall = SWToPython.Classes.HandledCall:New(call.ID)
-    self.HandledCalls[call.ID] = handledCall
+    if not handledCall then
+        warn("Uplink:HandleCall(): Failed to handle call. ID: %s", call.ID)
+        return
+    end
 
+    self.HandledCalls[handledCall.ID] = handledCall
     handledCall:Hoard(self, "HandledCalls")
 end
 
