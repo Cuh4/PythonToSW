@@ -80,7 +80,8 @@ class AddonConstants():
     """
     
     TOKEN_EXPIRY_SECONDS: float = 12 * 60 * 60
-    TPS: float = 1 / 26
+    MAX_TPS: int = 64
+    TICK_INTERVAL: int = 4
     OK_TIME_THRESHOLD_SECONDS: float = 0.5
     CALL_TIMEOUT_SECONDS: int = 5
 
@@ -253,6 +254,16 @@ class Addon():
         
         return f"(PTS) {self.name}"
     
+    def _calculate_tick_dt(self) -> float:
+        """
+        Calculates the TPS delta time.
+
+        Returns:
+            float: The TPS.
+        """
+
+        return self.constants.TICK_INTERVAL / self.constants.MAX_TPS
+    
     def _replace_content(self, content: str) -> str:
         """
         Replaces placeholders in the content with the addon name.
@@ -265,10 +276,11 @@ class Addon():
         """
         
         return (
-            content.replace("__FORMATTED_ADDON_NAME", f"{self._format_name()}")
+            content.replace("__FORMATTED_ADDON_NAME", self._format_name())
             .replace("__ADDON_NAME", self.name)
-            .replace("__REQUEST_TOKEN", f"\"{self.token}\"")
+            .replace("__REQUEST_TOKEN", self.token)
             .replace("__PORT", str(self.port))
+            .replace("__TICK_INTERVAL", str(self.constants.TICK_INTERVAL))
         )
     
     def _create_addon(self):
@@ -420,7 +432,7 @@ class Addon():
             if self.is_addon_alive():
                 self.on_tick.fire_threaded()
             
-            time.sleep(self.constants.TPS)
+            time.sleep(self._calculate_tick_dt())
     
     def _on_start(self):
         """

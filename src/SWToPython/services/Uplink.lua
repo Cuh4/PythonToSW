@@ -59,13 +59,13 @@ function SWToPython.Uplink:ServiceInit()
     --[[
         The request token for the PythonToSW server.
     ]]
-    ---@diagnostic disable-next-line: undefined-global
-    self.Token = __REQUEST_TOKEN
+    self.Token = "__REQUEST_TOKEN"
 
     --[[
         The tick interval between handling calls, etc.
     ]]
-    self.TickInterval = 4 -- Must be >2
+    ---@diagnostic disable-next-line: undefined-global
+    self.TickInterval = __TICK_INTERVAL
 
     --[[
         The amount of ticks that have passed.
