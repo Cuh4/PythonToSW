@@ -13110,11 +13110,11 @@ function SWToPython.Uplink:ServiceStart()
     self.UpdateTask = Noir.Services.TaskService:AddTickTask(function()
         self:Update()
 
-        -- print("outgoing requests: %s", self.outgoing)
-        -- print("handled calls: %s", Noir.Libraries.Table:Length(self.HandledCalls))
-        -- print("handled callbacks: %s", #self.TriggeredCallbacks)
-        -- print("alive: %s", self.Alive)
-        -- print("-----------------")
+        print("outgoing requests: %s", self.outgoing)
+        print("handled calls: %s", Noir.Libraries.Table:Length(self.HandledCalls))
+        print("handled callbacks: %s", #self.TriggeredCallbacks)
+        print("alive: %s", self.Alive)
+        print("-----------------")
     end, self.TickInterval, nil, true)
 
     --[[
@@ -13345,6 +13345,8 @@ function SWToPython.Uplink:HandleCall(call)
     self._DirectHandledCalls[handledCall.ID] = handledCall
 
     handledCall:Hoard(self, "HandledCalls")
+
+    print("Handled call server.%s with ID %s", call.Name, call.ID)
 end
 
 --[[
