@@ -81,7 +81,7 @@ class AddonConstants():
     
     TOKEN_EXPIRY_SECONDS: float = 12 * 60 * 60
     MAX_TPS: int = 64
-    TICK_INTERVAL: int = 4
+    TICK_INTERVAL: int = 2
     OK_TIME_THRESHOLD_SECONDS: float = 0.5
     CALL_TIMEOUT_SECONDS: int = 5
 
@@ -132,7 +132,7 @@ class Addon():
             "playlist.xml" : ADDON_PLAYLIST_CONTENT
         }
         
-        self.calls: dict[str, Call] = {}
+        self.calls: list[Call] = []
         self.callbacks: dict[CallbackEnum, Event] = {}
 
         self.app = FastAPI(title = self.name, docs_url = None, redoc_url = None, openapi_url = None)
@@ -264,6 +264,16 @@ class Addon():
 
         return self.constants.TICK_INTERVAL / self.constants.MAX_TPS
     
+    def _calculate_tps(self) -> float:
+        """
+        Calculates the TPS.
+
+        Returns:
+            float: The TPS.
+        """
+
+        return self.constants.MAX_TPS / self.constants.TICK_INTERVAL
+    
     def _replace_content(self, content: str) -> str:
         """
         Replaces placeholders in the content with the addon name.
@@ -350,65 +360,47 @@ class Addon():
             return "ok"
         
         @self.router.get(
-            "/calls",
-            response_model = dict[str, Call]
+            "/update",
+            response_model = list[Call]
         )
-        def calls() -> dict[str, Call]:
+        def update(handled_calls: str, triggered_callbacks: str) -> list[Call]:
             """
-            Returns a list of all unprocessed calls for the in-game addon.
-            """
-
-            return self.calls
-        
-        @self.router.get(
-            "/calls/return",
-            response_model = str
-        )
-        def calls_return(call_returns: str) -> str:
-            """
-            Completes calls in batch.
+            Receives an update from the addon, and returns
+            a list of all unprocessed calls for the addon.
             """
             
             try:
-                call_returns: dict[str, list[Any]] = json.loads(call_returns)
+                handled_calls: list[dict] = json.loads(handled_calls)
+                triggered_callbacks: list[dict] = json.loads(triggered_callbacks)
             except json.JSONDecodeError as exception:
-                self._error(f"Failed to decode call returns: {exception}")
-                raise PTSHTTPException(400, "json_error", "Failed to decode call returns.")
-            
-            for call_id, return_values in call_returns.items():
-                if call_id not in self.calls:
-                    self._error(f"Call with ID {call_id} not found, skipping.")
+                self._error(f"Failed to decode update data: {exception}")
+                raise PTSHTTPException(400, "json_error", "Failed to decode update data.")
+
+            for handled_call in handled_calls:
+                call_id =  handled_call["ID"]
+                return_values = handled_call["ReturnValues"]
+                
+                call = self.get_call(call_id)
+                
+                if call is None:
                     continue
                 
-                self._handle_call(self.calls[call_id], return_values)
+                self._handle_call(call, return_values)
+            
+            for triggered_callback in triggered_callbacks:
+                name = triggered_callback["Name"]
+                arguments = triggered_callback["Arguments"]
+                
+                try:
+                    name = CallbackEnum(name)
+                except ValueError as exception:
+                    self._error(f"Unknown callback name of {name}")
+                    continue
+                
+                self._handle_callback(name, arguments)
 
-            return "ok"
-            
-        @self.router.get(
-            "/callbacks/{name}",
-            response_model = str
-        )
-        def callback(name: str, arguments: str):
-            """
-            Handles a callback from the in-game addon.
-            """
-            
-            try:
-                arguments = json.loads(arguments)
-            except json.JSONDecodeError as exception:
-                self._error(f"Failed to decode callback arguments: {exception}")
-                raise PTSHTTPException(400, "json_error", "Failed to decode callback arguments.")
-            
-            try:
-                name = CallbackEnum(name)
-            except ValueError as exception:
-                self._error(f"Unknown callback name of {name}")
-                raise PTSHTTPException(400, "unknown_callback", f"Unknown callback name of {name}")
-            
-            self._handle_callback(name, arguments)
-            
-            return "ok"
-        
+            return self.calls
+
         @self.router.get(
             "/error",
             response_model = str
@@ -427,6 +419,8 @@ class Addon():
         """
         Fires the `on_tick` event on a separate thread.
         """
+        
+        self._info(f"Starting `on_tick` with TPS of {self._calculate_tps()} ({self._calculate_tick_dt():.2f}s).")
         
         while True:
             if self.is_addon_alive():
@@ -453,35 +447,6 @@ class Addon():
         """
         
         return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
-        
-    def start(self, on_start: Callable = None):
-        """
-        Starts the addon.
-        
-        Raises:
-            PTSLifecycleException: If the addon has already started.
-        """
-        
-        if self.started:
-            raise PTSLifecycleException("Addon has already started. Cannot start it more than once.")
-        
-        self._info(f"Starting on port {self.port}...")     
-        
-        self.started = True
-        self._create_addon()
-        self._create_endpoints()
-        
-        if on_start is not None:
-            self.on_start += on_start
-        
-        self.app.add_event_handler("startup", self._on_start)
-        
-        uvicorn.run(
-            self.app,
-            host = "localhost",
-            port = self.port,
-            log_level = self.uvicorn_log_level
-        )
         
     def _handle_callback(self, name: CallbackEnum, arguments: list[Any]):
         """
@@ -528,7 +493,37 @@ class Addon():
         """
         
         call.future.set_result(tuple(return_values))
-        del self.calls[call.id]
+        self.calls.remove(call)
+        
+    def get_call(self, call_id: str) -> Call|None:
+        """
+        Gets a call by its ID.
+        
+        Args:
+            call_id (str): The ID of the call to get.
+        
+        Returns:
+            Call | None: The call if it exists, otherwise None.
+        """
+        
+        for call in self.calls:
+            if call.id == call_id:
+                return call
+            
+        return None
+        
+    def does_call_exist(self, call_id: str) -> bool:
+        """
+        Checks if a call with the given ID exists.
+        
+        Args:
+            call_id (str): The ID of the call to check for.
+        
+        Returns:
+            bool: True if the call exists, False otherwise.
+        """
+        
+        return self.get_call(call_id) is not None
         
     def call(self, function: CallEnum, *args) -> Any:
         """
@@ -550,7 +545,7 @@ class Addon():
             arguments = list(args)
         )
 
-        self.calls[call_id] = call
+        self.calls.append(call)
         
         while not self.is_addon_alive():
             time.sleep(0.01)
@@ -559,3 +554,32 @@ class Addon():
             return call.future.result(self.constants.CALL_TIMEOUT_SECONDS)
         except TimeoutError as exception:
             raise PTSCallException(f"Call with ID {call_id} timed out.") from exception
+        
+    def start(self, on_start: Callable = None):
+        """
+        Starts the addon.
+        
+        Raises:
+            PTSLifecycleException: If the addon has already started.
+        """
+        
+        if self.started:
+            raise PTSLifecycleException("Addon has already started. Cannot start it more than once.")
+        
+        self._info(f"Starting on port {self.port}...")     
+        
+        self.started = True
+        self._create_addon()
+        self._create_endpoints()
+        
+        if on_start is not None:
+            self.on_start += on_start
+        
+        self.app.add_event_handler("startup", self._on_start)
+        
+        uvicorn.run(
+            self.app,
+            host = "localhost",
+            port = self.port,
+            log_level = self.uvicorn_log_level
+        )
