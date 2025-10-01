@@ -33,10 +33,10 @@ SWToPython.Classes.HandledCall = Noir.Class("HandledCall", Noir.Classes.Hoardabl
 --[[
     Initializes new HandledCall instances.
 ]]
----@param ID string The ID of the call
----@param returnValues table<integer, any> The return values of the call
+---@param ID string
+---@param returnValues table<integer, any>
 function SWToPython.Classes.HandledCall:Init(ID, returnValues)
-    self:InitFrom(Noir.Classes.Hoardable, ID)
+    self:InitFrom(Noir.Classes.Hoardable)
 
     --[[
         The ID of the call.
@@ -47,22 +47,22 @@ function SWToPython.Classes.HandledCall:Init(ID, returnValues)
         The return values of the call.
     ]]
     self.ReturnValues = returnValues
-
-    --[[
-        The time the call was handled.
-    ]]
-    self.HandledAt = Noir.Services.TaskService:GetTimeSeconds()
-
-    --[[
-        How long until this handled call can be cleaned up (seconds).
-    ]]
-    self.ExpiresAfter = 60
 end
 
 --[[
-    Returns if this handled call has expired.
+    Converts the HandledCall to a table representation.
 ]]
----@return boolean
-function SWToPython.Classes.HandledCall:HasExpired()
-    return Noir.Services.TaskService:GetTimeSeconds() > self.HandledAt + self.ExpiresAfter
+---@return SwToPython.HandledCall.AsTable
+function SWToPython.Classes.HandledCall:ToTable()
+    return {
+        ID = self.ID,
+        ReturnValues = self.ReturnValues
+    }
 end
+
+--[[
+    Table representation of a HandledCall. Use for sending to the PythonToSW server.
+]]
+---@class SwToPython.HandledCall.AsTable
+---@field ID string
+---@field ReturnValues table<integer, any>
