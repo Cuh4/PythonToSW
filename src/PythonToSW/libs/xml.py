@@ -34,7 +34,7 @@ def encode(dictionary: dict) -> str:
         str: The encoded XML string.
     """
 
-    return xmltodict.unparse(dictionary)
+    return xmltodict.unparse(dictionary, pretty = True)
 
 def decode(string: str) -> dict:
     """
