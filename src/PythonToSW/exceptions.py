@@ -43,6 +43,11 @@ class PTSLifecycleException(PTSException):
     Raised when something goes wrong with addon lifecycle.
     """
     
+class PTSConfigException(PTSException):
+    """
+    Raised when something goes wrong with addon configuration.
+    """
+    
 class PTSHTTPException(PTSException, HTTPException):
     """
     Exception class for HTTP errors in PythonToSW.
