@@ -31,6 +31,7 @@ from typing import Any, Callable
 from logging import WARNING
 from dataclasses import dataclass
 from concurrent.futures import TimeoutError
+import re
 
 from fastapi import (
     FastAPI,
@@ -47,7 +48,6 @@ from .exceptions import (
     PTSConfigException
 )
 
-from . import xml
 from . import io
 from . import http
 from . import logger
@@ -101,7 +101,7 @@ class Addon():
         *,
         port: int,
         copy_from: str = None,
-        sw_addons_path: str = r"%appdata%/Stormworks/data/missions",
+        addons_path: str = r"%appdata%/Stormworks/data/missions",
         uvicorn_log_level: int = WARNING,
         force_new_token: bool = False,
         constants: AddonConstants = None
@@ -114,7 +114,7 @@ class Addon():
             path (str): The path to store data for this addon in.
             port (int): The port to run the addon on.
             copy_from (str, optional): The name of the addon to copy files from (playlist.xml, vehicles, NOT script). Can alternatively be a path to an addon directory. Defaults to None.
-            sw_addons_path (str, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
+            addons_path (str, optional): The path to plop addons in for Stormworks to recognise. Defaults to "\%appdata\%/Stormworks/data/missions".
             uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
             force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
             constants (AddonConstants, optional): Constants to be used by the addon.
@@ -123,8 +123,8 @@ class Addon():
         self.name = name
         self.path = path
         self.port = port
-        self.sw_addons_path: str = os.path.expandvars(sw_addons_path)
-        self.sw_addon_path: str = os.path.join(self.sw_addons_path, self.name)
+        self.addons_path: str = os.path.expandvars(addons_path)
+        self.addon_path: str = os.path.join(self.addons_path, self.name)
         self.copy_from = self._get_addon_copy_path(copy_from)
         self.started = False
         self.last_ok = 0
@@ -289,9 +289,7 @@ class Addon():
         """
         
         return (
-            content.replace("__FORMATTED_ADDON_NAME", self._format_name())
-            .replace("__ADDON_NAME", self.name)
-            .replace("__REQUEST_TOKEN", self.token)
+            content.replace("__REQUEST_TOKEN", self.token)
             .replace("__PORT", str(self.port))
             .replace("__TICK_INTERVAL", str(self.constants.TICK_INTERVAL))
         )
@@ -319,7 +317,7 @@ class Addon():
             else:
                 raise PTSConfigException(f"`copy_from` path exists but is not a directory.")
         
-        potential_path = os.path.join(self.sw_addons_path, name_or_path)
+        potential_path = os.path.join(self.addons_path, name_or_path)
         
         if os.path.exists(potential_path):
             return potential_path
@@ -342,7 +340,7 @@ class Addon():
                 continue
             
             source_path = os.path.join(self.copy_from, vehicle_filename)
-            dest_path = os.path.join(self.sw_addon_path, vehicle_filename)
+            dest_path = os.path.join(self.addon_path, vehicle_filename)
             
             io.quick_write(dest_path, io.quick_read(source_path, "r"), mode = "w")
             self._info(f"Carried over vehicle: {vehicle_filename}")
@@ -373,12 +371,12 @@ class Addon():
         Creates the playlist file for the addon.
         """
         
-        decoded_playlist = xml.decode(self._get_template_playlist_content())
-        decoded_playlist["playlist"]["@name"] = self._format_name()
-        decoded_playlist["playlist"]["@folder_path"] = f"data/missions/{self.name}"
+        content = self._get_template_playlist_content()
+        content = re.sub(r"name=\"[^\"]*\"", f"name=\"{self._format_name()}\"", content, count = 1)
+        content = re.sub(r"folder_path=\"[^\"]*\"", f"folder_path=\"data/missions/{self.name}\"", content, count = 1)
 
-        playlist_path = os.path.join(self.sw_addon_path, "playlist.xml")
-        io.quick_write(playlist_path, xml.encode(decoded_playlist), mode = "w")
+        playlist_path = os.path.join(self.addon_path, "playlist.xml")
+        io.quick_write(playlist_path, content, mode = "w")
         
         self._info(f"Playlist created/updated successfully at: {playlist_path}")
         
@@ -387,7 +385,7 @@ class Addon():
         Creates the script file for the addon.
         """
         
-        script_path = os.path.join(self.sw_addon_path, "script.lua")
+        script_path = os.path.join(self.addon_path, "script.lua")
         io.quick_write(script_path, self._replace_content(ADDON_SCRIPT_CONTENT), mode = "w")
         
         self._info(f"Script created/updated successfully at: {script_path}")
@@ -397,14 +395,14 @@ class Addon():
         Creates the addon directory structure.
         """
         
-        if not os.path.exists(self.sw_addon_path):
-            os.makedirs(self.sw_addon_path, exist_ok = True)
+        if not os.path.exists(self.addon_path):
+            os.makedirs(self.addon_path, exist_ok = True)
 
         self._carry_over_vehicles()
         self._make_playlist_file()
         self._make_script_file()
             
-        self._info(f"Addon created/updated successfully at: {self.sw_addon_path}")
+        self._info(f"Addon created/updated successfully at: {self.addon_path}")
         
     def _update_last_ok(self):
         """
