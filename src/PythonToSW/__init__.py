@@ -28,8 +28,7 @@ from .log import logger
 
 from .libs import (
     io,
-    xml,
-    http,
+    http
 )
 
 from .libs.persistence import Persistence
