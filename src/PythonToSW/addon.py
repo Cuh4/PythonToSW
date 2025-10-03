@@ -39,18 +39,15 @@ from fastapi import (
     APIRouter
 )
 
-from . import (
-    ADDON_SCRIPT_CONTENT,
-    ADDON_PLAYLIST_CONTENT
-)
-
 from .exceptions import (
     PTSCallbackException,
     PTSHTTPException,
     PTSLifecycleException,
-    PTSCallException
+    PTSCallException,
+    PTSConfigException
 )
 
+from . import xml
 from . import io
 from . import http
 from . import logger
@@ -67,11 +64,18 @@ from . import (
     Token
 )
 
+from . import PACKAGE_PATH
+
 # // Main
 __all__ = [
     "AddonConstants",
-    "Addon"
+    "Addon",
+    "ADDON_SCRIPT_CONTENT",
+    "ADDON_PLAYLIST_CONTENT"
 ]
+
+ADDON_SCRIPT_CONTENT: str = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "script.lua"), "r")
+ADDON_PLAYLIST_CONTENT: str = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "playlist.xml"), "r")
 
 @dataclass(frozen = True)
 class AddonConstants():
@@ -96,7 +100,8 @@ class Addon():
         path: str,
         *,
         port: int,
-        sw_addons_path: str|None = r"%appdata%/Stormworks/data/missions",
+        copy_from: str = None,
+        sw_addons_path: str = r"%appdata%/Stormworks/data/missions",
         uvicorn_log_level: int = WARNING,
         force_new_token: bool = False,
         constants: AddonConstants = None
@@ -108,16 +113,19 @@ class Addon():
             name (str): The name of the addon. This should be unique and not conflict with other addons.
             path (str): The path to store data for this addon in.
             port (int): The port to run the addon on.
-            sw_addons_path (str | None, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
+            copy_from (str, optional): The name of the addon to copy files from (playlist.xml, vehicles, NOT script). Can alternatively be a path to an addon directory. Defaults to None.
+            sw_addons_path (str, optional): The path to Stormworks addon storage. Defaults to "\%appdata\%/Stormworks/data/missions".
             uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
             force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
             constants (AddonConstants, optional): Constants to be used by the addon.
         """
         
         self.name = name
-        self.port = port
         self.path = path
-        self.sw_addons_path: str = os.path.join(os.path.expandvars(sw_addons_path), self.name)
+        self.port = port
+        self.sw_addons_path: str = os.path.expandvars(sw_addons_path)
+        self.sw_addon_path: str = os.path.join(self.sw_addons_path, self.name)
+        self.copy_from = self._get_addon_copy_path(copy_from)
         self.started = False
         self.last_ok = 0
         self.constants = constants or AddonConstants()
@@ -126,11 +134,6 @@ class Addon():
         
         self.force_new_token = force_new_token
         self.token = self._get_token()
-        
-        self.files = {
-            "script.lua" : ADDON_SCRIPT_CONTENT,
-            "playlist.xml" : ADDON_PLAYLIST_CONTENT
-        }
         
         self.calls: list[Call] = []
         self.callbacks: dict[CallbackEnum, Event] = {}
@@ -292,22 +295,116 @@ class Addon():
             .replace("__PORT", str(self.port))
             .replace("__TICK_INTERVAL", str(self.constants.TICK_INTERVAL))
         )
+        
+    def _get_addon_copy_path(self, name_or_path: str = None) -> str|None:
+        """
+        Gets the path to copy files from, if any.
+        
+        Args:
+            name_or_path (str, optional): The name or path of the addon to copy files from. Defaults to None.
+            
+        Raises:
+            PTSConfigException: If the path is invalid.
+        
+        Returns:
+            str|None: The found path, or None if not copying from anything.
+        """
+        
+        if name_or_path is None:
+            return None
+        
+        if os.path.exists(name_or_path):
+            if os.path.isdir(name_or_path):
+                return name_or_path
+            else:
+                raise PTSConfigException(f"`copy_from` path exists but is not a directory.")
+        
+        potential_path = os.path.join(self.sw_addons_path, name_or_path)
+        
+        if os.path.exists(potential_path):
+            return potential_path
+        else:
+            raise PTSConfigException(f"Could not find `copy_from` addon. Ensure the path is correct, or provide the name of the addon instead if it is within the game's addons directory.")
+        
+    def _carry_over_vehicles(self):
+        """
+        Carries over vehicles from the copy_from addon.
+        """
+        
+        if self.copy_from is None:
+            return
+        
+        for vehicle_filename in os.listdir(self.copy_from):
+            if os.path.splitext(vehicle_filename)[1].lower() != ".xml":
+                continue
+            
+            if not vehicle_filename.startswith("vehicle_"):
+                continue
+            
+            source_path = os.path.join(self.copy_from, vehicle_filename)
+            dest_path = os.path.join(self.sw_addon_path, vehicle_filename)
+            
+            io.quick_write(dest_path, io.quick_read(source_path, "r"), mode = "w")
+            self._info(f"Carried over vehicle: {vehicle_filename}")
+            
+    def _get_template_playlist_content(self) -> str:
+        """
+        Gets the template playlist content.
+        
+        Raises:
+            PTSConfigException: If the `copy_from` addon does not have a playlist.xml file.
+        
+        Returns:
+            str: The template playlist content.
+        """
+        
+        if self.copy_from is not None:
+            playlist_path = os.path.join(self.copy_from, "playlist.xml")
+            
+            if not os.path.exists(playlist_path):
+                raise PTSConfigException(f"`copy_from` addon does not have a playlist.xml file.")
+            
+            return io.quick_read(playlist_path, "r")
+            
+        return ADDON_PLAYLIST_CONTENT
+        
+    def _make_playlist_file(self):
+        """
+        Creates the playlist file for the addon.
+        """
+        
+        decoded_playlist = xml.decode(self._get_template_playlist_content())
+        decoded_playlist["playlist"]["@name"] = self._format_name()
+        decoded_playlist["playlist"]["@folder_path"] = f"data/missions/{self.name}"
+
+        playlist_path = os.path.join(self.sw_addon_path, "playlist.xml")
+        io.quick_write(playlist_path, xml.encode(decoded_playlist), mode = "w")
+        
+        self._info(f"Playlist created/updated successfully at: {playlist_path}")
+        
+    def _make_script_file(self):
+        """
+        Creates the script file for the addon.
+        """
+        
+        script_path = os.path.join(self.sw_addon_path, "script.lua")
+        io.quick_write(script_path, self._replace_content(ADDON_SCRIPT_CONTENT), mode = "w")
+        
+        self._info(f"Script created/updated successfully at: {script_path}")
     
     def _create_addon(self):
         """
         Creates the addon directory structure.
         """
         
-        if not os.path.exists(self.sw_addons_path):
-            os.makedirs(self.sw_addons_path, exist_ok = True)
-        
-        for file, content in self.files.items():
-            self._info(f"Creating/updating file: {file}")
+        if not os.path.exists(self.sw_addon_path):
+            os.makedirs(self.sw_addon_path, exist_ok = True)
+
+        self._carry_over_vehicles()
+        self._make_playlist_file()
+        self._make_script_file()
             
-            path = os.path.join(self.sw_addons_path, file)
-            io.quick_write(path, self._replace_content(content), mode = "w")
-            
-        self._info(f"Addon created/updated successfully at: {self.sw_addons_path}")
+        self._info(f"Addon created/updated successfully at: {self.sw_addon_path}")
         
     def _update_last_ok(self):
         """
@@ -503,7 +600,7 @@ class Addon():
             call_id (str): The ID of the call to get.
         
         Returns:
-            Call | None: The call if it exists, otherwise None.
+            Call|None: The call if it exists, otherwise None.
         """
         
         for call in self.calls:
@@ -532,6 +629,9 @@ class Addon():
         Args:
             function (CallEnum): The name of the function to call.
             *args: The arguments to pass to the function.
+            
+        Raises:
+            PTSCallException: If the call times out.
         
         Returns:
             tuple[Any, ...]: Whatever the function returns.
