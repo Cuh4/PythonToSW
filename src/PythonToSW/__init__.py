@@ -41,9 +41,6 @@ from .values import *
 from .enums import *
 from .models import *
 
-ADDON_SCRIPT_CONTENT = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "script.lua"), "r")
-ADDON_PLAYLIST_CONTENT = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "playlist.xml"), "r")
-
 from .addon import *
 
 # // Main
