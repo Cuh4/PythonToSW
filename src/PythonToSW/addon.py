@@ -137,6 +137,7 @@ class Addon():
         
         self.calls: list[Call] = []
         self.callbacks: dict[CallbackEnum, Event] = {}
+        self.injected_lua_code: list[str] = []
 
         self.app = FastAPI(title = self.name, docs_url = None, redoc_url = None, openapi_url = None)
     
@@ -385,8 +386,11 @@ class Addon():
         Creates the script file for the addon.
         """
         
+        content = self._replace_content(ADDON_SCRIPT_CONTENT)
+        content += "\n\n-- User-Injected Code\n" + "\n\n".join(self.injected_lua_code)
+        
         script_path = os.path.join(self.addon_path, "script.lua")
-        io.quick_write(script_path, self._replace_content(ADDON_SCRIPT_CONTENT), mode = "w")
+        io.quick_write(script_path, content, mode = "w")
         
         self._info(f"Script created/updated successfully at: {script_path}")
     
@@ -542,6 +546,38 @@ class Addon():
         """
         
         return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
+    
+    def attach_lua_code(self, code: str):
+        """
+        Attaches Lua code to be injected into the end of the addon script.
+        
+        Args:
+            code (str): The Lua code to inject.
+        """
+        
+        self.injected_lua_code.append(code)
+        
+    def attach_lua_file(self, path: str):
+        """
+        Attaches a Lua file to be injected into the end of the addon script.
+        
+        Args:
+            path (str): The path to the Lua file to inject.
+            
+        Raises:
+            PTSConfigException: If the file does not exist.
+        """
+        
+        if not os.path.exists(path):
+            raise PTSConfigException(f"Lua file at path {path} does not exist.")
+        
+        if not os.path.isfile(path):
+            raise PTSConfigException(f"Lua file at path {path} is not a file.")
+        
+        if os.path.splitext(path)[1].lower() != ".lua":
+            raise PTSConfigException(f"Lua file at path {path} is not a .lua file.")
+    
+        self.attach_lua_code(io.quick_read(path, "r"))
         
     def _handle_callback(self, name: CallbackEnum, arguments: list[Any]):
         """
