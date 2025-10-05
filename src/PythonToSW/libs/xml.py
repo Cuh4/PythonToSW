@@ -20,29 +20,31 @@ limitations under the License.
 """
 
 # // Imports
-import os
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-from . import log
-from .log import logger
-
-from .libs import (
-    io,
-    xml,
-    http,
-)
-
-from .libs.persistence import Persistence
-from .libs.event import Event
-
-from . import exceptions
-
-from .values import *
-from .enums import *
-from .models import *
-
-from .addon import *
+import xmltodict
 
 # // Main
-from logging import INFO as _INFO
-log.install(_INFO)
+def encode(dictionary: dict) -> str:
+    """
+    XML encode a dictionary into an XML string.
+
+    Args:
+        dictionary (dict): The dictionary to encode.
+        
+    Returns:
+        str: The encoded XML string.
+    """
+
+    return xmltodict.unparse(dictionary, pretty = True)
+
+def decode(string: str) -> dict:
+    """
+    Decode an XML string into a dictionary.
+
+    Args:
+        string (str): The XML string to decode.
+        
+    Returns:
+       dict: The decoded dictionary.
+    """
+
+    return xmltodict.parse(string)
