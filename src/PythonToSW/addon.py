@@ -50,6 +50,7 @@ from .exceptions import (
 
 from . import io
 from . import http
+from . import xml
 from . import logger
 from . import Event
 from . import Persistence
@@ -68,10 +69,11 @@ from . import PACKAGE_PATH
 
 # // Main
 __all__ = [
+    "ADDON_SCRIPT_CONTENT",
+    "ADDON_PLAYLIST_CONTENT",
     "AddonConstants",
     "Addon",
-    "ADDON_SCRIPT_CONTENT",
-    "ADDON_PLAYLIST_CONTENT"
+    "DedicatedServerAddon"
 ]
 
 ADDON_SCRIPT_CONTENT: str = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "script.lua"), "r")
@@ -125,6 +127,10 @@ class Addon():
         self.port = port
         self.addons_path: str = os.path.expandvars(addons_path)
         self.addon_path: str = os.path.join(self.addons_path, self.name)
+        
+        if not os.path.exists(self.addons_path):
+            raise PTSConfigException(f"Addons path at {self.addons_path} does not exist.")
+        
         self.copy_from = self._get_addon_copy_path(copy_from)
         self.started = False
         self.last_ok = 0
@@ -717,3 +723,136 @@ class Addon():
             port = self.port,
             log_level = self.uvicorn_log_level
         )
+
+class DedicatedServerAddon(Addon):
+    """
+    A class representing an addon specifically for Stormworks dedicated servers.
+
+    Note that the `Addon` class can also be used for dedicated servers, but this class
+    makes it easier by automatically setting the addons path to the correct location
+    and modifying the server_config.xml file to include the addon.
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        dedicated_server_path: str,
+        server_config_path: str,
+        *,
+        port: int,
+        copy_from: str = None,
+        uvicorn_log_level: int = WARNING,
+        force_new_token: bool = False,
+        constants: AddonConstants = None
+    ):
+        """
+        Initializes a new instance of the `DedicatedServerAddon` class.
+        
+        Args:
+            name (str): The name of the addon. This should be unique and not conflict with other addons.
+            path (str): The path to store data for this addon in.
+            dedicated_server_path (str): The path to the dedicated server installation.
+            server_config_path (str): The path to the server_config.xml file. For Windows, this is usually in `%appdata%/Stormworks` unless overridden via command line arguments to the server executable.
+            port (int): The port to run the addon on.
+            copy_from (str, optional): The name of the addon to copy files from (playlist.xml, vehicles, NOT script). Can alternatively be a path to an addon directory. Defaults to None.
+            uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
+            force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
+            constants (AddonConstants, optional): Constants to be used by the addon.
+        """
+        
+        super().__init__(
+            name = name,
+            path = path,
+            port = port,
+            copy_from = copy_from,
+            addons_path = os.path.join(dedicated_server_path, "rom/data/missions"),
+            uvicorn_log_level = uvicorn_log_level,
+            force_new_token = force_new_token,
+            constants = constants
+        )
+        
+        self.server_config_path = server_config_path
+        
+        if not os.path.exists(self.server_config_path):
+            raise PTSConfigException(f"Server config path at {self.server_config_path} does not exist.")
+        
+        if not os.path.isfile(self.server_config_path):
+            raise PTSConfigException(f"Server config path at {self.server_config_path} is not a file.")
+        
+        if os.path.splitext(self.server_config_path)[1].lower() != ".xml":
+            raise PTSConfigException(f"Server config path at {self.server_config_path} is not an XML file.")
+        
+    def _get_server_config(self) -> dict:
+        """
+        Returns the XML decoded server_config.xml file.
+        
+        Returns:
+            dict: The server config as a dictionary.
+        """
+        
+        return xml.decode(io.quick_read(self.server_config_path, "r"))
+    
+    def _get_addon_path_for_server_config(self) -> str:
+        """
+        Returns the path to this addon for use in the server_config.xml file.
+        
+        Returns:
+            str: The path to this addon for use in the server_config.xml file.
+        """
+        
+        return f"rom/data/missions/{self.name}"
+    
+    def _is_in_server_config(self, config: dict) -> bool:
+        """
+        Checks if the addon is in the server_config.xml file.
+        
+        Args:
+            config (dict): The server config as a dictionary.
+        
+        Returns:
+            bool: True if the addon is in the server_config.xml file, False otherwise.
+        """
+        
+        for playlist in config["server_data"]["playlists"]["path"]:
+            if playlist["@path"] == self._get_addon_path_for_server_config():
+                return True
+            
+        return False
+    
+    def _save_new_server_config(self, config: dict):
+        """
+        Saves a new server_config.xml file.
+        
+        Args:
+            config (dict): The server config as a dictionary.
+        """
+        
+        io.quick_write(self.server_config_path, xml.encode(config), mode = "w")
+        
+    def _setup_server_config(self):
+        """
+        Sets up the server_config.xml file to include this addon.
+        """
+        
+        config = self._get_server_config()
+        
+        if self._is_in_server_config(config):
+            self._info(f"Addon already in `server_config.xml`, skipping.")
+            return
+        
+        config["server_data"]["playlists"]["path"].append({
+            "@path": self._get_addon_path_for_server_config()
+        })
+        
+        self._save_new_server_config(config)
+        
+        self._info(f"Added addon to `server_config.xml` at: {self.server_config_path}")
+        
+    def _create_addon(self):
+        """
+        Creates the addon directory structure.
+        """
+        
+        super()._create_addon()
+        self._setup_server_config()
