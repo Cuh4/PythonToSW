@@ -34,7 +34,7 @@ Unfortunately, since HTTP is used, any PythonToSW addon will be 2x slower than a
 
 To install or update PythonToSW, simply run:
 
-```
+```batch
 pip install PythonToSW --upgrade
 ```
 

@@ -13,15 +13,18 @@ Before we begin with creating an addon, we need to first import PythonToSW.
 Ensure you have installed the PythonToSW package before proceeding (see [..](../ "mention")).
 {% endhint %}
 
-<pre class="language-python" data-title="main.py" data-full-width="false"><code class="lang-python">from PythonToSW import (
+{% code title="main.py" fullWidth="false" %}
+```python
+from PythonToSW import (
     Addon,
-<strong>    CallEnum,
-</strong>    CallbackEnum,
+    CallEnum,
+    CallbackEnum,
     AddonConstants
 )
-</code></pre>
+```
+{% endcode %}
 
-There are more things we can import, but these three are the main things you will use when using PythonToSW.
+There are more things we can import, but these four are the the only things relevant to the guide.
 
 ## Creating The Addon
 
