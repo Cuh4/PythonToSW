@@ -27,16 +27,22 @@
     A class representing a game callback that has been triggered. Contains arguments from the callback too.
 ]]
 ---@class SWToPython.TriggeredCallback: NoirHoardable
----@field New fun(self: SWToPython.TriggeredCallback, name: string, arguments: table<integer, any>): SWToPython.TriggeredCallback
+---@field New fun(self: SWToPython.TriggeredCallback, ID: number, name: string, arguments: table<integer, any>): SWToPython.TriggeredCallback
 SWToPython.Classes.TriggeredCallback = Noir.Class("TriggeredCallback", Noir.Classes.Hoardable)
 
 --[[
     Initializes new TriggeredCallback instances.
 ]]
+---@param ID number
 ---@param name string
 ---@param arguments table<integer, any>
-function SWToPython.Classes.TriggeredCallback:Init(name, arguments)
-    self:InitFrom(Noir.Classes.Hoardable)
+function SWToPython.Classes.TriggeredCallback:Init(ID, name, arguments)
+    self:InitFrom(Noir.Classes.Hoardable, ID)
+
+    --[[
+        The ID of the triggered callback.
+    ]]
+    self.ID = ID
 
     --[[
         The name of the callback.
@@ -47,6 +53,11 @@ function SWToPython.Classes.TriggeredCallback:Init(name, arguments)
         The arguments of the callback.
     ]]
     self.Arguments = arguments
+
+    --[[
+        The time the callback was triggered.
+    ]]
+    self.Time = server.getTimeMillisec()
 end
 
 --[[
@@ -55,8 +66,10 @@ end
 ---@return SwToPython.TriggeredCallback.AsTable
 function SWToPython.Classes.TriggeredCallback:ToTable()
     return {
+        ID = self.ID,
         Name = self.Name,
-        Arguments = self.Arguments
+        Arguments = self.Arguments,
+        Time = self.Time
     }
 end
 
@@ -64,5 +77,7 @@ end
     Table representation of a TriggeredCallback. Use for sending to the PythonToSW server.
 ]]
 ---@class SwToPython.TriggeredCallback.AsTable
+---@field ID number
 ---@field Name string
 ---@field Arguments table<integer, any>
+---@field Time number

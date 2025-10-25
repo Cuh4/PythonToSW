@@ -36,7 +36,7 @@ SWToPython.Classes.HandledCall = Noir.Class("HandledCall", Noir.Classes.Hoardabl
 ---@param ID string
 ---@param returnValues table<integer, any>
 function SWToPython.Classes.HandledCall:Init(ID, returnValues)
-    self:InitFrom(Noir.Classes.Hoardable)
+    self:InitFrom(Noir.Classes.Hoardable, ID)
 
     --[[
         The ID of the call.
@@ -47,6 +47,11 @@ function SWToPython.Classes.HandledCall:Init(ID, returnValues)
         The return values of the call.
     ]]
     self.ReturnValues = returnValues
+
+    --[[
+        The time the call was handled.
+    ]]
+    self.Time = server.getTimeMillisec()
 end
 
 --[[
@@ -56,7 +61,8 @@ end
 function SWToPython.Classes.HandledCall:ToTable()
     return {
         ID = self.ID,
-        ReturnValues = self.ReturnValues
+        ReturnValues = self.ReturnValues,
+        Time = self.Time
     }
 end
 
@@ -66,3 +72,4 @@ end
 ---@class SwToPython.HandledCall.AsTable
 ---@field ID string
 ---@field ReturnValues table<integer, any>
+---@field Time number
