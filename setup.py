@@ -23,7 +23,7 @@ limitations under the License.
 import os
 from setuptools import setup, find_packages
 
-# // Variables
+# // Main
 with open(os.path.join(os.path.dirname(__file__), "VERSION"), encoding = "utf-8") as file:
     version = file.read()
     
@@ -33,7 +33,6 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding = "utf-
 with open(os.path.join(os.path.dirname(__file__), "requirements.txt"), encoding = "utf-8") as file:
     requirements = file.read().splitlines()
 
-# // Main
 setup(
     name = "PythonToSW",
     version = version,
@@ -43,6 +42,7 @@ setup(
     long_description_content_type = "text/markdown",
     packages = find_packages(where = "src"),
     license = "Apache License 2.0",
+    url = "https://github.com/Cuh4/PythonToSW",
     
     classifiers = [
         "Programming Language :: Python :: 3",
