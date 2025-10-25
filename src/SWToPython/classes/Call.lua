@@ -27,13 +27,13 @@
     A class representing a call from the PythonToSW server
 ]]
 ---@class SWToPython.Call: NoirDataclass
----@field New fun(self: SWToPython.Call, ID: string, name: string, arguments: table): SWToPython.Call
+---@field New fun(self: SWToPython.Call, ID: string, path: string, arguments: table): SWToPython.Call
 ---@field ID string The ID of the call
----@field Name string The name of the `server.` function to call
+---@field Path string The path of the function to be called
 ---@field Arguments table The arguments of the call
 SWToPython.Classes.Call = Noir.Libraries.Dataclasses:New("Call", {
     Noir.Libraries.Dataclasses:Field("ID", "string"),
-    Noir.Libraries.Dataclasses:Field("Name", "string"),
+    Noir.Libraries.Dataclasses:Field("Path", "string"),
     Noir.Libraries.Dataclasses:Field("Arguments", "table")
 })
 
@@ -42,10 +42,10 @@ SWToPython.Classes.Call = Noir.Libraries.Dataclasses:New("Call", {
 ]]
 ---@return SWToPython.HandledCall?
 function SWToPython.Classes.Call:Call()
-    local func = server[self.Name]
+    local func = SWToPython.Uplink:GetFunction(self.Path)
 
     if not func then
-        SWToPython.Uplink:PropagateError("Function "..self.Name.." does not exist.")
+        SWToPython.Uplink:PropagateError("Function at "..self.Path.." does not exist.")
         return
     end
 
@@ -61,7 +61,7 @@ end
 function SWToPython.Classes.Call:FromTable(tbl)
     return self:New(
         tbl.id,
-        tbl.name,
+        tbl.path,
         tbl.arguments
     )
 end
