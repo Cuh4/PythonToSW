@@ -3,6 +3,8 @@
 ## 📚 | Overview
 PythonToSW is a Python package that allows you to create addons in Stormworks: Build and Rescue with Python through HTTP using FastAPI under the hood.
 
+Documentation: https://pythontosw.cuhhub.com/
+
 ### Working Example
 ```python
 from PythonToSW import (
@@ -50,6 +52,9 @@ addon.start(on_start, on_stop)
 ```
 
 More examples can be found in the [examples directory](/examples/).
+
+## 📚 | Documentation
+[Click here for the documentation.](https://pythontosw.cuhhub.com/)
 
 ## ⚙️ | Installing this package
 - Use `pip install PythonToSW --upgrade`
