@@ -124,14 +124,8 @@ function SWToPython.Uplink:ServiceInit()
     --[[
         A table of handled calls.
     ]]
-    ---@type table<integer, SWToPython.HandledCall>
-    self.HandledCalls = {}
-
-    --[[
-        A table of handled calls by IDs.
-    ]]
     ---@type table<string, SWToPython.HandledCall>
-    self._DirectHandledCalls = {}
+    self.HandledCalls = {}
 
     --[[
         The amount of outgoing requests that haven't received a response yet.
@@ -150,12 +144,6 @@ function SWToPython.Uplink:ServiceStart()
     ]]
     self.UpdateTask = Noir.Services.TaskService:AddTickTask(function()
         self:Update()
-
-        -- print("outgoing requests: %s", self.Outgoing)
-        -- print("handled calls: %s", Noir.Libraries.Table:Length(self.HandledCalls))
-        -- print("handled callbacks: %s", #self.TriggeredCallbacks)
-        -- print("alive: %s", self.Alive)
-        -- print("-----------------")
     end, self.TickInterval, nil, true)
 
     --[[
@@ -164,13 +152,6 @@ function SWToPython.Uplink:ServiceStart()
     self.CheckAliveTask = Noir.Services.TaskService:AddTickTask(function()
         self:CheckAlive()
     end, self.AliveCheckTickInterval, nil, true)
-
-    -- Handle loading triggered callbacks correctly
-    ---@param handledCall SWToPython.HandledCall
-    Noir.Services.HoarderService:AddCheckpoint(self, SWToPython.Classes.HandledCall, function(handledCall)
-        self._DirectHandledCalls[handledCall.ID] = handledCall
-        return true
-    end)
 
     -- Load handled calls from previous session
     if Noir.AddonReason == "AddonReload" then
@@ -189,6 +170,36 @@ function SWToPython.Uplink:ServiceStart()
             SWToPython.Classes.TriggeredCallback,
             {}
         )
+    end
+end
+
+--[[
+    Returns a function from a path, or nil if not found.<br>
+    Example path: "server.announce", "foo.bar.myFunction", etc.
+]]
+---@param path string
+---@return function|nil
+function SWToPython.Uplink:GetFunction(path)
+    local at = _ENV
+
+    for _, segment in pairs(Noir.Libraries.String:Split(path, ".")) do
+        local nextPoint = at[segment]
+
+        if not nextPoint then
+            return nil
+        end
+
+        if type(nextPoint) ~= "table" and type(nextPoint) ~= "function" then
+            return nil
+        end
+
+        at = nextPoint
+    end
+
+    if type(at) == "function" then
+        return at
+    else
+        return nil
     end
 end
 
@@ -297,8 +308,8 @@ end
     Handles the process of running calls from the PythonToSW server, returning values, etc.
 ]]
 function SWToPython.Uplink:Update()
-    local _handledCalls = self.HandledCalls
-    local _triggeredCallbacks = self.TriggeredCallbacks
+    local _handledCalls = Noir.Libraries.Table:Copy(self.HandledCalls)
+    local _triggeredCallbacks = Noir.Libraries.Table:Copy(self.TriggeredCallbacks)
 
     self:Request(
         "/update",
@@ -310,29 +321,22 @@ function SWToPython.Uplink:Update()
 
         ---@param calls table<integer, table>
         function(calls)
-            -- clean up old data as the PythonToSW server has received and processed it, so we can discard it now
-
-            if #_triggeredCallbacks > 0 then
-                for index = #_triggeredCallbacks, 1, -1 do
-                    self:RemoveTriggeredCallback(index)
-                end
-            end
-
-            if #_handledCalls > 0 then
-                for index = #_handledCalls, 1, -1 do
-                    self:RemoveHandledCall(index)
-                end
-            end
-
             for _, _call in ipairs(calls) do
                 local call = SWToPython.Classes.Call:FromTable(_call)
 
                 if self:HasHandledCall(call) then
-                    print("we handled this sorry")
                     return
                 end
 
                 self:HandleCall(call)
+            end
+
+            for _, triggeredCallback in pairs(_triggeredCallbacks) do
+                self:RemoveTriggeredCallback(triggeredCallback)
+            end
+
+            for _, handledCall in pairs(_handledCalls) do
+                self:RemoveHandledCall(handledCall)
             end
         end
     )
@@ -343,11 +347,16 @@ end
 ]]
 ---@return table<integer, SwToPython.HandledCall.AsTable>
 function SWToPython.Uplink:HandledCallsToTable()
+    ---@type table<integer, SwToPython.HandledCall.AsTable>
     local handledCalls = {}
 
-    for _, handledCall in ipairs(self.HandledCalls) do
+    for _, handledCall in pairs(self.HandledCalls) do
         table.insert(handledCalls, handledCall:ToTable())
     end
+
+    table.sort(handledCalls, function (handledCallA, handledCallB)
+        return handledCallA.Time < handledCallB.Time
+    end)
 
     return handledCalls
 end
@@ -357,11 +366,16 @@ end
 ]]
 ---@return table<integer, SwToPython.TriggeredCallback.AsTable>
 function SWToPython.Uplink:TriggeredCallbacksToTable()
+    ---@type table<integer, SwToPython.TriggeredCallback.AsTable>
     local triggeredCallbacks = {}
 
-    for _, triggeredCallback in ipairs(self.TriggeredCallbacks) do
+    for _, triggeredCallback in pairs(self.TriggeredCallbacks) do
         table.insert(triggeredCallbacks, triggeredCallback:ToTable())
     end
+
+    table.sort(triggeredCallbacks, function (triggeredCallbackA, triggeredCallbackB)
+        return triggeredCallbackA.Time < triggeredCallbackB.Time
+    end)
 
     return triggeredCallbacks
 end
@@ -382,12 +396,8 @@ function SWToPython.Uplink:HandleCall(call)
         return
     end
 
-    table.insert(self.HandledCalls, handledCall)
-    self._DirectHandledCalls[handledCall.ID] = handledCall
-
+    self.HandledCalls[handledCall.ID] = handledCall
     handledCall:Hoard(self, "HandledCalls")
-
-    -- print("Handled call server.%s with ID %s", call.Name, call.ID)
 end
 
 --[[
@@ -396,24 +406,15 @@ end
 ---@param call SWToPython.Call
 ---@return boolean
 function SWToPython.Uplink:HasHandledCall(call)
-    return self._DirectHandledCalls[call.ID] ~= nil
+    return self.HandledCalls[call.ID] ~= nil
 end
 
 --[[
     Removes a handled call.
 ]]
----@param index integer
-function SWToPython.Uplink:RemoveHandledCall(index)
-    local handledCall = self.HandledCalls[index]
-
-    if not handledCall then
-        warn("Uplink:RemoveHandledCall(): Attempted to remove a non-existent handled call.")
-        return
-    end
-
-    table.remove(self.HandledCalls, index)
-    self._DirectHandledCalls[handledCall.ID] = nil
-
+---@param handledCall SWToPython.HandledCall
+function SWToPython.Uplink:RemoveHandledCall(handledCall)
+    self.HandledCalls[handledCall.ID] = nil
     handledCall:Unhoard(self, "HandledCalls")
 end
 
@@ -424,9 +425,9 @@ end
 ---@param arguments table<integer, any>
 ---@return SWToPython.TriggeredCallback
 function SWToPython.Uplink:HandleCallback(callbackName, arguments)
-    local triggeredCallback = SWToPython.Classes.TriggeredCallback:New(callbackName, arguments)
+    local triggeredCallback = SWToPython.Classes.TriggeredCallback:New(SWToPython.ID:GetID(), callbackName, arguments)
+    self.TriggeredCallbacks[triggeredCallback.ID] = triggeredCallback
 
-    table.insert(self.TriggeredCallbacks, triggeredCallback)
     triggeredCallback:Hoard(self, "TriggeredCallbacks")
 
     return triggeredCallback
@@ -435,16 +436,9 @@ end
 --[[
     Removes a triggered callback.
 ]]
----@param index integer
-function SWToPython.Uplink:RemoveTriggeredCallback(index)
-    local triggeredCallback = self.TriggeredCallbacks[index]
-
-    if not triggeredCallback then
-        warn("Uplink:RemoveTriggeredCallback(): Attempted to remove a non-existent triggered callback.")
-        return
-    end
-
-    table.remove(self.TriggeredCallbacks, index)
+---@param triggeredCallback SWToPython.TriggeredCallback
+function SWToPython.Uplink:RemoveTriggeredCallback(triggeredCallback)
+    self.TriggeredCallbacks[triggeredCallback.ID] = nil
     triggeredCallback:Unhoard(self, "TriggeredCallbacks")
 end
 
