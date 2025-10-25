@@ -684,7 +684,7 @@ class Addon():
         
         return self.get_call(call_id) is not None
         
-    def call(self, function: CallEnum, *args) -> Any:
+    def call(self, function: CallEnum, *args) -> tuple[Any, ...]:
         """
         Calls a `server.` function in the addon.
         
@@ -701,7 +701,7 @@ class Addon():
         
         return self.call_function(f"server.{function.value}", *args)
         
-    def call_function(self, path: str, *args) -> Any:
+    def call_function(self, path: str, *args) -> tuple[Any, ...]:
         """
         Calls a custom function in the addon.<br>
         You can inject custom functions into the addon script using `attach_lua_code` or `attach_lua_file`.
