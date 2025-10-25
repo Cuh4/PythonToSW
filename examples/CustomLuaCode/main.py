@@ -16,7 +16,7 @@ def on_start():
     """
     
     # Call `foo.bar.myFunction` with arguments `time.time()`
-    number = addon.call_function("foo.bar.myFunction", time.time())
+    number, = addon.call_function("foo.bar.myFunction", time.time())
     
     # ...and print what was returned:
     print(f"We got: {number}")
