@@ -4,6 +4,5 @@ fastapi==0.120.0
 pydantic==2.12.3
 pytest==8.3.4
 rich==14.2.0
-setuptools==75.1.0
 uvicorn==0.38.0
 xmltodict==0.14.2

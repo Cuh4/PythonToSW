@@ -4,4 +4,4 @@ py combine.py --directory "src/SWToPython" --destination "src/PythonToSW/addon/s
 rmdir dist /S /q
 
 pipreqs --force
-py setup.py sdist
+py -m build
