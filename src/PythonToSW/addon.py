@@ -644,7 +644,7 @@ class Addon():
         
     def _handle_call(self, call: Call, return_values: list[Any]):
         """
-        Handles the finalization of a call to a `server.` function in the addon.
+        Handles the finalization of a call to a function in the addon.
         
         Args:
             call (Call): The call to handle.
