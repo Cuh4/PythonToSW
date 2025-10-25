@@ -89,7 +89,7 @@ class AddonConstants():
     MAX_TPS: int = 64
     TICK_INTERVAL: int = 2
     OK_TIME_THRESHOLD_SECONDS: float = 0.5
-    CALL_TIMEOUT_SECONDS: int = 5
+    CALL_TIMEOUT_SECONDS: int = 20
 
 class Addon():
     """
@@ -133,6 +133,7 @@ class Addon():
         
         self.copy_from = self._get_addon_copy_path(copy_from)
         self.started = False
+        self.connected = False
         self.last_ok = 0
         self.constants = constants or AddonConstants()
         
@@ -155,6 +156,7 @@ class Addon():
         self.uvicorn_log_level = uvicorn_log_level
         
         self.on_start = Event()
+        self.on_stop = Event()
         self.on_tick = Event()
         
     def _generate_token(self) -> str:
@@ -525,33 +527,53 @@ class Addon():
         Fires the `on_tick` event on a separate thread.
         """
         
-        self._info(f"Starting `on_tick` with TPS of {self._calculate_tps()} ({self._calculate_tick_dt():.2f}s).")
+        self._info(f"Starting `on_tick` with TPS of {self._calculate_tps()} ({self._calculate_tick_dt():.2f}s/tick).")
         
         while True:
-            if self.is_addon_alive():
+            self._update_connected()
+            
+            if self.connected:
                 self.on_tick.fire_threaded()
             
             time.sleep(self._calculate_tick_dt())
+            
+    def _start_on_tick(self):
+        """
+        Starts the `on_tick` thread.
+        """
+        
+        thread = threading.Thread(target = self._on_tick, daemon = True)
+        thread.start()
     
     def _on_start(self):
         """
-        Internal handler for the FastAPI app startup event.
+        Called when the addon starts.
         """
         
-        self._info(f"Started {self.name} on port {self.port}.")
-
-        threading.Thread(target = self._on_tick, daemon = True).start()
+        self._info(f"{self.name} has connected.")
         self.on_start.fire_threaded()
         
-    def is_addon_alive(self) -> bool:
+    def _on_stop(self):
         """
-        Checks if the addon is alive.
-        
-        Returns:
-            bool: True if the addon is alive, False otherwise.
+        Called when the addon stops.
         """
         
-        return time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
+        self._warn(f"{self.name} has disconnected.")
+        self.on_stop.fire_threaded()
+        
+    def _update_connected(self):
+        """
+        Checks if we're connected.
+        """
+        
+        connected = time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
+        
+        if not self.connected and connected:
+            self._on_start()
+        elif self.connected and not connected:
+            self._on_stop()
+            
+        self.connected = connected
     
     def attach_lua_code(self, code: str):
         """
@@ -677,17 +699,35 @@ class Addon():
             tuple[Any, ...]: Whatever the function returns.
         """
         
+        return self.call_function(f"server.{function.value}", *args)
+        
+    def call_function(self, path: str, *args) -> Any:
+        """
+        Calls a custom function in the addon.<br>
+        You can inject custom functions into the addon script using `attach_lua_code` or `attach_lua_file`.
+        
+        Args:
+            path (str): The path of the function to call.
+            *args: The arguments to pass to the function.
+            
+        Raises:
+            PTSCallException: If the call times out.
+        
+        Returns:
+            tuple[Any, ...]: Whatever the function returns.
+        """
+        
         call_id = http.generate_uuid()
 
         call = Call(
             id = call_id,
-            name = function,
+            path = path,
             arguments = list(args)
         )
 
         self.calls.append(call)
         
-        while not self.is_addon_alive():
+        while not self.connected:
             time.sleep(0.01)
 
         try:
@@ -695,9 +735,13 @@ class Addon():
         except TimeoutError as exception:
             raise PTSCallException(f"Call with ID {call_id} timed out.") from exception
         
-    def start(self, on_start: Callable = None):
+    def start(self, on_start: Callable = None, on_stop: Callable = None):
         """
         Starts the addon.
+        
+        Args:
+            on_start (Callable, optional): A function to call when the addon starts (connection is established). Defaults to None.
+            on_stop (Callable, optional): A function to call when the addon stops (connection is lost). Defaults to None.
         
         Raises:
             PTSLifecycleException: If the addon has already started.
@@ -711,12 +755,14 @@ class Addon():
         self.started = True
         self._create_addon()
         self._create_endpoints()
-        
+        self._start_on_tick()
+
         if on_start is not None:
             self.on_start += on_start
-        
-        self.app.add_event_handler("startup", self._on_start)
-        
+            
+        if on_stop is not None:
+            self.on_stop += on_stop
+
         uvicorn.run(
             self.app,
             host = "localhost",
