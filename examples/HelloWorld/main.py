@@ -1,3 +1,10 @@
+"""
+A simple hello world addon.<br>
+When the addon starts, "Hello world!" is sent into chat.
+"""
+
+import os
+
 from PythonToSW import (
     Addon,
     CallEnum,
@@ -5,7 +12,7 @@ from PythonToSW import (
 
 addon = Addon(
     "Testing",
-    path = ".",
+    path = os.path.dirname(__file__),
     port = 2000
 )
 

@@ -1,3 +1,11 @@
+"""
+A simple hello world addon.<br>
+When the addon starts, "Hello world!" is sent into chat.<br>
+This version is to be ran on a dedicated server, and shows that PythonToSW can handle that.
+"""
+
+import os
+
 from PythonToSW import (
     DedicatedServerAddon,
     CallEnum,
@@ -8,7 +16,7 @@ from PythonToSW import (
 # so you don't need to worry about that.
 addon = DedicatedServerAddon(
     "Testing",
-    path = ".",
+    path = os.path.dirname(__file__),
     dedicated_server_path = "C:/Path/To/Stormworks/Server/Directory",
     server_config_path = "C:/Path/To/Stormworks/Server/Directory/server_config.xml",    # usually at `%appdata%\\Stormworks\\server_config.xml` on Windows
     port = 2000                                                                         # unless overridden via server executable command-line argument
