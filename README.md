@@ -8,71 +8,48 @@ PythonToSW is a Python package that allows you to create addons in Stormworks: B
 from PythonToSW import (
     Addon,
     CallEnum,
-    CallbackEnum
 )
 
-class State():
-    """
-    Represents addon state.
-    This is not required for PythonToSW.
-    This is purely for the addon.
-    """
-    
-    ticks = 0
-    count = 0
-
-addon = Addon("Testing", path = ".", port = 2000)
-state = State()
-
-def on_player_join(steam_id: int, name: str, peer_id: int, is_admin: bool, is_auth: bool):
-    """
-    Called when a player joins.
-    """
-    
-    addon.call(CallEnum.ANNOUNCE, "My Addon", f"Welcome {name}!")
-
-def on_tick():
-    """
-    Called every tick.
-    """
-    
-    state.ticks += 1
-    
-    if state.ticks % 100 != 0: # Only run below code every 100 ticks
-        return
-    
-    state.count += 1
-    addon.call(CallEnum.NOTIFY, -1, "My Addon", f"We at #{state.count}", 1)
+addon = Addon(
+    "Testing",
+    path = ".",
+    port = 2000
+)
 
 def on_start():
     """
-    Called when the addon starts.
+    Called when the addon starts (connects with in-game addon).
     """
     
-    players: list = addon.call(CallEnum.GET_PLAYERS)[0]
-
-    for player in players:
-        on_player_join(
-            player["steam_id"],
-            player["name"],
-            player["id"],
-            player["admin"],
-            player["auth"]
-        )
+    # If you was to code a Lua addon with the same behaviour, it'd look like: server.announce("Server", "Hello world!")
+    addon.call(CallEnum.ANNOUNCE, "Server", "Hello world!")
     
-    # lua code equivalent: server.announce("My Addon", "Addon has started!")
-    addon.call(CallEnum.ANNOUNCE, "My Addon", "Addon has started!")
-
-# Listen for players joining
-addon.connect(CallbackEnum.ON_PLAYER_JOIN, on_player_join)
-
-# Connect `on_tick` function to the custom `on_tick` event
-# This does not connect to the in-game `onTick` callback (intentionally not allowed)
+def on_stop():
+    """
+    Called when the addon stops (disconnects with in-game addon).
+    """
+    
+    print("Whups, we lost connection!")
+    
+def on_tick():
+    """
+    Called every addon tick.
+    """
+    
+    pass
+    
+# Call `on_tick` every addon tick
+# Note that this doesn't connect to the in-game `onTick` callback as HTTP would not be able to keep up
+# Instead, this is a simulated version that is called at a manageable rate (32 TPS, theoretical max)
 addon.on_tick += on_tick
 
-# Start the addon. `on_start` will then be called when it is fully started
-addon.start(on_start)
+# Start the addon
+# `on_start` is called when the in-game addon connects
+# `on_stop` is called when the in-game addon disconnects (game exited, etc.)
+addon.start(on_start, on_stop)
 ```
+
+More examples can be found in the [examples directory](/examples/).
 
 ## ⚙️ | Installing this package
 - Use `pip install PythonToSW --upgrade`
