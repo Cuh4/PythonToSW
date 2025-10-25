@@ -13283,9 +13283,19 @@ SWToPython.Uplink = Noir.Services:CreateService(
 ]]
 function SWToPython.Uplink:ServiceInit()
     --[[
+        Fired when we connect to the PythonToSW server.
+    ]]
+    self.OnConnect = Noir.Libraries.Events:Create()
+
+    --[[
+        Fired when we disconnect from the PythonToSW server.
+    ]]
+    self.OnDisconnect = Noir.Libraries.Events:Create()
+
+    --[[
         The status of the PythonToSW server.
     ]]
-    self.Alive = true
+    self.Alive = false
 
     --[[
         How often to check if the PythonToSW server is alive.
@@ -13379,6 +13389,10 @@ end
     Called when the service is started.
 ]]
 function SWToPython.Uplink:ServiceStart()
+    -- Check alive
+    self:CheckAlive()
+
+    -- Handle callbacks
     self:HandleCallbacks()
 
     --[[
@@ -13531,9 +13545,11 @@ function SWToPython.Uplink:SetAlive(alive)
     self.Alive = alive
 
     if self.Alive then
-        print("Uplink:SetAlive(): PythonToSW server is alive.")
+        print("Uplink:SetAlive(): Connected to PythonToSW server (alive).")
+        self.OnConnect:Fire()
     else
-        warn("Uplink:SetAlive(): PythonToSW server is not alive.")
+        warn("Uplink:SetAlive(): Disconnected from PythonToSW server (not alive).")
+        self.OnDisconnect:Fire()
     end
 end
 
@@ -13550,15 +13566,24 @@ end
     Handles the process of running calls from the PythonToSW server, returning values, etc.
 ]]
 function SWToPython.Uplink:Update()
-    local _handledCalls = Noir.Libraries.Table:Copy(self.HandledCalls)
-    local _triggeredCallbacks = Noir.Libraries.Table:Copy(self.TriggeredCallbacks)
+    local handledCalls = self:HandledCallsToTable()
+
+    for _, handledCall in pairs(self.HandledCalls) do
+        self:RemoveHandledCall(handledCall)
+    end
+
+    local triggeredCallbacks = self:TriggeredCallbacksToTable()
+
+    for _, triggeredCallback in pairs(self.TriggeredCallbacks) do
+        self:RemoveTriggeredCallback(triggeredCallback)
+    end
 
     self:Request(
         "/update",
 
         {
-            handled_calls = self:HandledCallsToTable(),
-            triggered_callbacks = self:TriggeredCallbacksToTable()
+            handled_calls = handledCalls,
+            triggered_callbacks = triggeredCallbacks
         },
 
         ---@param calls table<integer, table>
@@ -13571,14 +13596,6 @@ function SWToPython.Uplink:Update()
                 end
 
                 self:HandleCall(call)
-            end
-
-            for _, triggeredCallback in pairs(_triggeredCallbacks) do
-                self:RemoveTriggeredCallback(triggeredCallback)
-            end
-
-            for _, handledCall in pairs(_handledCalls) do
-                self:RemoveHandledCall(handledCall)
             end
         end
     )
@@ -13661,12 +13678,13 @@ function SWToPython.Uplink:RemoveHandledCall(handledCall)
 end
 
 --[[
-    Handles a callback.
+    Invokes a callback.<br>
+    Essentially triggers an event up in PythonToSW.
 ]]
 ---@param callbackName string
 ---@param arguments table<integer, any>
 ---@return SWToPython.TriggeredCallback
-function SWToPython.Uplink:HandleCallback(callbackName, arguments)
+function SWToPython.Uplink:InvokeCallback(callbackName, arguments)
     local triggeredCallback = SWToPython.Classes.TriggeredCallback:New(SWToPython.ID:GetID(), callbackName, arguments)
     self.TriggeredCallbacks[triggeredCallback.ID] = triggeredCallback
 
@@ -13690,7 +13708,7 @@ end
 function SWToPython.Uplink:HandleCallbacks()
     for _, callbackName in pairs(self.Callbacks) do
         Noir.Callbacks:Connect(callbackName, function(...)
-            self:HandleCallback(callbackName, {...})
+            self:InvokeCallback(callbackName, {...})
         end)
     end
 end
