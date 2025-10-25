@@ -77,7 +77,7 @@ class CallbackEnum(Enum):
 
 class CallEnum(Enum):
     """
-    An enum for all the available calls in Stormworks.
+    An enum for all the available server functions that can be called in Stormworks.
     """
     
     GET_ADDON_INDEX = "getAddonIndex"
