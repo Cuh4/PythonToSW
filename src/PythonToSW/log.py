@@ -20,29 +20,34 @@ limitations under the License.
 """
 
 # // Imports
-import os
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
+import logging
 
-from . import log
-from .log import logger
-
-from .libs import (
-    io,
-    xml,
-    http
-)
-
-from .libs.persistence import Persistence
-from .libs.event import Event
-
-from . import exceptions
-
-from .values import *
-from .enums import *
-from .models import *
-
-from .addon import *
+from coloredlogs import install as _install
 
 # // Main
-from logging import INFO as _INFO
-log.install(_INFO)
+logger = logging.getLogger("cuhHub")
+
+console_handler = logging.StreamHandler()
+logger.addHandler(console_handler)
+
+def install(level: int):
+    """
+    Install colored logs with the specified log level.
+
+    Args:
+        level (int): The log level to set.
+    """
+    
+    _install(level = level, logger = logger, fmt = "%(asctime)s - %(levelname)s - %(message)s")
+
+def set_log_level(level: int):
+    """
+    Set the log level for the logger.
+    
+    Args:
+        level (int): The log level to set.
+    """
+    
+    install(level)
+    logger.setLevel(level)
+    console_handler.setLevel(level)

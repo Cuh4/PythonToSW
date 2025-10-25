@@ -20,29 +20,32 @@ limitations under the License.
 """
 
 # // Imports
-import os
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
+import pytest
+from concurrent.futures import Future
 
-from . import log
-from .log import logger
-
-from .libs import (
-    io,
-    xml,
-    http
-)
-
-from .libs.persistence import Persistence
-from .libs.event import Event
-
-from . import exceptions
-
-from .values import *
-from .enums import *
-from .models import *
-
-from .addon import *
+import PythonToSW
 
 # // Main
-from logging import INFO as _INFO
-log.install(_INFO)
+def _test_value(value: PythonToSW.BaseValue):
+    """
+    Tests the serialization of a value.
+    
+    Args:
+        value (PythonToSW.BaseValue): The value to process.
+    """
+    
+    call = PythonToSW.Call(
+        id = "test",
+        path = f"server.{PythonToSW.CallEnum.ADD_ADMIN}",
+        arguments = [value],
+        future = Future()
+    )
+    
+    assert call.model_dump()["arguments"][0] == value.build(), f"{value.__class__.__name__} serialization failed."
+    
+def test_matrix_serialization():
+    """
+    Tests the automatic serialization of matrices.
+    """
+
+    _test_value(PythonToSW.Matrix(1, 5, 2))

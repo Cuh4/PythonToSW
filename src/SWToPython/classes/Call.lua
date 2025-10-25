@@ -1,0 +1,67 @@
+--------------------------------------------------------
+-- [SWToPython] Call
+-- https://github.com/Cuh4/PythonToSW
+--------------------------------------------------------
+
+--[[
+    Copyright (C) 2025 Cuh4
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    A class representing a call from the PythonToSW server
+]]
+---@class SWToPython.Call: NoirDataclass
+---@field New fun(self: SWToPython.Call, ID: string, path: string, arguments: table): SWToPython.Call
+---@field ID string The ID of the call
+---@field Path string The path of the function to be called
+---@field Arguments table The arguments of the call
+SWToPython.Classes.Call = Noir.Libraries.Dataclasses:New("Call", {
+    Noir.Libraries.Dataclasses:Field("ID", "string"),
+    Noir.Libraries.Dataclasses:Field("Path", "string"),
+    Noir.Libraries.Dataclasses:Field("Arguments", "table")
+})
+
+--[[
+    Calls the `server.` function in the addon and returns the result.
+]]
+---@return SWToPython.HandledCall?
+function SWToPython.Classes.Call:Call()
+    local func = SWToPython.Uplink:GetFunction(self.Path)
+
+    if not func then
+        SWToPython.Uplink:PropagateError("Function at "..self.Path.." does not exist.")
+        return
+    end
+
+    local returns = {func(table.unpack(self.Arguments))}
+    return SWToPython.Classes.HandledCall:New(self.ID, returns)
+end
+
+--[[
+    Returns a Call instance from a table representation.
+]]
+---@param tbl table
+---@return SWToPython.Call
+function SWToPython.Classes.Call:FromTable(tbl)
+    return self:New(
+        tbl.id,
+        tbl.path,
+        tbl.arguments
+    )
+end

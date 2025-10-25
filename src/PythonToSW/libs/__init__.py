@@ -20,29 +20,8 @@ limitations under the License.
 """
 
 # // Imports
-import os
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-from . import log
-from .log import logger
-
-from .libs import (
-    io,
-    xml,
-    http
-)
-
-from .libs.persistence import Persistence
-from .libs.event import Event
-
-from . import exceptions
-
-from .values import *
-from .enums import *
-from .models import *
-
-from .addon import *
-
-# // Main
-from logging import INFO as _INFO
-log.install(_INFO)
+from . import event
+from . import http
+from . import io
+from . import persistence
+from . import xml

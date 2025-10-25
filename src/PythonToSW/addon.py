@@ -1,14 +1,10 @@
-# ----------------------------------------
-# [PythonToSW] Addon
-# ----------------------------------------
-
-# A Python package that allows you to make Stormworks addons with Python.
-# Repo: https://github.com/Cuh4/PythonToSW
-
 """
-The main module in this package.
+----------------------------------------------
+PythonToSW: A Python package that allows you to make Stormworks addons with Python.
+https://github.com/Cuh4/PythonToSW
+----------------------------------------------
 
-Copyright (C) 2024 Cuh4
+Copyright (C) 2025 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,684 +19,886 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# ---- // Imports
+# // Imports
 from __future__ import annotations
+
 import os
-import flask
-import flask.cli
 import json
 import threading
-import logging
-import werkzeug
-import werkzeug.utils
-import colorama
-from datetime import datetime
-from uuid import uuid4
+import uvicorn
 import time
+from typing import Any, Callable
+from logging import WARNING
+from dataclasses import dataclass
+from concurrent.futures import TimeoutError
+import re
 
-from PythonToSW import helpers
-from PythonToSW import exceptions
-from PythonToSW import Event
-from PythonToSW import dataclasses
+from fastapi import (
+    FastAPI,
+    Query,
+    Depends,
+    APIRouter
+)
 
-# ---- // Main
-colorama.init()
+from .exceptions import (
+    PTSCallbackException,
+    PTSHTTPException,
+    PTSLifecycleException,
+    PTSCallException,
+    PTSConfigException
+)
+
+from . import io
+from . import http
+from . import xml
+from . import logger
+from . import Event
+from . import Persistence
+
+from . import (
+    CallEnum,
+    CallbackEnum
+)
+
+from . import (
+    Call,
+    Token
+)
+
+from . import PACKAGE_PATH
+
+# // Main
+__all__ = [
+    "ADDON_SCRIPT_CONTENT",
+    "ADDON_PLAYLIST_CONTENT",
+    "AddonConstants",
+    "Addon",
+    "DedicatedServerAddon"
+]
+
+ADDON_SCRIPT_CONTENT: str = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "script.lua"), "r")
+ADDON_PLAYLIST_CONTENT: str = io.quick_read(os.path.join(PACKAGE_PATH, "addon", "playlist.xml"), "r")
+
+@dataclass(frozen = True)
+class AddonConstants():
+    """
+    Constants used by PythonToSW addons.
+    """
+    
+    TOKEN_EXPIRY_SECONDS: float = 12 * 60 * 60
+    MAX_TPS: int = 64
+    TICK_INTERVAL: int = 2
+    OK_TIME_THRESHOLD_SECONDS: float = 0.5
+    CALL_TIMEOUT_SECONDS: int = 20
 
 class Addon():
-    # raw string to prevent "SyntaxWarning: invalid escape sequence '\S'" from %appdata% part
-    r"""
-    A class that represents a Stormworks addon.
-    
-    >>> import PythonToSW as PTS
-    >>> addon = PTS.Addon("MyAddon", port = 3000)
-    >>>
-    >>> def main():
-    >>>     addon.execute(PTS.Announce("Server", "Hello World", -1))
-    >>>
-    >>> addon.start(target = main)
-    
-    Args:
-        addonName: (str) The name of the addon.
-        port: (int) The port to listen for requests from the in-game addon on.
-        allowLogging: (bool = True) Whether to allow logging.
-        addonPath: (str = None) The path for the addon to be placed in. You will need to provide this if you are on a non-Windows OS. Defaults to %APPDATA%\Stormworks\data\missions.
-        
-    Raises:
-        exceptions.InternalError: Raised if the PythonToSW base addon doesn't exist.
-        exceptions.PathNotFound: Raised if the addon path does not exist. If this is raised, you likely haven't installed and ran Stormworks. If you have, you will need to manually set the addonPath argument.
     """
-
-    def __init__(self, addonName: str, port: int, *, allowLogging: bool = True, addonPath: str = os.path.join(os.getenv("APPDATA"), "Stormworks", "data", "missions")):
-        # main attributes
-        self.addonName = addonName
+    A class representing a Stormworks addon.
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        *,
+        port: int,
+        copy_from: str = None,
+        addons_path: str = r"%appdata%/Stormworks/data/missions",
+        uvicorn_log_level: int = WARNING,
+        force_new_token: bool = False,
+        constants: AddonConstants = None
+    ):
+        r"""
+        Initializes a new instance of the `Addon` class.
+        
+        Args:
+            name (str): The name of the addon. This should be unique and not conflict with other addons.
+            path (str): The path to store data for this addon in.
+            port (int): The port to run the addon on.
+            copy_from (str, optional): The name of the addon to copy files from (playlist.xml, vehicles, NOT script). Can alternatively be a path to an addon directory. Defaults to None.
+            addons_path (str, optional): The path to plop addons in for Stormworks to recognise. Defaults to "\%appdata\%/Stormworks/data/missions".
+            uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
+            force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
+            constants (AddonConstants, optional): Constants to be used by the addon.
+        """
+        
+        self.name = name
+        self.path = path
         self.port = port
-        self.app = flask.Flask(__name__)
-        self.running = False
-        self.allowLogging = allowLogging
-        self.templateAddonPath = os.path.join(os.path.dirname(__file__), "addon")
-        self.addonPath = addonPath
-        self.pendingExecutions: dict[str, BaseExecution] = {}
-        self.callbacks: dict[str, Event] = {}
+        self.addons_path: str = os.path.expandvars(addons_path)
+        self.addon_path: str = os.path.join(self.addons_path, self.name)
         
-        self.playlistEncoded = self._parsePlaylist()
-        self.script = self._parseScript()
-        self.vehicles: list[dataclasses.Vehicle] = []
+        if not os.path.exists(self.addons_path):
+            raise PTSConfigException(f"Addons path at {self.addons_path} does not exist.")
         
-        # validate addon name
-        validatedAddonName, validationRequired = self._validateAddonName(addonName)
+        self.copy_from = self._get_addon_copy_path(copy_from)
+        self.started = False
+        self.connected = False
+        self.last_ok = 0
+        self.constants = constants or AddonConstants()
         
-        if validationRequired:
-            self.log(f"Your addon name contained invalid characters and was corrected. Was: {addonName} | Now: {validatedAddonName}.")
-            self.addonName = validatedAddonName
+        self.persistence = Persistence(os.path.join(self.path, self.name) + ".json")
         
-        # check if paths exist
-        if not os.path.exists(self.templateAddonPath):
-            raise exceptions.InternalError(f"Template addon path does not exist: {os.path.abspath(self.templateAddonPath)}")
+        self.force_new_token = force_new_token
+        self.token = self._get_token()
         
-        if not os.path.exists(self.addonPath):
-            raise exceptions.PathNotFound(f"Desired addon path does not exist: {os.path.abspath(self.addonPath)}. Please install and run Stormworks: Build and Rescue if you are using the default path.\nIf you are on a non-Windows OS, please provide the addonPath argument and set it to the location of Stormworks' Stormworks/data/missions folder.")
-        
-        # edit playlist
-        self.playlistEncoded["playlist"]["@name"] = f"[P2SW] {self.addonName}"
-        self.playlistEncoded["playlist"]["@folder_path"] = f"data/missions/{self.addonName}"
-        
-        # edit script
-        self.script = self.script.replace("__PORT__", str(self.port))
-        
-    def log(self, message: str):
-        """
-        Sends a message to the terminal. It's just a fancy print()
-        
-        Args:
-            message: (str) The message to send.
-        """
+        self.calls: list[Call] = []
+        self.callbacks: dict[CallbackEnum, Event] = {}
+        self.injected_lua_code: list[str] = []
 
-        if not self.allowLogging:
-            return
-        
-        print(f"{colorama.Fore.BLUE}{colorama.Style.BRIGHT}[PythonToSW - {datetime.now()}]{colorama.Style.RESET_ALL}{colorama.Fore.RESET} {message}")
-        
-    def start(self, target: "function"):
-        """
-        Starts the addon, automatically creating needed files, as well as hosting a HTTP server locally.
-        
-        >>> import PythonToSW as PTS
-        >>> addon = PTS.Addon("MyAddon", port = 3000)
-        >>>
-        >>> def main():
-        >>>     addon.execute(PTS.Announce("Server", "Hello World", -1))
-        >>>
-        >>> addon.start(target = main) # Start the addon. This automatically creates an addon and places it in your Stormworks' addon directory, so you can easily use the addon in a save.
-        
-        Args:
-            target: (function) The function to start the addon with.
-            
-        Raises:
-            exceptions.FailedStartAttempt: Raised if the addon is already running.
-        """
-
-        if self.running:
-            raise exceptions.FailedStartAttempt("Addon is already running")
-        
-        # set running
-        self.running = True
-        
-        # setup addon
-        self._setupAddon()
-        
-        # setup routes
-        self._setupRoutes()
-        
-        # hide flask output
-        self._hideFlaskOutput()
-        
-        # send startup message
-        self.log(f"{self.addonName} (addon) has started, listening on port {self.port}. Create a save with your addon enabled in Stormworks and keep this running.")
-        
-        # start server
-        threading.Thread(target = target).start()
-        self.app.run(host = "127.0.0.1", port = self.port, threaded = True)
-        
-    def execute(self, execution: BaseExecution):
-        """
-        Sends an execution to the in-game addon.
-        
-        >>> import PythonToSW as PTS
-        >>> addon = PTS.Addon("MyAddon", port = 3000)
-        >>>
-        >>> def main():
-        >>>     addon.execute(PTS.Announce("Server", "Hello World", -1)) # Sends a message to everyone
-        >>>
-        >>> addon.start(target = main)
-        
-        Args:
-            execution: (BaseExecution) The execution to send.
-            
-        Raises:
-            exceptions.FailedExecutionAttempt: Raised if the addon is not running, or if an execution with the same ID already exists.
-        """
-
-        # check if addon is running
-        if not self.running:
-            raise exceptions.FailedExecutionAttempt("Attempted to execute server function when addon is not running")
-        
-        # check if execution already exists
-        if self.getPendingExecution(execution.ID):
-            raise exceptions.FailedExecutionAttempt(f"Attempted to execute server function with duplicate ID: {execution.ID}")
-        
-        # add execution
-        self.pendingExecutions[execution.ID] = execution
-        # self.log(f"{execution} has been queued.")
-        
-        # wait for execution to complete
-        returnValues = execution._wait()
-        # self.log(f"{execution} has complete. Returned: {returnValues}")
-        
-        if execution._obsolete():
-            return
-        
-        # remove execution now that its complete
-        self.removePendingExecution(execution.ID)
-        
-        # return
-        return returnValues
+        self.app = FastAPI(title = self.name, docs_url = None, redoc_url = None, openapi_url = None)
     
-    def getPendingExecution(self, executionID: str) -> BaseExecution|None:
-        """
-        Returns the pending execution with the given ID.
+        self.router = APIRouter(dependencies = [
+            Depends(self._token_dependency),
+            Depends(self._update_ok_dependency)
+        ])
+    
+        self.uvicorn_log_level = uvicorn_log_level
         
-        Args:
-            executionID: (str) The ID of the execution to return.
-            
-        Returns:
-            (BaseExecution|None) The pending execution with the given ID, or None if it doesn't exist.
-        """
-
-        return self.getPendingExecutions().get(executionID)
+        self.on_start = Event()
+        self.on_stop = Event()
+        self.on_tick = Event()
         
-    def getPendingExecutions(self) -> dict[str, BaseExecution]:
+    def _generate_token(self) -> str:
         """
-        Returns all pending executions.
+        Generates a new token for this addon.
+        This overwrites persistence data. Call this carefully.
         
         Returns:
-            (dict[str, BaseExecution]) The pending executions, with the keys being the execution IDs.
+            str: The generated token.
         """
+        
+        token = Token(
+            token = http.generate_uuid(),
+            set_at = time.time()
+        )
 
-        return self.pendingExecutions.copy()
-    
-    def removePendingExecution(self, executionID: str):
+        self.persistence.set("token", token.model_dump())
+        return token.token
+        
+    def _get_token(self) -> str:
         """
-        Removes the pending execution with the given ID.
+        Returns the request token for this addon.
+
+        Tokens are saved and reused temporarily per-addon.
+        This is to prevent the addon user having to reload
+        the in-game addon every time the addon is started
+        as the token would be regenerated.
+        
+        Returns:
+            str: The generated token.
+        """
+        
+        token = self.persistence.get("token")
+        
+        if token is None:
+            return self._generate_token()
+        
+        if self.force_new_token:
+            return self._generate_token()
+        
+        token = Token.model_validate(token)
+        
+        if time.time() > token.set_at + self.constants.TOKEN_EXPIRY_SECONDS:
+            self._warn("Request token expired, creating a new one.")
+            self._warn("If you are having issues, please run `?reload_scripts` in-game so the addon can get the updated token.")
+            return self._generate_token()
+        else:
+            return token.token
+    
+    def _validate_name(self, name: str):
+        """
+        Validates the name of the addon.
         
         Args:
-            executionID: (str) The ID of the execution to remove.
-            
-        Raises:
-            exceptions.FailedExecutionAttempt: Raised if the execution with the given ID doesn't exist.
-            exceptions.ExecutionNotFound: Raised if no execution with the given ID exists.
+            name (str): The name of the addon.
         """
-
-        # check if addon is running
-        if not self.running:
-            raise exceptions.FailedExecutionAttempt("Attempted to remove pending execution when addon is not running")
         
-        # get the execution
-        execution = self.getPendingExecution(executionID)
+        return name.replace("/", "").replace("\r", "").replace("\n", "").replace("\\", "")
         
-        if not execution:
-            raise exceptions.ExecutionNotFound(f"Invalid execution ID: {executionID}")
-        
-        # halt execution
-        execution._halt()
-        
-        # remove it
-        self.pendingExecutions.pop(executionID)
-    
-    def registerVehicle(self, path: str, vehicleID: int, isStatic: bool = False, isEditable: bool = False, isInvulnerable: bool = False, isShowOnMap: bool = False, isTransponderActive: bool = False):
+    def _debug(self, message: str):
         """
-        Registers a vehicle with the addon.
+        Logs a debug message.
         
         Args:
-            path: (str) The path to the vehicle file.
-            vehicleID: (int) The ID of the vehicle.
-            isStatic: (bool = False) Whether the vehicle is static.
-            isEditable: (bool = False) Whether the vehicle is editable.
-            isInvulnerable: (bool = False) Whether the vehicle is invulnerable.
-            isShowOnMap: (bool = False) Whether the vehicle is shown on the map.
-            isTransponderActive: (bool = False) Whether the vehicle's transponder is active.
-            
-        Raises:
-            exceptions.InvalidVehiclePath: Raised if the path to the vehicle file is invalid (doesn't exist, isn't a file, or isn't an XML file).
+            message (str): The message to log.
+        """
+        
+        logger.debug(f"[Addon: {self.name}] {message}")
+        
+    def _info(self, message: str):
+        """
+        Logs an informational message.
+        
+        Args:
+            message (str): The message to log.
+        """
+        
+        logger.info(f"[Addon: {self.name}] {message}")
+        
+    def _warn(self, message: str):
+        """
+        Logs a warning message.
+        
+        Args:
+            message (str): The message to log.
+        """
+        
+        logger.warning(f"[Addon: {self.name}] {message}")
+        
+    def _error(self, message: str):
+        """
+        Logs an error message.
+        
+        Args:
+            message (str): The message to log.
+        """
+        
+        logger.error(f"[Addon: {self.name}] {message}")
+    
+    def _format_name(self) -> str:
+        """
+        Formats the addon name for display to the user.
+
+        Returns:
+            str: The formatted name of this addon.
+        """
+        
+        return f"(PTS) {self.name}"
+    
+    def _calculate_tick_dt(self) -> float:
+        """
+        Calculates the TPS delta time.
+
+        Returns:
+            float: The TPS.
         """
 
-        # check if path exists and is valid
+        return self.constants.TICK_INTERVAL / self.constants.MAX_TPS
+    
+    def _calculate_tps(self) -> float:
+        """
+        Calculates the TPS.
+
+        Returns:
+            float: The TPS.
+        """
+
+        return self.constants.MAX_TPS / self.constants.TICK_INTERVAL
+    
+    def _replace_content(self, content: str) -> str:
+        """
+        Replaces placeholders in the content with the addon name.
+        
+        Args:
+            content (str): The content to replace placeholders in.
+        
+        Returns:
+            str: The content with placeholders replaced.
+        """
+        
+        return (
+            content.replace("__REQUEST_TOKEN", self.token)
+            .replace("__PORT", str(self.port))
+            .replace("__TICK_INTERVAL", str(self.constants.TICK_INTERVAL))
+        )
+        
+    def _get_addon_copy_path(self, name_or_path: str = None) -> str|None:
+        """
+        Gets the path to copy files from, if any.
+        
+        Args:
+            name_or_path (str, optional): The name or path of the addon to copy files from. Defaults to None.
+            
+        Raises:
+            PTSConfigException: If the path is invalid.
+        
+        Returns:
+            str|None: The found path, or None if not copying from anything.
+        """
+        
+        if name_or_path is None:
+            return None
+        
+        if os.path.exists(name_or_path):
+            if os.path.isdir(name_or_path):
+                return name_or_path
+            else:
+                raise PTSConfigException(f"`copy_from` path exists but is not a directory.")
+        
+        potential_path = os.path.join(self.addons_path, name_or_path)
+        
+        if os.path.exists(potential_path):
+            return potential_path
+        else:
+            raise PTSConfigException(f"Could not find `copy_from` addon. Ensure the path is correct, or provide the name of the addon instead if it is within the game's addons directory.")
+        
+    def _carry_over_vehicles(self):
+        """
+        Carries over vehicles from the copy_from addon.
+        """
+        
+        if self.copy_from is None:
+            return
+        
+        for vehicle_filename in os.listdir(self.copy_from):
+            if os.path.splitext(vehicle_filename)[1].lower() != ".xml":
+                continue
+            
+            if not vehicle_filename.startswith("vehicle_"):
+                continue
+            
+            source_path = os.path.join(self.copy_from, vehicle_filename)
+            dest_path = os.path.join(self.addon_path, vehicle_filename)
+            
+            io.quick_write(dest_path, io.quick_read(source_path, "r"), mode = "w")
+            self._info(f"Carried over vehicle: {vehicle_filename}")
+            
+    def _get_template_playlist_content(self) -> str:
+        """
+        Gets the template playlist content.
+        
+        Raises:
+            PTSConfigException: If the `copy_from` addon does not have a playlist.xml file.
+        
+        Returns:
+            str: The template playlist content.
+        """
+        
+        if self.copy_from is not None:
+            playlist_path = os.path.join(self.copy_from, "playlist.xml")
+            
+            if not os.path.exists(playlist_path):
+                raise PTSConfigException(f"`copy_from` addon does not have a playlist.xml file.")
+            
+            return io.quick_read(playlist_path, "r")
+            
+        return ADDON_PLAYLIST_CONTENT
+        
+    def _make_playlist_file(self):
+        """
+        Creates the playlist file for the addon.
+        """
+        
+        content = self._get_template_playlist_content()
+        content = re.sub(r"name=\"[^\"]*\"", f"name=\"{self._format_name()}\"", content, count = 1)
+        content = re.sub(r"folder_path=\"[^\"]*\"", f"folder_path=\"data/missions/{self.name}\"", content, count = 1)
+
+        playlist_path = os.path.join(self.addon_path, "playlist.xml")
+        io.quick_write(playlist_path, content, mode = "w")
+        
+        self._info(f"Playlist created/updated successfully at: {playlist_path}")
+        
+    def _make_script_file(self):
+        """
+        Creates the script file for the addon.
+        """
+        
+        content = self._replace_content(ADDON_SCRIPT_CONTENT)
+        content += "\n\n-- User-Injected Code\n" + "\n\n".join(self.injected_lua_code)
+        
+        script_path = os.path.join(self.addon_path, "script.lua")
+        io.quick_write(script_path, content, mode = "w")
+        
+        self._info(f"Script created/updated successfully at: {script_path}")
+    
+    def _create_addon(self):
+        """
+        Creates the addon directory structure.
+        """
+        
+        if not os.path.exists(self.addon_path):
+            os.makedirs(self.addon_path, exist_ok = True)
+
+        self._carry_over_vehicles()
+        self._make_playlist_file()
+        self._make_script_file()
+            
+        self._info(f"Addon created/updated successfully at: {self.addon_path}")
+        
+    def _update_last_ok(self):
+        """
+        Updates the `last_ok` attribute.
+        """
+        
+        self.last_ok = time.time()
+    
+    def _token_dependency(self, token: str = Query()):
+        """
+        A FastAPI dependency for checking the request token.
+        
+        Args:
+            token (str): The token to check for in the query parameters.
+            
+        Raises:
+            PTSHTTPException: If the token does not match the expected token.
+        
+        Returns:
+            str: The token if it exists, otherwise raises an PTSHTTPException.
+        """
+        
+        if token != self.token:
+            raise PTSHTTPException(401, "no_auth", "Invalid token provided.")
+        
+        return token
+    
+    def _update_ok_dependency(self):
+        """
+        A FastAPI dependency for updating the `last_ok` attribute whenever
+        we receive a request.
+        """
+        
+        self._update_last_ok()
+    
+    def _create_endpoints(self):
+        """
+        Creates the FastAPI endpoints for the addon.
+        """
+        
+        @self.router.get(
+            "/ok",
+            response_model = str
+        )
+        def alive() -> str:
+            """
+            Performs nothing. Used by in-game addon to check if we're alive.
+            """
+            
+            return "ok"
+        
+        @self.router.get(
+            "/update",
+            response_model = list[Call]
+        )
+        def update(handled_calls: str, triggered_callbacks: str) -> list[Call]:
+            """
+            Receives an update from the addon, and returns
+            a list of all unprocessed calls for the addon.
+            """
+            
+            try:
+                handled_calls: list[dict] = json.loads(handled_calls)
+                triggered_callbacks: list[dict] = json.loads(triggered_callbacks)
+            except json.JSONDecodeError as exception:
+                self._error(f"Failed to decode update data: {exception}")
+                raise PTSHTTPException(400, "json_error", "Failed to decode update data.")
+
+            for handled_call in handled_calls:
+                call_id =  handled_call["ID"]
+                return_values = handled_call["ReturnValues"]
+                
+                call = self.get_call(call_id)
+                
+                if call is None:
+                    continue
+                
+                self._handle_call(call, return_values)
+            
+            for triggered_callback in triggered_callbacks:
+                name = triggered_callback["Name"]
+                arguments = triggered_callback["Arguments"]
+                
+                try:
+                    name = CallbackEnum(name)
+                except ValueError as exception:
+                    self._error(f"Unknown callback name of {name}")
+                    continue
+                
+                self._handle_callback(name, arguments)
+
+            return self.calls
+
+        @self.router.get(
+            "/error",
+            response_model = str
+        )
+        def error(message: str):
+            """
+            Propagates errors from the in-game addon to here.
+            """
+            
+            self._error(f"{message} (from in-game)")
+            return "ok"
+        
+        self.app.include_router(self.router)
+    
+    def _on_tick(self):
+        """
+        Fires the `on_tick` event on a separate thread.
+        """
+        
+        self._info(f"Starting `on_tick` with TPS of {self._calculate_tps()} ({self._calculate_tick_dt():.2f}s/tick).")
+        
+        while True:
+            self._update_connected()
+            
+            if self.connected:
+                self.on_tick.fire_threaded()
+            
+            time.sleep(self._calculate_tick_dt())
+            
+    def _start_on_tick(self):
+        """
+        Starts the `on_tick` thread.
+        """
+        
+        thread = threading.Thread(target = self._on_tick, daemon = True)
+        thread.start()
+    
+    def _on_start(self):
+        """
+        Called when the addon starts.
+        """
+        
+        self._info(f"{self.name} has connected.")
+        self.on_start.fire_threaded()
+        
+    def _on_stop(self):
+        """
+        Called when the addon stops.
+        """
+        
+        self._warn(f"{self.name} has disconnected.")
+        self.on_stop.fire_threaded()
+        
+    def _update_connected(self):
+        """
+        Checks if we're connected.
+        """
+        
+        connected = time.time() - self.last_ok < self.constants.OK_TIME_THRESHOLD_SECONDS
+        
+        if not self.connected and connected:
+            self._on_start()
+        elif self.connected and not connected:
+            self._on_stop()
+            
+        self.connected = connected
+    
+    def attach_lua_code(self, code: str):
+        """
+        Attaches Lua code to be injected into the end of the addon script.
+        
+        Args:
+            code (str): The Lua code to inject.
+        """
+        
+        self.injected_lua_code.append(code)
+        
+    def attach_lua_file(self, path: str):
+        """
+        Attaches a Lua file to be injected into the end of the addon script.
+        
+        Args:
+            path (str): The path to the Lua file to inject.
+            
+        Raises:
+            PTSConfigException: If the file does not exist.
+        """
+        
         if not os.path.exists(path):
-            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path}")
+            raise PTSConfigException(f"Lua file at path {path} does not exist.")
         
         if not os.path.isfile(path):
-            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path} is not a file")
+            raise PTSConfigException(f"Lua file at path {path} is not a file.")
         
-        if not os.path.splitext(path)[1] == ".xml":
-            raise exceptions.InvalidVehiclePath(f"Invalid vehicle path: {path} is not an XML file")
-        
-        # validate playlist structure (this is awful)
-        root = self.playlistEncoded["playlist"]["locations"]["locations"]["l"]
-        
-        if root["components"].get("components", None) is None and root["components"].get("c", None) is None:
-            root["components"] = {"c" : []}
-        
-        # register vehicle
-        self.vehicles.append(dataclasses.Vehicle(
-            path = path,
-            vehicleID = vehicleID
-        ))
-        
-        # add vehicle to playlist
-        vehicle = {
-            "@component_type": "3",
-            "@id": f"{vehicleID}",
-            "@name": "Vehicle",
-            "@dynamic_object_type": "2",
-            "@vehicle_file_name": f"data/missions_working/vehicle_{vehicleID}.xml",
-            "@vehicle_file_store": "4",
-            
-            "spawn_transform" : {
-                "@30" : "0",
-                "@31" : "0",
-                "@32" : "0"
-            },
-
-            "spawn_bounds": {
-                "min": {
-                    "@x": "0",
-                    "@y": "0",
-                    "@z": "0"
-                },
-                "max": {
-                    "@x": "0",
-                    "@y": "0",
-                    "@z": "0"
-                }
-            },
-
-            "spawn_local_offset": {
-                "@y": "0",
-            },
-
-            "graph_links": None
-        }
-        
-        if isStatic:
-            vehicle["@vehicle_is_static"] = "true"
-            
-        if isEditable:
-            vehicle["@vehicle_is_editable"] = "true"
-            
-        if isInvulnerable:
-            vehicle["@vehicle_is_invulnerable"] = "true"
-            
-        if isShowOnMap:
-            vehicle["@vehicle_is_show_on_map"] = "true"
-            
-        if isTransponderActive:
-            vehicle["@vehicle_is_transponder_active"] = "true"
-
-        root["components"]["c"].append(vehicle)
-        
-        # send log
-        self.log(f"Registered vehicle #{vehicleID}.")
-        
-    def listen(self, name: str, callback: "function") -> Event:
-        """
-        Listens for a game callback.
-        
-        >>> import PythonToSW as PTS
-        >>> addon = PTS.Addon("MyAddon", port = 3000)
-        >>>
-        >>> def main():
-        >>>     def onTick(game_ticks):
-        >>>         PTS.Announce("Server", "Tick", -1)
-        >>>
-        >>>     addon.listen("onTick", onTick)
-        >>>
-        >>> addon.start(target = main)
-        
-        Args:
-            name: (str) The name of the callback.
-            callback: (function) The callback to listen for.
-            
-        Returns:
-            (Event) The event that was created.
-        """
-
-        # send log
-        self.log(f"{callback.__name__} is listening for callback: {name}")
-        
-        # create if not exists
-        self._createCallbackIfNotExists(name)
-        event = self.getCallback(name)
-
-        # connect
-        event.connect(callback)
-        return event
-        
-    def getCallback(self, name: str) -> Event|None:
-        """
-        Get a callback by its name.
-        
-        Args:
-            name: (str) The name of the callback.
-            
-        Returns:
-            (Event|None) The event representing the callback, or None if it doesn't exist.
-        """
-
-        return self.getCallbacks().get(name)
+        if os.path.splitext(path)[1].lower() != ".lua":
+            raise PTSConfigException(f"Lua file at path {path} is not a .lua file.")
     
-    def getCallbacks(self) -> dict[str, Event]:
-        """
-        Get all callbacks.
+        self.attach_lua_code(io.quick_read(path, "r"))
         
-        Returns:
-            (dict[str, Event]) A dictionary of events representing callbacks.
+    def _handle_callback(self, name: CallbackEnum, arguments: list[Any]):
         """
-
-        return self.callbacks.copy()
-    
-    @staticmethod
-    def _validateAddonName(name: str) -> tuple[str, bool]:
-        """
-        Validates an addon name, replacing any invalid characters if needed.
+        Handles a callback from Stormworks and fires the corresponding event (if any)
         
         Args:
-            name: (str) The name of the addon.
+            name (CallbackEnum): The name of the callback.
+            arguments (list[Any]): The arguments passed to the callback.
             
-        Returns:
-            (tuple[str, bool]) The validated name and a boolean indicating whether the name was changed.
+        Raises:
+            PTSCallbackException: If the event does not exist.
         """
         
-        validated = name.replace(" ", "").replace("/", "").replace("\\", "").replace("\n", "").replace("\r", "")
-        return validated, validated != name
-    
-    def _createCallbackIfNotExists(self, name: str):
+        if name not in self.callbacks:
+            return
+        
+        try:
+            self.callbacks[name].fire_threaded(*arguments)
+        except Exception as exception:
+            raise PTSCallbackException(f"Something went wrong with the `{name}` event. Are your callbacks expecting the right amount of arguments?") from exception
+        
+    def connect(self, name: CallbackEnum, callback: Callable):
         """
-        Create a callback if it doesn't exist.
+        Connects the passed callable argument to a specific game callback.
         
         Args:
-            name: (str) The name of the callback.
+            name (CallbackEnum): The in-game callback to connect to
+            callback (Callable): The callback function to call when the event is fired.
         """
-
-        if not self.getCallback(name):
+        
+        if name not in self.callbacks:
             self.callbacks[name] = Event()
         
-    def _setupRoutes(self):
+        self.callbacks[name] += callback
+        self._info(f"Connected callback to game callback: {name}")
+        
+    def _handle_call(self, call: Call, return_values: list[Any]):
         """
-        Sets up API routes for this addon's HTTP server.
-        
-        Raises:
-            (exceptions.InternalError) Raised if the addon is not running.
-        """
-
-        # check if addon is running
-        if not self.running:
-            raise exceptions.InternalError("Attempted to setup routes when addon is not running")
-        
-        # route - raise error from addon
-        @self.app.get("/error")
-        def error():
-            @flask.ctx.after_this_request
-            def raiseException(_):
-                raise exceptions.AddonException(f"[{errorType}]: {errorMessage}")
-            
-            # get error type and message
-            errorType, errorMessage = flask.request.args.get("errorType"), flask.request.args.get("errorMessage")
-            
-            if errorType is None or errorMessage is None:
-                raise exceptions.InternalError("Missing errorType and/or errorMessage for /error endpoint")
-            
-            errorType, errorMessage = helpers.URLDecode(errorType), helpers.URLDecode(errorMessage)
-            
-            # return
-            return "Ok", 200
-        
-        # route - return values for an execution
-        @self.app.get("/return")
-        def returnVal():
-            # get id and return values
-            executionID = flask.request.args.get("id")
-            returnValues = flask.request.args.get("returnValues")
-            
-            if executionID is None or returnValues is None:
-                raise exceptions.InternalError("Missing id and/or returnValues for /return endpoint")
-            
-            executionID = helpers.URLDecode(executionID)
-            returnValues = helpers.URLDecode(returnValues)
-            
-            # get execution
-            execution = self.getPendingExecution(executionID)
-            
-            if not execution:
-                return "Invalid execution ID", 400
-            
-            # call execution._return() with the decoded return values
-            decodedReturnValues: dict = json.loads(returnValues)
-            decodedReturnValues = [*decodedReturnValues.values()]
-
-            execution._return(decodedReturnValues)
-            
-            # return
-            return "Ok", 200
-        
-        # route - fetch pending executions
-        @self.app.get("/get-pending-executions")
-        def getPendingExecutions():
-            encoded = {execution.ID: execution._toDict() for execution in self.getPendingExecutions().values()}
-            return json.dumps(encoded, indent = 5), 200
-        
-        # route - trigger callback
-        @self.app.get("/trigger-callback")
-        def triggerCallback():
-            # get name
-            name = flask.request.args.get("name")
-            
-            if name is None:
-                raise exceptions.InternalError("Missing name for /trigger-callback endpoint")
-            
-            name = helpers.URLDecode(name)
-            
-            # get callback
-            callback = self.getCallback(name)
-            
-            if not callback:
-                return "Invalid callback name", 400 # its ok! addon just isnt listening for this callback
-            
-            # get arguments
-            args = flask.request.args.get("args")
-            
-            if args is None:
-                raise exceptions.InternalError("Missing args for /trigger-callback endpoint")
-            
-            args = helpers.URLDecode(args)
-            args = json.loads(args)
-            
-            # trigger
-            callback.fire(*args)
-            
-            # return
-            return "Ok", 200
-        
-    def _hideFlaskOutput(self):
-        """
-        Hides Werkzeug and Flask logging. This is used to hide the Flask server banner and request logs.
-        """
-
-        logging.getLogger("werkzeug").disabled = True
-        self.app.logger.disabled = True
-        flask.cli.show_server_banner = lambda *_, **__: None
-        
-    def _parsePlaylist(self):
-        """
-        Parses (XML decodes) the addon's playlist.xml file.
-        
-        Returns:
-            (dict) The XML decoded playlist.
-            
-        Raises:
-            (exceptions.PathNotFound) Raised if the playlist file does not exist.
-        """
-
-        playlistFile = os.path.join(self.templateAddonPath, "playlist.xml")
-        
-        if not os.path.exists(playlistFile):
-            raise exceptions.PathNotFound(f"Playlist file does not exist: {playlistFile}")
-        
-        return helpers.XMLDecode(helpers.quickRead(playlistFile))
-    
-    def _parseScript(self):
-        """
-        Parses the addon's script.lua file.
-        
-        Returns:
-            (str) The script contents.
-            
-        Raises:
-            (exceptions.PathNotFound) Raised if the script file does not exist.
-        """
-
-        scriptFile = os.path.join(self.templateAddonPath, "script.lua")
-        
-        if not os.path.exists(scriptFile):
-            raise exceptions.PathNotFound(f"Script file does not exist: {scriptFile}")
-        
-        return helpers.quickRead(scriptFile)
-        
-    def _setupAddon(self):
-        """
-        Sets up the addon by writing the playlist and script files to the addon path, as well as setting up vehicles, etc.
-        """
-
-        # set path
-        secureAddonName = werkzeug.utils.secure_filename(self.addonName)
-        path = os.path.join(self.addonPath, secureAddonName)
-        
-        # write files to path
-        helpers.quickWrite(os.path.join(path, "playlist.xml"), helpers.XMLEncode(self.playlistEncoded))
-        helpers.quickWrite(os.path.join(path, "script.lua"), self.script)
-        
-        # add vehicles to addon directory
-        for vehicle in self.vehicles:
-            content = helpers.quickRead(vehicle.path)
-            helpers.quickWrite(os.path.join(path, f"vehicle_{vehicle.vehicleID}"), content)
-            
-class BaseExecution():
-    """
-    Represents an execution that can be sent to the in-game addon.
-
-    You never really need to use this directly. If there is an in-game
-    function that doesn't have an execution, create an execution that
-    inherits from this. Example:
-    
-    >>> class MoveGroup(BaseExecution):
-    >>>     def __init__(self, group_id: int, pos: list):
-    >>>         super().__init__(
-    >>>             functionName = "moveGroup",
-    >>>             arguments = [group_id, pos]
-    >>>         )
-    
-    Args:
-        functionName: (str) The name of the in-game function to call
-        arguments: (list) The arguments to pass to the in-game function
-    """
-
-    def __init__(self, functionName: str, arguments: list = []):
-        self.ID = str(uuid4())
-        self.functionName = functionName
-        self.arguments = arguments
-        
-        self.handled = False
-        self.returnValues = []
-        self.isWaiting = False
-        
-    def __str__(self):
-        return f"Execution-{self.ID} ({self.functionName})"
-    
-    def execute(self, addon: Addon) -> list:
-        """
-        Send this execution to the in-game addon.
-        Equivalent to: addon.execute(self)
+        Handles the finalization of a call to a function in the addon.
         
         Args:
-            addon: (Addon) The addon to send this execution to.
-            
-        Returns:
-            (list) The return values from the in-game function call.
-
-        Raises:
-            exceptions.FailedExecutionAttempt: Raised if the addon is not running, or if an execution with the same ID already exists.
+            call (Call): The call to handle.
+            return_values (list[Any]): The return values from the call.
         """
-
-        return addon.execute(self)
         
-    def _toDict(self):
-        """
-        Converts this execution into a dictionary that can be sent to the addon
+        call.future.set_result(tuple(return_values))
+        self.calls.remove(call)
         
-        Returns:
-            (dict) The dictionary representation of this execution
+    def get_call(self, call_id: str) -> Call|None:
         """
-
-        return {
-            "ID" : self.ID,
-            "functionName": self.functionName,
-            "arguments": self.arguments,
-            "handled": self.handled
-        }
-        
-    def _return(self, returnValues: list):
-        """
-        Marks this execution as handled and saves return values.
+        Gets a call by its ID.
         
         Args:
-            returnValues: (list) The return values from the in-game function.
+            call_id (str): The ID of the call to get.
+        
+        Returns:
+            Call|None: The call if it exists, otherwise None.
+        """
+        
+        for call in self.calls:
+            if call.id == call_id:
+                return call
+            
+        return None
+        
+    def does_call_exist(self, call_id: str) -> bool:
+        """
+        Checks if a call with the given ID exists.
+        
+        Args:
+            call_id (str): The ID of the call to check for.
+        
+        Returns:
+            bool: True if the call exists, False otherwise.
+        """
+        
+        return self.get_call(call_id) is not None
+        
+    def call(self, function: CallEnum, *args) -> tuple[Any, ...]:
+        """
+        Calls a `server.` function in the addon.
+        
+        Args:
+            function (CallEnum): The name of the function to call.
+            *args: The arguments to pass to the function.
             
         Raises:
-            exceptions.InternalError: Raised if this method is called when the execution is already handled.
-        """
-
-        if self.handled:
-            raise exceptions.InternalError("Tried to return after already returning")
-        
-        self.handled = True
-        self.returnValues = returnValues
-    
-    def _halt(self):
-        """
-        Stops waiting on this execution via _wait() method.
-        """
-
-        self.isWaiting = False
-        
-    def _obsolete(self):
-        """
-        Returns whether this execution has been handled.
+            PTSCallException: If the call times out.
         
         Returns:
-            (bool) Whether this execution has been handled.
+            tuple[Any, ...]: Whatever the function returns.
         """
-
-        return not self.isWaiting
         
-    def _wait(self) -> list:
+        return self.call_function(f"server.{function.value}", *args)
+        
+    def call_function(self, path: str, *args) -> tuple[Any, ...]:
         """
-        Waits until this execution has been handled and returns the return values.
+        Calls a custom function in the addon.<br>
+        You can inject custom functions into the addon script using `attach_lua_code` or `attach_lua_file`.
+        
+        Args:
+            path (str): The path of the function to call.
+            *args: The arguments to pass to the function.
+            
+        Raises:
+            PTSCallException: If the call times out.
         
         Returns:
-            (list) The return values from the in-game function call.
+            tuple[Any, ...]: Whatever the function returns.
         """
-
-        self.isWaiting = True
         
-        while not self.handled and self.isWaiting:
+        call_id = http.generate_uuid()
+
+        call = Call(
+            id = call_id,
+            path = path,
+            arguments = list(args)
+        )
+
+        self.calls.append(call)
+        
+        while not self.connected:
             time.sleep(0.01)
+
+        try:
+            return call.future.result(self.constants.CALL_TIMEOUT_SECONDS)
+        except TimeoutError as exception:
+            raise PTSCallException(f"Call with ID {call_id} timed out.") from exception
+        
+    def start(self, on_start: Callable = None, on_stop: Callable = None):
+        """
+        Starts the addon.
+        
+        Args:
+            on_start (Callable, optional): A function to call when the addon starts (connection is established). Defaults to None.
+            on_stop (Callable, optional): A function to call when the addon stops (connection is lost). Defaults to None.
+        
+        Raises:
+            PTSLifecycleException: If the addon has already started.
+        """
+        
+        if self.started:
+            raise PTSLifecycleException("Addon has already started. Cannot start it more than once.")
+        
+        self._info(f"Starting on port {self.port}...")     
+        
+        self.started = True
+        self._create_addon()
+        self._create_endpoints()
+        self._start_on_tick()
+
+        if on_start is not None:
+            self.on_start += on_start
             
-        return self.returnValues
+        if on_stop is not None:
+            self.on_stop += on_stop
+
+        uvicorn.run(
+            self.app,
+            host = "localhost",
+            port = self.port,
+            log_level = self.uvicorn_log_level
+        )
+
+class DedicatedServerAddon(Addon):
+    """
+    A class representing an addon specifically for Stormworks dedicated servers.
+
+    Note that the `Addon` class can also be used for dedicated servers, but this class
+    makes it easier by automatically setting the addons path to the correct location
+    and modifying the server_config.xml file to include the addon.
+    """
+    
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        dedicated_server_path: str,
+        server_config_path: str,
+        *,
+        port: int,
+        copy_from: str = None,
+        uvicorn_log_level: int = WARNING,
+        force_new_token: bool = False,
+        constants: AddonConstants = None
+    ):
+        """
+        Initializes a new instance of the `DedicatedServerAddon` class.
+        
+        Args:
+            name (str): The name of the addon. This should be unique and not conflict with other addons.
+            path (str): The path to store data for this addon in.
+            dedicated_server_path (str): The path to the dedicated server installation.
+            server_config_path (str): The path to the server_config.xml file. For Windows, this is usually in `%appdata%/Stormworks` unless overridden via command line arguments to the server executable.
+            port (int): The port to run the addon on.
+            copy_from (str, optional): The name of the addon to copy files from (playlist.xml, vehicles, NOT script). Can alternatively be a path to an addon directory. Defaults to None.
+            uvicorn_log_level (int, optional): The log level for Uvicorn. Defaults to `logging.WARNING`.
+            force_new_token (bool, optional): Whether or not to force a new token every time the addon starts. Defaults to False.
+            constants (AddonConstants, optional): Constants to be used by the addon.
+        """
+        
+        super().__init__(
+            name = name,
+            path = path,
+            port = port,
+            copy_from = copy_from,
+            addons_path = os.path.join(dedicated_server_path, "rom/data/missions"),
+            uvicorn_log_level = uvicorn_log_level,
+            force_new_token = force_new_token,
+            constants = constants
+        )
+        
+        self.server_config_path = server_config_path
+        
+        if not os.path.exists(self.server_config_path):
+            raise PTSConfigException(f"Server config path at {self.server_config_path} does not exist.")
+        
+        if not os.path.isfile(self.server_config_path):
+            raise PTSConfigException(f"Server config path at {self.server_config_path} is not a file.")
+        
+        if os.path.splitext(self.server_config_path)[1].lower() != ".xml":
+            raise PTSConfigException(f"Server config path at {self.server_config_path} is not an XML file.")
+        
+    def _get_server_config(self) -> dict:
+        """
+        Returns the XML decoded server_config.xml file.
+        
+        Returns:
+            dict: The server config as a dictionary.
+        """
+        
+        return xml.decode(io.quick_read(self.server_config_path, "r"))
+    
+    def _get_addon_path_for_server_config(self) -> str:
+        """
+        Returns the path to this addon for use in the server_config.xml file.
+        
+        Returns:
+            str: The path to this addon for use in the server_config.xml file.
+        """
+        
+        return f"rom/data/missions/{self.name}"
+    
+    def _is_in_server_config(self, config: dict) -> bool:
+        """
+        Checks if the addon is in the server_config.xml file.
+        
+        Args:
+            config (dict): The server config as a dictionary.
+        
+        Returns:
+            bool: True if the addon is in the server_config.xml file, False otherwise.
+        """
+        
+        for playlist in config["server_data"]["playlists"]["path"]:
+            if playlist["@path"] == self._get_addon_path_for_server_config():
+                return True
+            
+        return False
+    
+    def _save_new_server_config(self, config: dict):
+        """
+        Saves a new server_config.xml file.
+        
+        Args:
+            config (dict): The server config as a dictionary.
+        """
+        
+        io.quick_write(self.server_config_path, xml.encode(config), mode = "w")
+        
+    def _setup_server_config(self):
+        """
+        Sets up the server_config.xml file to include this addon.
+        """
+        
+        config = self._get_server_config()
+        
+        if self._is_in_server_config(config):
+            self._info(f"Addon already in `server_config.xml`, skipping.")
+            return
+        
+        config["server_data"]["playlists"]["path"].append({
+            "@path": self._get_addon_path_for_server_config()
+        })
+        
+        self._save_new_server_config(config)
+        
+        self._info(f"Added addon to `server_config.xml` at: {self.server_config_path}")
+        
+    def _create_addon(self):
+        """
+        Creates the addon directory structure.
+        """
+        
+        super()._create_addon()
+        self._setup_server_config()

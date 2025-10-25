@@ -1,3 +1,2 @@
-rmdir dist /S /Q
-py setup.py sdist
+@ECHO OFF
 twine upload dist/*

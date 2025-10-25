@@ -20,29 +20,46 @@ limitations under the License.
 """
 
 # // Imports
-import os
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-from . import log
-from .log import logger
-
-from .libs import (
-    io,
-    xml,
-    http
+from urllib.parse import (
+    quote,
+    unquote
 )
 
-from .libs.persistence import Persistence
-from .libs.event import Event
-
-from . import exceptions
-
-from .values import *
-from .enums import *
-from .models import *
-
-from .addon import *
+from uuid import uuid4
 
 # // Main
-from logging import INFO as _INFO
-log.install(_INFO)
+def generate_uuid() -> str:
+    """
+    Generate a random UUID.
+    
+    Returns:
+        str: The generated UUID as a string.
+    """
+    
+    return str(uuid4())
+
+def url_encode(string: str) -> str:
+    """
+    URL encode a string.
+    
+    Args:
+        string (str): The string to URL encode.
+        
+    Returns:
+        str: The URL encoded string.
+    """
+
+    return quote(string)
+
+def url_decode(string: str) -> str:
+    """
+    URL decode a URL encoded string.
+    
+    Args:
+        string (str): The URL encoded string to decode.
+        
+    Returns:
+        str: The decoded string.
+    """
+
+    return unquote(string)

@@ -1,14 +1,10 @@
-# ----------------------------------------
-# [PythonToSW] Exceptions
-# ----------------------------------------
-
-# A Python package that allows you to make Stormworks addons with Python.
-# Repo: https://github.com/Cuh4/PythonToSW
-
 """
-A module containing exceptions.
+----------------------------------------------
+PythonToSW: A Python package that allows you to make Stormworks addons with Python.
+https://github.com/Cuh4/PythonToSW
+----------------------------------------------
 
-Copyright (C) 2024 Cuh4
+Copyright (C) 2025 Cuh4
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,27 +19,50 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# ---- // Main
-class InternalError(Exception):
-    pass
+# // Imports
+from fastapi import HTTPException
 
-class AddonException(Exception):
-    pass
+# // Main
+class PTSException(Exception):
+    """
+    Base class for all exceptions in PythonToSW.
+    """
+    
+class PTSCallException(PTSException):
+    """
+    Raised when something goes wrong with addon calls.
+    """
 
-class FailedStartAttempt(Exception):
-    pass
+class PTSCallbackException(PTSException):
+    """
+    Raised when something goes wrong with addon callbacks.
+    """
+    
+class PTSLifecycleException(PTSException):
+    """
+    Raised when something goes wrong with addon lifecycle.
+    """
+    
+class PTSConfigException(PTSException):
+    """
+    Raised when something goes wrong with addon configuration.
+    """
+    
+class PTSHTTPException(PTSException, HTTPException):
+    """
+    Exception class for HTTP errors in PythonToSW.
+    Inherits from both `PTSException` and FastAPI's `HTTPException`.
+    """
 
-class FailedExecutionAttempt(Exception):
-    pass
+    def __init__(self, status_code: int, type: str, detail: str):
+        """
+        Initializes a new instance of the `PTSHTTPException` class.
+        
+        Args:
+            status_code (int): The HTTP status code for the exception.
+            type (str): The type of the exception.
+            detail (str): The detail message for the exception.
+        """
 
-class InvalidExecutionID(Exception):
-    pass
-
-class InvalidVehiclePath(Exception):
-    pass
-
-class PathNotFound(Exception):
-    pass
-
-class ExecutionNotFound(Exception):
-    pass
+        PTSException.__init__(self, detail)
+        HTTPException.__init__(self, status_code = status_code, detail = f"{type}: {detail}")

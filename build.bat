@@ -1,1 +1,7 @@
-py combine.py --directory "src/addon" --destination "src/PythonToSW/addon/script.lua" --allow_file_extension ".lua" --ignore_path "src/addon/p1_dependencies/frameworkIntellisense.lua" "src/addon/intellisense"
+@ECHO OFF
+py combine.py --directory "src/SWToPython" --destination "src/PythonToSW/addon/script.lua" --allow_file_extension ".lua"
+
+rmdir dist /S /q
+
+pipreqs --force
+py -m build

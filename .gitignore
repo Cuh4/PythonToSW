@@ -1,8 +1,17 @@
-src/addon/script.lua
-src/test.py
-__pycache__/
+# Cache
+*.pyc
+__pycache__
 
+# Code-Generated
+src/PythonToSW/addon-persistence
+
+# Distribution files
 dist
 *.egg-info
 
-TODO.txt
+# Testing
+tests/dump
+test*
+
+# Dev
+TODO.md

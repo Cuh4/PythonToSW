@@ -1,7 +1,8 @@
-pyperclip
-requests
-urllib3
-uuid
-xmltodict
-flask
-colorama
+click==8.1.7
+coloredlogs==15.0.1
+fastapi==0.120.0
+pydantic==2.12.3
+pytest==8.3.4
+rich==14.2.0
+uvicorn==0.38.0
+xmltodict==0.14.2
