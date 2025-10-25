@@ -674,14 +674,21 @@ end
 ---@param voxelX integer|nil
 ---@param voxelY integer|nil
 ---@param voxelZ integer|nil
+---@return SWMatrix
 function Noir.Classes.Body:GetPosition(voxelX, voxelY, voxelZ)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetPosition()", "voxelX", voxelX, "number", "nil")
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetPosition()", "voxelY", voxelY, "number", "nil")
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetPosition()", "voxelZ", voxelZ, "number", "nil")
 
-    -- Get and return position
-    return (server.getVehiclePos(self.ID))
+    -- Get position
+    local position, success = server.getVehiclePos(self.ID, voxelX, voxelY, voxelZ)
+
+    if not position or not success then
+        error("Noir.Classes.Body:GetPosition()", "Failed to get position for body.")
+    end
+
+    return position
 end
 
 --[[
@@ -1034,7 +1041,13 @@ function Noir.Classes.Body:GetBattery(batteryName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetBattery()", "batteryName", batteryName, "string")
 
     -- Get battery
-    return (server.getVehicleBattery(self.ID, batteryName))
+    local battery, success = server.getVehicleBattery(self.ID, batteryName)
+
+    if not success then
+        return
+    end
+
+    return battery
 end
 
 --[[
@@ -1051,7 +1064,13 @@ function Noir.Classes.Body:GetBatteryByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetBatteryByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get battery
-    return (server.getVehicleBattery(self.ID, voxelX, voxelY, voxelZ))
+    local battery, success = server.getVehicleBattery(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return battery
 end
 
 --[[
@@ -1064,7 +1083,13 @@ function Noir.Classes.Body:GetButton(buttonName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetButton()", "buttonName", buttonName, "string")
 
     -- Get button
-    return (server.getVehicleButton(self.ID, buttonName))
+    local button, success = server.getVehicleButton(self.ID, buttonName)
+
+    if not success then
+        return
+    end
+
+    return button
 end
 
 --[[
@@ -1081,7 +1106,13 @@ function Noir.Classes.Body:GetButtonByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetButtonByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get button
-    return (server.getVehicleButton(self.ID, voxelX, voxelY, voxelZ))
+    local button, success = server.getVehicleButton(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return button
 end
 
 --[[
@@ -1090,7 +1121,13 @@ end
 ---@return SWLoadedVehicleData|nil
 function Noir.Classes.Body:GetComponents()
     -- Get components
-    return (server.getVehicleComponents(self.ID))
+    local components, success = server.getVehicleComponents(self.ID)
+
+    if not success then
+        return
+    end
+
+    return components
 end
 
 --[[
@@ -1098,8 +1135,13 @@ end
 ]]
 ---@return SWVehicleData|nil
 function Noir.Classes.Body:GetData()
-    -- Get data
-    return (server.getVehicleData(self.ID))
+    local data, success = server.getVehicleData(self.ID)
+
+    if not success then
+        return
+    end
+
+    return data
 end
 
 --[[
@@ -1112,7 +1154,13 @@ function Noir.Classes.Body:GetDial(dialName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetDial()", "dialName", dialName, "string")
 
     -- Get dial
-    return (server.getVehicleDial(self.ID, dialName))
+    local dial, success = server.getVehicleDial(self.ID, dialName)
+
+    if not success then
+        return
+    end
+
+    return dial
 end
 
 --[[
@@ -1129,7 +1177,13 @@ function Noir.Classes.Body:GetDialByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetDialByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get dial
-    return (server.getVehicleDial(self.ID, voxelX, voxelY, voxelZ))
+    local dial, success = server.getVehicleDial(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return dial
 end
 
 --[[
@@ -1138,7 +1192,13 @@ end
 ---@return integer|nil
 function Noir.Classes.Body:GetFireCount()
     -- Get fire count
-    return (server.getVehicleFireCount(self.ID))
+    local count, success = server.getVehicleFireCount(self.ID)
+
+    if not success then
+        return
+    end
+
+    return count
 end
 
 --[[
@@ -1151,7 +1211,13 @@ function Noir.Classes.Body:GetHopper(hopperName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetHopper()", "hopperName", hopperName, "string")
 
     -- Get hopper
-    return (server.getVehicleHopper(self.ID, hopperName))
+    local hopper, success = server.getVehicleHopper(self.ID, hopperName)
+
+    if not success then
+        return
+    end
+
+    return hopper
 end
 
 --[[
@@ -1168,7 +1234,13 @@ function Noir.Classes.Body:GetHopperByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetHopperByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get hopper
-    return (server.getVehicleHopper(self.ID, voxelX, voxelY, voxelZ))
+    local hopper, success = server.getVehicleHopper(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return hopper
 end
 
 --[[
@@ -1181,7 +1253,13 @@ function Noir.Classes.Body:GetRopeHook(hookName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetRopeHook()", "hookName", hookName, "string")
 
     -- Get rope hook
-    return (server.getVehicleRopeHook(self.ID, hookName))
+    local hook, success = server.getVehicleRopeHook(self.ID, hookName)
+
+    if not success then
+        return
+    end
+
+    return hook
 end
 
 --[[
@@ -1198,7 +1276,13 @@ function Noir.Classes.Body:GetRopeHookByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetRopeHookByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get rope hook
-    return (server.getVehicleRopeHook(self.ID, voxelX, voxelY, voxelZ))
+    local hook, success = server.getVehicleRopeHook(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return hook
 end
 
 --[[
@@ -1211,7 +1295,13 @@ function Noir.Classes.Body:GetSeat(seatName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetSeat()", "seatName", seatName, "string")
 
     -- Get seat
-    return (server.getVehicleSeat(self.ID, seatName))
+    local seat, success = server.getVehicleSeat(self.ID, seatName)
+
+    if not success then
+        return
+    end
+
+    return seat
 end
 
 --[[
@@ -1228,7 +1318,13 @@ function Noir.Classes.Body:GetSeatByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetSeatByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get seat
-    return (server.getVehicleSeat(self.ID, voxelX, voxelY, voxelZ))
+    local seat, success = server.getVehicleSeat(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return seat
 end
 
 --[[
@@ -1241,7 +1337,13 @@ function Noir.Classes.Body:GetSign(signName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetSign()", "signName", signName, "string")
 
     -- Get sign
-    return (server.getVehicleSign(self.ID, signName))
+    local sign, success = server.getVehicleSign(self.ID, signName)
+
+    if not success then
+        return
+    end
+
+    return sign
 end
 
 --[[
@@ -1258,7 +1360,13 @@ function Noir.Classes.Body:GetSignByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetSignByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get sign
-    return (server.getVehicleSign(self.ID, voxelX, voxelY, voxelZ))
+    local sign, success = server.getVehicleSign(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return sign
 end
 
 --[[
@@ -1271,7 +1379,13 @@ function Noir.Classes.Body:GetTank(tankName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetTank()", "tankName", tankName, "string")
 
     -- Get tank
-    return (server.getVehicleTank(self.ID, tankName))
+    local tank, success = server.getVehicleTank(self.ID, tankName)
+
+    if not success then
+        return
+    end
+
+    return tank
 end
 
 --[[
@@ -1288,7 +1402,13 @@ function Noir.Classes.Body:GetTankByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetTankByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get tank
-    return (server.getVehicleTank(self.ID, voxelX, voxelY, voxelZ))
+    local tank, success = server.getVehicleTank(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return tank
 end
 
 --[[
@@ -1301,7 +1421,13 @@ function Noir.Classes.Body:GetWeapon(weaponName)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetWeapon()", "weaponName", weaponName, "string")
 
     -- Get weapon
-    return (server.getVehicleWeapon(self.ID, weaponName))
+    local weapon, success = server.getVehicleWeapon(self.ID, weaponName)
+
+    if not success then
+        return
+    end
+
+    return weapon
 end
 
 --[[
@@ -1318,7 +1444,13 @@ function Noir.Classes.Body:GetWeaponByVoxel(voxelX, voxelY, voxelZ)
     Noir.TypeChecking:Assert("Noir.Classes.Body:GetWeaponByVoxel()", "voxelZ", voxelZ, "number")
 
     -- Get weapon
-    return (server.getVehicleWeapon(self.ID, voxelX, voxelY, voxelZ))
+    local weapon, success = server.getVehicleWeapon(self.ID, voxelX, voxelY, voxelZ)
+
+    if not success then
+        return
+    end
+
+    return weapon
 end
 
 --[[
@@ -1472,10 +1604,9 @@ end
     Represents a command.
 ]]
 ---@class NoirCommand: NoirClass
----@field New fun(self: NoirCommand, name: string, aliases: table<integer, string>, requiredPermissions: table<integer, string>, requiresAuth: boolean, requiresAdmin: boolean, capsSensitive: boolean, description: string): NoirCommand
+---@field New fun(self: NoirCommand, name: string, aliases: table<integer, string>, requiresAuth: boolean, requiresAdmin: boolean, capsSensitive: boolean, description: string): NoirCommand
 ---@field Name string The name of this command
 ---@field Aliases table<integer, string> The aliases of this command
----@field RequiredPermissions table<integer, string> The required permissions for this command. If this is empty, anyone can use this command
 ---@field RequiresAuth boolean Whether or not this command requires auth
 ---@field RequiresAdmin boolean Whether or not this command requires admin
 ---@field CapsSensitive boolean Whether or not this command is case-sensitive
@@ -1488,15 +1619,13 @@ Noir.Classes.Command = Noir.Class("Command")
 ]]
 ---@param name string
 ---@param aliases table<integer, string>
----@param requiredPermissions table<integer, string>
 ---@param requiresAuth boolean
 ---@param requiresAdmin boolean
 ---@param capsSensitive boolean
 ---@param description string
-function Noir.Classes.Command:Init(name, aliases, requiredPermissions, requiresAuth, requiresAdmin, capsSensitive, description)
+function Noir.Classes.Command:Init(name, aliases, requiresAuth, requiresAdmin, capsSensitive, description)
     Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "name", name, "string")
     Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "aliases", aliases, "table")
-    Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "requiredPermissions", requiredPermissions, "table")
     Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "requiresAuth", requiresAuth, "boolean")
     Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "requiresAdmin", requiresAdmin, "boolean")
     Noir.TypeChecking:Assert("Noir.Classes.Command:Init()", "capsSensitive", capsSensitive, "boolean")
@@ -1504,7 +1633,6 @@ function Noir.Classes.Command:Init(name, aliases, requiredPermissions, requiresA
 
     self.Name = name
     self.Aliases = aliases
-    self.RequiredPermissions = requiredPermissions
     self.RequiresAuth = requiresAuth
     self.RequiresAdmin = requiresAdmin
     self.CapsSensitive = capsSensitive
@@ -1585,13 +1713,6 @@ function Noir.Classes.Command:CanUse(player)
     -- Check if the player can use this command via admin
     if self.RequiresAdmin and not player.Admin then
         return false
-    end
-
-    -- Check if the player has the required permissions
-    for _, permission in ipairs(self.RequiredPermissions) do
-        if not player:HasPermission(permission) then
-            return false
-        end
     end
 
     -- Woohoo!
@@ -1937,6 +2058,11 @@ end
 -------------------------------
 
 --[[
+    The ID of a hoardable class.
+]]
+---@alias NoirHoardableID string|number|boolean|nil
+
+--[[
     A class that hoardable classes should inherit from to be able to be used with the `Noir.Services.HoarderService`.<br>
     Check out the aforementioned service for more info.<br>
     Example:
@@ -1959,11 +2085,11 @@ end
         return string.format("ItemInfo: %s", self.MadeBy)
     end
 
-    function ItemInfo:OnSerialize(serialized)
+    function ItemInfo:OnPreSerialize(serialized)
         serialized.Bar = nil -- unneeded but this is just an example to show you can mess with serialization logic
     end
 
-    function ItemInfo:OnDeserialize(serialized, lookupClasses)
+    function ItemInfo:OnPostDeserialize(serialized, lookupClasses)
         self.Bar = Noir.Libraries.Events:Create() -- event functions would be removed during serialization, 
                                                   -- but attributes that "track" the functions (eg: function count) 
                                                   -- would not be reset which could cause problems so we just
@@ -1990,24 +2116,33 @@ end
     end
 ]]
 ---@class NoirHoardable: NoirClass
----@field New fun(self: NoirHoardable, ID: any|nil): NoirHoardable
----@field _HoardableID any|nil The ID of this class instance (optional. used as key in tables. omitting will just append to the end of the table)
+---@field New fun(self: NoirHoardable, ID: NoirHoardableID): NoirHoardable
+---@field _HoardableID NoirHoardableID The ID of this class instance (optional. used as key in tables. omitting will just append to the end of the table)
 Noir.Classes.Hoardable = Noir.Class("Hoardable")
 
 --[[
     Initializes `Hoardable` class instances.
 ]]
----@param ID any|nil
+---@param ID NoirHoardableID
 function Noir.Classes.Hoardable:Init(ID)
+    Noir.TypeChecking:Assert("Noir.Classes.Hoardable:Init()", "ID", ID, "string", "number", "boolean", "nil")
     self._HoardableID = ID
 end
 
 --[[
     Returns the ID of this class instance.
 ]]
----@return any|nil
+---@return NoirHoardableID
 function Noir.Classes.Hoardable:GetHoardableID()
     return self._HoardableID
+end
+
+--[[
+    Returns if this class instance has a hoardable ID.
+]]
+---@return boolean
+function Noir.Classes.Hoardable:HasHoardableID()
+    return self:GetHoardableID() ~= nil
 end
 
 --[[
@@ -2039,16 +2174,37 @@ function Noir.Classes.Hoardable:Unhoard(service, tblName)
 end
 
 --[[
-    Called during serialization.<br>
+    Called before serialization.<br>
+    You can use this to replace unserializable values like cyclic tables with something else.<br>
+    These can then be converted back via `OnDeserialize`.<br>
     `self` is the class instance being serialized.<br>
-    `serialized` is the serialized data of the class instance.<br>
+    This is an `abstractmethod` and should be overridden in subclasses (optional).
+]]
+function Noir.Classes.Hoardable:OnPreSerialize() end
+
+--[[
+    Called after serialization.<br>
+    `self` is the class instance being serialized.<br>
+    `serialized` is the now serialized data of the class instance.<br>
     This is an `abstractmethod` and should be overridden in subclasses (optional).
 ]]
 ---@param serialized table
-function Noir.Classes.Hoardable:OnSerialize(serialized) end
+function Noir.Classes.Hoardable:OnPostSerialize(serialized) end
 
 --[[
-    Called during deserialization.<br>
+    Called before deserialization.<br>
+    Can be used to replace serialized values with something else, e.g. converting older data to newer data.<br>
+    `self` is the class instance being deserialized.<br>
+    `serialized` is the serialized data of the class instance.<br>
+    `lookupClasses` is a table of classes that can be used to deserialize the class instance.<br>
+    This is an `abstractmethod` and should be overridden in subclasses (optional).
+]]
+---@param serialized table
+---@param lookupClasses table<string, NoirClass>
+function Noir.Classes.Hoardable:OnPreDeserialize(serialized, lookupClasses) end
+
+--[[
+    Called after deserialization.<br>
     `self` is the deserialized class instance.<br>
     `serialized` is the serialized data of the class instance.<br>
     `lookupClasses` is a table of classes that can be used to deserialize the class instance.<br>
@@ -2057,7 +2213,7 @@ function Noir.Classes.Hoardable:OnSerialize(serialized) end
 ]]
 ---@param serialized table
 ---@param lookupClasses table<string, NoirClass>
-function Noir.Classes.Hoardable:OnDeserialize(serialized, lookupClasses) end
+function Noir.Classes.Hoardable:OnPostDeserialize(serialized, lookupClasses) end
 
 --------------------------------------------------------
 -- [Noir] Classes - HTTP Request
@@ -2860,20 +3016,21 @@ end
     Represents a player.
 
     local character = player:GetCharacter() -- NoirObject
-    character:SetTooltip("A Tooltip")
 
-    player:SetPermission("Awesome")
-    player:HasPermission("Awesome") -- true
+    if character then -- Can be nil if the player's character hasn't loaded
+        character:SetTooltip("A Tooltip")
+    end
 ]]
 ---@class NoirPlayer: NoirClass
----@field New fun(self: NoirPlayer, name: string, ID: integer, steam: string, admin: boolean, auth: boolean, permissions: table<string, boolean>): NoirPlayer
+---@field New fun(self: NoirPlayer, name: string, ID: integer, steam: string, admin: boolean, auth: boolean): NoirPlayer
 ---@field Name string The name of this player
 ---@field ID integer The ID of this player
 ---@field Steam string The Steam ID of this player
 ---@field Admin boolean Whether or not this player is an admin
 ---@field Auth boolean Whether or not this player is authed
----@field Permissions table<string, boolean> The permissions this player has
 ---@field InGame boolean Whether or not this player is in the game. This is set to false when the player leaves
+---
+---@field OnCharacterLoad NoirEvent Arguments: character (NoirObject) | Fired when this player's character is loaded
 Noir.Classes.Player = Noir.Class("Player")
 
 --[[
@@ -2884,70 +3041,30 @@ Noir.Classes.Player = Noir.Class("Player")
 ---@param steam string
 ---@param admin boolean
 ---@param auth boolean
----@param permissions table<string, boolean>
-function Noir.Classes.Player:Init(name, ID, steam, admin, auth, permissions)
+function Noir.Classes.Player:Init(name, ID, steam, admin, auth)
     Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "name", name, "string")
     Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "ID", ID, "number")
     Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "steam", steam, "string")
     Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "admin", admin, "boolean")
     Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "auth", auth, "boolean")
-    Noir.TypeChecking:Assert("Noir.Classes.Player:Init()", "permissions", permissions, "table")
 
     self.Name = name
     self.ID = math.floor(ID)
     self.Steam = steam
     self.Admin = admin
     self.Auth = auth
-    self.Permissions = permissions
     self.InGame = true
+
+    self.OnCharacterLoad = Noir.Libraries.Events:Create()
 end
 
 --[[
-    Give this player a permission.
+    Triggers `OnCharacterLoad`.<br>
+    Used internally.
 ]]
----@param permission string
-function Noir.Classes.Player:SetPermission(permission)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Classes.Player:SetPermission()", "permission", permission, "string")
-
-    -- Set permission
-    self.Permissions[permission] = true
-
-    -- Save changes
-    Noir.Services.PlayerService:_SaveProperty(self, "Permissions")
-end
-
---[[
-    Returns whether or not this player has a permission.
-]]
----@param permission string
----@return boolean
-function Noir.Classes.Player:HasPermission(permission)
-    Noir.TypeChecking:Assert("Noir.Classes.Player:HasPermission()", "permission", permission, "string")
-    return self.Permissions[permission] ~= nil
-end
-
---[[
-    Remove a permission from this player.
-]]
----@param permission string
-function Noir.Classes.Player:RemovePermission(permission)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Classes.Player:RemovePermission()", "permission", permission, "string")
-
-    -- Remove permission
-    self.Permissions[permission] = nil
-
-    -- Save changes
-    Noir.Services.PlayerService:_SaveProperty(self, "Permissions")
-end
-
---[[
-    Returns a table containing the player's permissions.
-]]
----@return table<integer, string>
-function Noir.Classes.Player:GetPermissions()
-    return Noir.Libraries.Table:Keys(self.Permissions)
+---@param character NoirObject
+function Noir.Classes.Player:_CharacterLoad(character)
+    self.OnCharacterLoad:Fire(character)
 end
 
 --[[
@@ -3038,18 +3155,16 @@ end
 --[[
     Returns this player's character as a NoirObject.
 ]]
----@return NoirObject
+---@return NoirObject|nil
 function Noir.Classes.Player:GetCharacter()
     -- Get the character
-    local character = server.getPlayerCharacterID(self.ID)
+    local object_id, success = server.getPlayerCharacterID(self.ID)
 
-    if not character then
-        error("Noir.Classes.Player:GetCharacter()", "server.getPlayerCharacterID() returned nil")
+    if not success then
+        return
     end
 
-    -- Return character
-    local object = Noir.Services.ObjectService:GetObject(character)
-    return object
+    return Noir.Services.ObjectService:GetObject(object_id)
 end
 
 --[[
@@ -3752,7 +3867,7 @@ end
 ]]
 ---@return string
 function Noir.Classes.Tracker:ToFormattedString()
-    return ("%s() | Avg. Exc. Time: %.4f ms, Last Exc. Time: %.4fms, Call Count: %d"):format(
+    return ("%s() | Avg. Exc. Time: %.8f ms, Last Exc. Time: %.8fms, Call Count: %d"):format(
         self:GetName(),
         self:GetAverageExecutionTime(),
         self:GetLastExecutionTime(),
@@ -4577,24 +4692,24 @@ function Noir.Classes.MapObjectWidget:Deserialize(serializedWidget)
     widget._AttachmentMode = serializedWidget.AttachmentMode
     widget.AttachmentOffset = serializedWidget.AttachmentOffset
 
-    if serializedWidget.AttachmentMode == 1 then
+    if widget._AttachmentMode == 1 then
         local body = Noir.Services.VehicleService:GetBody(serializedWidget.AttachmentBodyID or -1)
 
         if not body then
-            self:Detach()
+            widget:Detach()
             return widget
         end
 
-        self.AttachmentBody = body
-    elseif serializedWidget.AttachmentMode == 2 then
+        widget.AttachmentBody = body
+    elseif widget._AttachmentMode == 2 then
         local object = Noir.Services.ObjectService:GetObject(serializedWidget.AttachmentObjectID or -1)
 
         if not object or not object:Exists() then
-            self:Detach()
+            widget:Detach()
             return widget
         end
 
-        self.AttachmentObject = object
+        widget.AttachmentObject = object
     end
 
     return widget
@@ -4970,20 +5085,20 @@ function Noir.Classes.PopupWidget:Deserialize(serializedWidget)
     widget._AttachmentMode = serializedWidget.AttachmentMode
     widget.AttachmentOffset = serializedWidget.AttachmentOffset
 
-    if serializedWidget.AttachmentMode == 1 then
+    if widget._AttachmentMode == 1 then
         local body = Noir.Services.VehicleService:GetBody(serializedWidget.AttachmentBodyID or -1)
 
         if not body then
-            self:Detach()
+            widget:Detach()
             return widget
         end
 
         widget.AttachmentBody = body
-    elseif serializedWidget.AttachmentMode == 2 then
+    elseif widget._AttachmentMode == 2 then
         local object = Noir.Services.ObjectService:GetObject(serializedWidget.AttachmentObjectID or -1)
 
         if not object or not object:Exists() then
-            self:Detach()
+            widget:Detach()
             return widget
         end
 
@@ -7099,44 +7214,44 @@ end
 ]]
 ---@param tbl table
 ---@param indent integer|nil
+---@param _journey table<table, boolean>|nil
 ---@return string
-function Noir.Libraries.Table:ToString(tbl, indent)
+function Noir.Libraries.Table:ToString(tbl, indent, _journey)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Libraries.Table:ToString()", "tbl", tbl, "table")
     Noir.TypeChecking:Assert("Noir.Libraries.Table:ToString()", "indent", indent, "number", "nil")
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:ToString()", "_journey", _journey, "table", "nil")
 
-    -- Set default indent
+    -- Convert table to string
     if not indent then
         indent = 0
     end
 
-    -- Create a table for later
+    _journey = _journey or {}
+
+    if _journey[tbl] then
+        return "{<circular reference!>}"
+    end
+
+    _journey[tbl] = true
+
     local toConcatenate = {}
 
-    -- Convert the table to a string
     for index, value in pairs(tbl) do
-        -- Get value type
         local valueType = type(value)
-
-        -- Format the index for later
         local formattedIndex = ("[%s]:"):format(type(index) == "string" and "\""..index.."\"" or tostring(index):gsub("\n", "\\n"))
-
-        -- Format the value
         local toAdd = formattedIndex
 
         if valueType == "table" then
-            -- Format table
             local nextIndent = indent + 2
             local formattedValue = Noir.Libraries.Table:ToString(value, nextIndent)
 
-            -- Check if empty table
             if formattedValue == "" then
                 formattedValue = "{}"
             else
                 formattedValue = "\n"..formattedValue
             end
 
-            -- Add to string
             toAdd = toAdd..(" %s"):format(formattedValue)
         elseif valueType == "number" or valueType == "boolean" then
             toAdd = toAdd..(" %s"):format(tostring(value))
@@ -7144,11 +7259,9 @@ function Noir.Libraries.Table:ToString(tbl, indent)
             toAdd = toAdd..(" \"%s\""):format(tostring(value):gsub("\n", "\\n"))
         end
 
-        -- Add to table
         table.insert(toConcatenate, ("  "):rep(indent)..toAdd)
     end
 
-    -- Return the table as a formatted string
     return table.concat(toConcatenate, "\n")
 end
 
@@ -7175,6 +7288,7 @@ function Noir.Libraries.Table:Copy(tbl)
 
     return new
 end
+
 --[[
     Copy a table (deep).
 
@@ -7184,17 +7298,30 @@ end
 ]]
 ---@generic tbl: table
 ---@param tbl tbl
+---@param _journey table|nil
 ---@return tbl
-function Noir.Libraries.Table:DeepCopy(tbl)
+function Noir.Libraries.Table:DeepCopy(tbl, _journey)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Libraries.Table:DeepCopy()", "tbl", tbl, "table")
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:DeepCopy()", "_journey", _journey, "table", "nil")
 
     -- Perform a deep copy
+    _journey = _journey or {}
+
+    if _journey[tbl] then
+        return _journey[tbl]
+    end
+
     local new = {}
+    _journey[tbl] = new
 
     for index, value in pairs(tbl) do
+        if type(index) == "table" then
+            index = self:DeepCopy(index, _journey)
+        end
+
         if type(value) == "table" then
-            new[index] = self:DeepCopy(value)
+            new[index] = self:DeepCopy(value, _journey)
         else
             new[index] = value
         end
@@ -7540,16 +7667,17 @@ end
 -------------------------------
 
 --[[
-    A service for easily creating commands with support for command aliases, permissions, etc.
+    A service for easily creating commands with support for command aliases, etc.
 
-    Noir.Services.CommandService:CreateCommand("info", {"i"}, {"Nerd"}, false, false, false, "Shows random information.", function(player, message, args, hasPermission)
+    -- `true` = requires auth
+    Noir.Services.CommandService:CreateCommand("help", {"h"}, true, false, false, "My Command Description", function(player, message, args, hasPermission)
         if not hasPermission then
-            server.announce("Server", "Sorry, you don't have permission to use this command. Try again though.", player.ID)
-            player:SetPermission("Nerd")
+            player:Notify("Lacking Permissions", "Sorry, you don't have permission to run this command. Try again.", 3)
+            player:SetAuth(true)
             return
         end
 
-        server.announce("Info", "This addon uses Noir!")
+        player:Notify("Help", "TODO: Add a help message", 4)
     end)
 ]]
 ---@class NoirCommandService: NoirService
@@ -7559,7 +7687,7 @@ Noir.Services.CommandService = Noir.Services:CreateService(
     "CommandService",
     true,
     "A service that allows you to create commands.",
-    "A service that allows you to create commands with support for aliases, permissions, etc.",
+    "A service that allows you to create commands with support for aliases, etc.",
     {"Cuh4"}
 )
 
@@ -7611,10 +7739,11 @@ end
 --[[
     Create a new command.
 
-    Noir.Services.CommandService:CreateCommand("help", {"h"}, {"Nerd"}, false, false, false, "Example Command", function(player, message, args, hasPermission)
+    -- `true` = requires auth
+    Noir.Services.CommandService:CreateCommand("help", {"h"}, true, false, false, "My Command Description", function(player, message, args, hasPermission)
         if not hasPermission then
             player:Notify("Lacking Permissions", "Sorry, you don't have permission to run this command. Try again.", 3)
-            player:SetPermission("Nerd")
+            player:SetAuth(true)
             return
         end
 
@@ -7623,18 +7752,16 @@ end
 ]]
 ---@param name string The name of the command (eg: if you provided "help", the player would need to type "?help" in chat)
 ---@param aliases table<integer, string> The aliases of the command
----@param requiredPermissions table<integer, string>|nil The required permissions for this command
 ---@param requiresAuth boolean|nil Whether or not this command requires auth
 ---@param requiresAdmin boolean|nil Whether or not this command requires admin
 ---@param capsSensitive boolean|nil Whether or not this command is case-sensitive
 ---@param description string|nil The description of this command
 ---@param callback fun(player: NoirPlayer, message: string, args: table<integer, string>, hasPermission: boolean)
 ---@return NoirCommand
-function Noir.Services.CommandService:CreateCommand(name, aliases, requiredPermissions, requiresAuth, requiresAdmin, capsSensitive, description, callback)
+function Noir.Services.CommandService:CreateCommand(name, aliases, requiresAuth, requiresAdmin, capsSensitive, description, callback)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "name", name, "string")
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "aliases", aliases, "table")
-    Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "requiredPermissions", requiredPermissions, "table", "nil")
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "requiresAuth", requiresAuth, "boolean", "nil")
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "requiresAdmin", requiresAdmin, "boolean", "nil")
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "capsSensitive", capsSensitive, "boolean", "nil")
@@ -7642,7 +7769,7 @@ function Noir.Services.CommandService:CreateCommand(name, aliases, requiredPermi
     Noir.TypeChecking:Assert("Noir.Services.CommandService:CreateCommand()", "callback", callback, "function")
 
     -- Create command
-    local command = Noir.Classes.Command:New(name, aliases, requiredPermissions or {}, requiresAuth or false, requiresAdmin or false, capsSensitive or false, description or "")
+    local command = Noir.Classes.Command:New(name, aliases, requiresAuth or false, requiresAdmin or false, capsSensitive or false, description or "")
 
     -- Connect to event
     command.OnUse:Connect(callback)
@@ -7815,7 +7942,7 @@ end
 -- // Main
 -------------------------------
 
----@alias NoirHoarderCheckpoint fun(instance: NoirClass): boolean, table|nil
+---@alias NoirHoarderCheckpoint fun(instance: NoirHoardable): boolean, table|nil
 
 --[[
     A service for easily saving/loading class instances within a service with minimal hassle.<br>
@@ -7899,34 +8026,65 @@ function Noir.Services.HoarderService:ServiceInit()
 end
 
 --[[
+    Returns if a value is serializable.
+]]
+---@param value any
+---@return boolean
+function Noir.Services.HoarderService:_IsSerializable(value)
+    local allowed = {
+        ["number"] = true,
+        ["string"] = true,
+        ["boolean"] = true
+    }
+
+    return allowed[type(value)] ~= nil
+end
+
+--[[
     Serializes a table for saving by removing all functions.<br>
     Used internally.
 ]]
 ---@param tbl table
+---@param _active table<any, boolean>|nil
 ---@return table
-function Noir.Services.HoarderService:_Serialize(tbl)
+function Noir.Services.HoarderService:_Serialize(tbl, _active)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Services.HoarderService:_Serialize()", "tbl", tbl, "table")
+    Noir.TypeChecking:Assert("Noir.Services.HoarderService:_Serialize()", "_active", _active, "table", "nil")
+
+    -- Check for cyclic tables/shared references
+    _active = _active or {}
+
+    if _active[tbl] then
+        error("Noir.Services.HoarderService:_Serialize()", "Cyclic table detected during serialization. Cyclic tables cannot be saved! Consider replacing this value via `:OnPreSerialize()` and recreating the original manually via `:OnPostDeserialize()`.")
+    end
+
+    _active[tbl] = true
 
     -- Serialize
     local serialized = {}
 
     for key, value in pairs(tbl) do
-        -- Disallow functions
-        if type(value) == "function" then
+        if not self:_IsSerializable(key) then
             goto continue
         end
 
         if type(value) == "table" then
             -- Recursively serialize
-            serialized[key] = self:_Serialize(value)
+            serialized[key] = self:_Serialize(value, _active)
         else
+            if not self:_IsSerializable(value) then
+                goto continue
+            end
+
             -- Add value (it's allowed)
             serialized[key] = value
         end
 
         ::continue::
     end
+
+    _active[tbl] = nil
 
     -- Return
     return serialized
@@ -7974,6 +8132,12 @@ function Noir.Services.HoarderService:_Deserialize(class, serialized, lookupClas
     local instance = {}
     class:_SetupObject(instance)
 
+    -- Call `OnPreDeserialize`
+    if Noir.Classes.Hoardable:IsSameType(instance)  and instance.OnPreDeserialize then
+        ---@diagnostic disable-next-line: param-type-mismatch
+        instance:OnPreDeserialize(serialized, lookupClasses)
+    end
+
     -- Set attributes
     for key, value in pairs(serialized) do
         if Noir.IsClass(value) then -- .IsClass(), at least for 3.0.0, checks for a `ClassName` attribute. so even if serialized, it'll work here 
@@ -7993,10 +8157,10 @@ function Noir.Services.HoarderService:_Deserialize(class, serialized, lookupClas
     -- Re-add parents
     instance._Parents = class._Parents
 
-    -- Call `OnDeserialize`
-    if Noir.Classes.Hoardable:IsSameType(instance)  and instance.OnDeserialize then
+    -- Call `OnPostDeserialize`
+    if Noir.Classes.Hoardable:IsSameType(instance)  and instance.OnPostDeserialize then
         ---@diagnostic disable-next-line: param-type-mismatch
-        instance:OnDeserialize(serialized, lookupClasses)
+        instance:OnPostDeserialize(serialized, lookupClasses)
     end
 
     -- Return
@@ -8025,13 +8189,14 @@ end
 ]]
 ---@param service NoirService
 ---@param class NoirClass
----@param instance NoirClass
+---@param instance NoirHoardable
 ---@return boolean
+---@return table|nil
 function Noir.Services.HoarderService:_HandleCheckpoint(service, class, instance)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Services.HoarderService:_ShouldLoad()", "service", service, Noir.Classes.Service)
     Noir.TypeChecking:Assert("Noir.Services.HoarderService:_ShouldLoad()", "class", class, "class")
-    Noir.TypeChecking:Assert("Noir.Services.HoarderService:_ShouldLoad()", "instance", instance, "class")
+    Noir.TypeChecking:Assert("Noir.Services.HoarderService:_ShouldLoad()", "instance", instance, Noir.Classes.Hoardable)
 
     -- Run checkpoint if it exists
     if self.Checkpoints[service] and self.Checkpoints[service][class] then
@@ -8062,7 +8227,7 @@ end
 ]]
 ---@param service NoirService
 ---@param class NoirHoardable
----@param func fun(instance: NoirHoardable): boolean, table|nil
+---@param func NoirHoarderCheckpoint
 function Noir.Services.HoarderService:AddCheckpoint(service, class, func)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Services.HoarderService:AddCheckpoint()", "service", service, Noir.Classes.Service)
@@ -8094,18 +8259,24 @@ function Noir.Services.HoarderService:Hoard(service, tblName, instance)
     Noir.TypeChecking:Assert("Noir.Services.HoarderService:Hoard()", "instance", instance, Noir.Classes.Hoardable)
 
     -- Serialize
+    instance = Noir.Libraries.Table:DeepCopy(instance)
+
+    if instance.OnPreSerialize then
+        instance:OnPreSerialize()
+    end
+
     local serialized = self:_Serialize(instance)
 
-    if instance.OnSerialize then
-        instance:OnSerialize(serialized)
+    if instance.OnPostSerialize then
+        instance:OnPostSerialize(serialized)
     end
 
     -- Save serialized instance
-    local saveData = service:GetSaveData()
-
     self:_InitSaveData(service, tblName)
 
-    if instance:GetHoardableID() then
+    local saveData = service:GetSaveData()
+
+    if instance:HasHoardableID() then
         saveData[tblName][instance:GetHoardableID()] = serialized
     else
         table.insert(saveData[tblName], serialized)
@@ -8130,7 +8301,7 @@ function Noir.Services.HoarderService:Unhoard(service, tblName, instance)
     -- Unhoard
     local saveData = service:GetSaveData()
 
-    if instance:GetHoardableID() then
+    if instance:HasHoardableID() then
         saveData[tblName][instance:GetHoardableID()] = nil
     else
         local index = Noir.Libraries.Table:Find(saveData[tblName], instance)
@@ -8141,6 +8312,23 @@ function Noir.Services.HoarderService:Unhoard(service, tblName, instance)
 
         table.remove(saveData[tblName], index)
     end
+end
+
+--[[
+    Clears out saved instances for the provided service.
+]]
+---@param service NoirService
+---@param tblName string
+function Noir.Services.HoarderService:Clear(service, tblName)
+    -- Type checking
+    Noir.TypeChecking:Assert("Noir.Services.HoarderService:Clear()", "service", service, Noir.Classes.Service)
+    Noir.TypeChecking:Assert("Noir.Services.HoarderService:Clear()", "tblName", tblName, "string")
+
+    -- Init savedata
+    self:_InitSaveData(service, tblName)
+
+    -- Clear
+    service:GetSaveData()[tblName] = {}
 end
 
 --[[
@@ -8177,11 +8365,10 @@ function Noir.Services.HoarderService:LoadAll(service, from, to, class, lookupCl
             goto continue
         end
 
-        local ID = instance:GetHoardableID()
         local location = overwrittenLocation or to
 
-        if ID then
-            location[ID] = instance
+        if instance:HasHoardableID() then
+            location[instance:GetHoardableID()] = instance
         else
             table.insert(location, instance)
         end
@@ -9304,6 +9491,7 @@ end
 ---@class NoirPlayerService: NoirService
 ---@field OnJoin NoirEvent Arguments: player (NoirPlayer) | Fired when a player joins the server
 ---@field OnLeave NoirEvent Arguments: player (NoirPlayer) | Fired when a player leaves the server
+---@field OnCharacterLoad NoirEvent Arguments: player (NoirPlayer), character (NoirObject) | Fired when a player's character is loaded
 ---@field OnDie NoirEvent Arguments: player (NoirPlayer) | Fired when a player dies
 ---@field OnSit NoirEvent Arguments: player (NoirPlayer), body (NoirBody|nil), seatName (string) | Fired when a player sits in a seat (body can be nil if the player sat on a map object, etc)
 ---@field OnUnsit NoirEvent Arguments: player (NoirPlayer), body (NoirBody|nil), seatName (string) | Fired when a player unsits in a seat (body can be nil if the player sat on a map object, etc)
@@ -9316,6 +9504,7 @@ end
 ---@field _RespawnCallback NoirConnection A connection to the onPlayerRespawn event
 ---@field _SitCallback NoirConnection A connection to the onPlayerSit event
 ---@field _UnsitCallback NoirConnection A connection to the onPlayerUnsit event
+---@field _OnObjectLoadCallback NoirConnection A connection to ObjectService's `OnLoad` event
 Noir.Services.PlayerService = Noir.Services:CreateService(
     "PlayerService",
     true,
@@ -9329,6 +9518,7 @@ Noir.Services.PlayerService.InitPriority = 1
 function Noir.Services.PlayerService:ServiceInit()
     self.OnJoin = Noir.Libraries.Events:Create()
     self.OnLeave = Noir.Libraries.Events:Create()
+    self.OnCharacterLoad = Noir.Libraries.Events:Create()
     self.OnDie = Noir.Libraries.Events:Create()
     self.OnRespawn = Noir.Libraries.Events:Create()
     self.OnSit = Noir.Libraries.Events:Create()
@@ -9336,7 +9526,6 @@ function Noir.Services.PlayerService:ServiceInit()
 
     self.Players = {}
 
-    self:GetSaveData().PlayerProperties = self:_GetSavedProperties() or {}
     self:GetSaveData().RecognizedIDs = self:GetSaveData().RecognizedIDs or {}
 
     self._LoadedUnrecognizedPlayers = self:_LoadPlayers()
@@ -9349,21 +9538,21 @@ function Noir.Services.PlayerService:ServiceStart()
     -- all because of a single bug i encountered
     Noir.Services.TaskService:AddTickTask(function()
         for _, player in pairs(self._LoadedUnrecognizedPlayers) do
-            self.OnJoin:Fire(player)
+            self:_RegisterPlayer(player, true)
         end
     end, 1)
 
     -- Create callbacks
     self._JoinCallback = Noir.Callbacks:Connect("onPlayerJoin", function(steam_id, name, peer_id, admin, auth)
         -- Give data
-        local player = self:_GivePlayerData(steam_id, name, peer_id, admin, auth)
+        local player = self:_ConstructPlayer(steam_id, name, peer_id, admin, auth)
 
         if not player then
             return -- likely the host. in multiplayer, `onPlayerJoin` gets called for the host but `:_LoadPlayers()` in `:ServiceInit()` beats it to the punch. in singleplayer though, `onPlayerJoin` doesn't get called. bummy
         end
 
-        -- Call join event
-        self.OnJoin:Fire(player)
+        -- Register player
+        self:_RegisterPlayer(player, true)
     end)
 
     self._LeaveCallback = Noir.Callbacks:Connect("onPlayerLeave", function(steam_id, name, peer_id, admin, auth)
@@ -9434,10 +9623,21 @@ function Noir.Services.PlayerService:ServiceStart()
         -- Call unsit event
         self.OnUnsit:Fire(player, body, seat_name)
     end)
+
+    ---@param object NoirObject
+    self._OnObjectLoadCallback = Noir.Services.ObjectService.OnLoad:Connect(function(object)
+        local player = self:GetPlayerByCharacter(object)
+
+        if not player then
+            return
+        end
+
+        player:_CharacterLoad(object)
+    end)
 end
 
 --[[
-    Load players current in-game and returns a table of players to fire `OnJoin` for.<br>
+    Load players current in-game and returns a table of players to register later.<br>
     Used internally.
 ]]
 ---@return table<integer, NoirPlayer>
@@ -9467,24 +9667,20 @@ function Noir.Services.PlayerService:_LoadPlayers()
 
         -- Give data
         local recognized = self:_IsRecognized(player.id)
-        local createdPlayer = self:_GivePlayerData(player.steam_id, player.name, player.id, player.admin, player.auth)
+        local createdPlayer = self:_ConstructPlayer(player.steam_id, player.name, player.id, player.admin, player.auth)
 
         if not createdPlayer then
             goto continue
         end
 
-        -- Load saved properties (eg: permissions)
-        local savedProperties = self:_GetSavedPropertiesForPlayer(createdPlayer)
-
-        if savedProperties then
-            for property, value in pairs(savedProperties) do
-                createdPlayer[property] = value
-            end
-        end
-
-        -- Fire OnJoin if unrecognized in this session)
         if not recognized then
-            table.insert(players, createdPlayer) -- will happen in `:ServiceStart()`
+            -- Fire OnJoin if unrecognized in this session)
+            -- This could be the host in singleplayer since `onPlayerJoin` is not called for the host in singleplayer (or is called before Noir starts)
+            -- As a result, we artifically trigger `OnJoin` later in `:ServiceStart()`, and also register them before so
+            table.insert(players, createdPlayer)
+        else
+            -- Register
+            self:_RegisterPlayer(createdPlayer, false)
         end
 
         ::continue::
@@ -9494,7 +9690,17 @@ function Noir.Services.PlayerService:_LoadPlayers()
 end
 
 --[[
-    Gives data to a player.<br>
+    To be called when a player's character is loaded.
+]]
+---@param player NoirPlayer
+---@param character NoirObject
+function Noir.Services.PlayerService:_CharacterLoad(player, character)
+    self.OnCharacterLoad:Fire(player, character)
+    player:_CharacterLoad(character)
+end
+
+--[[
+    Makes data for a player. Returns nil if player is invalid (e.g.: unnamed client).<br>
     Used internally.
 ]]
 ---@param steam_id integer|string
@@ -9503,13 +9709,13 @@ end
 ---@param admin boolean
 ---@param auth boolean
 ---@return NoirPlayer|nil
-function Noir.Services.PlayerService:_GivePlayerData(steam_id, name, peer_id, admin, auth)
+function Noir.Services.PlayerService:_ConstructPlayer(steam_id, name, peer_id, admin, auth)
     -- Type checking
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GivePlayerData()", "steam_id", steam_id, "number", "string")
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GivePlayerData()", "name", name, "string")
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GivePlayerData()", "peer_id", peer_id, "number")
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GivePlayerData()", "admin", admin, "boolean")
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GivePlayerData()", "auth", auth, "boolean")
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_ConstructPlayer()", "steam_id", steam_id, "number", "string")
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_ConstructPlayer()", "name", name, "string")
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_ConstructPlayer()", "peer_id", peer_id, "number")
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_ConstructPlayer()", "admin", admin, "boolean")
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_ConstructPlayer()", "auth", auth, "boolean")
 
     -- Check if the player is the server itself (applies to dedicated servers)
     if self:_IsHost(peer_id) then
@@ -9527,15 +9733,33 @@ function Noir.Services.PlayerService:_GivePlayerData(steam_id, name, peer_id, ad
         peer_id,
         tostring(steam_id),
         admin,
-        auth,
-        {}
+        auth
     )
 
+    -- Return player
+    return player
+end
+
+--[[
+    Registers a player.<br>
+    Used internally.
+]]
+---@param player NoirPlayer
+---@param triggerEvent boolean
+function Noir.Services.PlayerService:_RegisterPlayer(player, triggerEvent)
+    -- Type checking
+    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_RegisterPlayer()", "player", player, Noir.Classes.Player)
+
     -- Save player
-    self.Players[peer_id] = player
+    self.Players[player.ID] = player
 
     -- Save peer ID so we know if we can call onJoin for this player or not if the addon reloads
     self:_MarkRecognized(player)
+
+    -- Trigger event
+    if triggerEvent then
+        self.OnJoin:Fire(player)
+    end
 
     -- Return
     return player
@@ -9553,9 +9777,6 @@ function Noir.Services.PlayerService:_RemovePlayerData(player)
     -- Remove player
     player.InGame = false
     self.Players[player.ID] = nil
-
-    -- Remove saved properties
-    self:_RemoveSavedProperties(player)
 
     -- Unmark as recognized
     self:_UnmarkRecognized(player)
@@ -9621,64 +9842,6 @@ function Noir.Services.PlayerService:_UnmarkRecognized(player)
 
     -- Remove from recognized
     self:GetSaveData().RecognizedIDs[player.ID] = nil
-end
-
---[[
-    Returns all saved player properties saved in g_savedata.<br>
-    Used internally. Do not use in your code.
-]]
----@return NoirSavedPlayerProperties
-function Noir.Services.PlayerService:_GetSavedProperties()
-    return self:GetSaveData().PlayerProperties
-end
-
---[[
-    Save a player's property to g_savedata.<br>
-    Used internally. Do not use in your code.
-]]
----@param player NoirPlayer
----@param property string
-function Noir.Services.PlayerService:_SaveProperty(player, property)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_SaveProperty()", "player", player, Noir.Classes.Player)
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_SaveProperty()", "property", property, "string")
-
-    -- Property saving
-    local properties = self:_GetSavedProperties()
-
-    if not properties[player.Steam] then
-        properties[player.Steam] = {}
-    end
-
-    properties[player.Steam][property] = player[property]
-end
-
---[[
-    Get a player's saved properties.<br>
-    Used internally. Do not use in your code.
-]]
----@param player NoirPlayer
----@return table<string, boolean>|nil
-function Noir.Services.PlayerService:_GetSavedPropertiesForPlayer(player)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_GetSavedPropertiesForPlayer()", "player", player, Noir.Classes.Player)
-
-    -- Return saved properties for player
-    return self:_GetSavedProperties()[player.Steam]
-end
-
---[[
-    Removes a player's saved properties from g_savedata.<br>
-    Used internally. Do not use in your code.
-]]
----@param player NoirPlayer
-function Noir.Services.PlayerService:_RemoveSavedProperties(player)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Services.PlayerService:_RemoveSavedProperties()", "player", player, Noir.Classes.Player)
-
-    -- Remove saved properties
-    local properties = self:_GetSavedProperties()
-    properties[player.Steam] = nil
 end
 
 --[[
@@ -9793,12 +9956,6 @@ function Noir.Services.PlayerService:IsSamePlayer(playerA, playerB)
     -- Return if both players are the same
     return playerA.ID == playerB.ID
 end
-
--------------------------------
--- // Intellisense
--------------------------------
-
----@alias NoirSavedPlayerProperties table<integer, table<string, any>>
 
 --------------------------------------------------------
 -- [Noir] Services - RelPos Service
@@ -10602,19 +10759,42 @@ end
 function Noir.Services.UIService:ServiceStart()
     ---@param player NoirPlayer
     self._OnJoinConnection = Noir.Services.PlayerService.OnJoin:Connect(function(player)
-        Noir.Services.TaskService:AddTimeTask(function()
-            for _, widget in pairs(self:GetWidgetsShownToPlayer(player)) do
-                widget:Update()
-            end
-        end, 1)
+        if player:GetCharacter() then
+            self:_ShowWidgetsToPlayer(player)
+        else
+            player.OnCharacterLoad:Once(function()
+                self:_ShowWidgetsToPlayer(player)
+            end)
+        end
     end)
 
     ---@param player NoirPlayer
     self._OnLeaveConnection = Noir.Services.PlayerService.OnLeave:Connect(function(player)
-        for _, widget in pairs(self:GetWidgetsBelongingToPlayer(player)) do
-            self:RemoveWidget(widget.ID)
-        end
+        self:_RemoveWidgetsFromPlayer(player)
     end)
+end
+
+
+--[[
+    Shows all widgets to a new player.<br>
+    Used internally. Do not use in your code.
+]]
+---@param player NoirPlayer
+function Noir.Services.UIService:_ShowWidgetsToPlayer(player)
+    for _, widget in pairs(self:GetWidgetsShownToPlayer(player)) do
+        widget:Update()
+    end
+end
+
+--[[
+    Removes all widgets from a player who left.<br>
+    Used internally. Do not use in your code.
+]]
+---@param player NoirPlayer
+function Noir.Services.UIService:_RemoveWidgetsFromPlayer(player)
+    for _, widget in pairs(self:GetWidgetsBelongingToPlayer(player)) do
+        self:RemoveWidget(widget.ID)
+    end
 end
 
 --[[
@@ -11883,6 +12063,20 @@ function error(source, message, ...)
 end
 
 --[[
+    Presents trackers in a category.<br>
+    Used internally.
+]]
+---@param category string
+---@param trackers table<integer, NoirTracker>
+function Noir.Debugging:_PresentTrackers(category, trackers)
+    Noir.Libraries.Logging:Success("Debugging", "--- "..category.." functions:")
+
+    for index, tracker in ipairs(trackers) do
+        Noir.Libraries.Logging:Info("Debugging", "Tracker #%d: %s", index, tracker:ToFormattedString())
+    end
+end
+
+--[[
     Returns all tracked functions with the option to copy.
 ]]
 ---@param copy boolean|nil
@@ -11911,12 +12105,7 @@ end
 ]]
 function Noir.Debugging:ShowLastCalledTracked()
     local trackers = self:GetLastCalledTracked()
-
-    Noir.Libraries.Logging:Success("Debugging", "--- *Last* called functions:")
-
-    for index, tracker in ipairs(trackers) do
-        Noir.Libraries.Logging:Info("Debugging", "#%d: %s", index, tracker:ToFormattedString())
-    end
+    self:_PresentTrackers("*Last* called", trackers)
 end
 
 --[[
@@ -11938,12 +12127,7 @@ end
 ]]
 function Noir.Debugging:ShowLeastPerformantTracked()
     local trackers = self:GetLeastPerformantTracked()
-
-    Noir.Libraries.Logging:Success("Debugging", "--- *Least* performant functions:")
-
-    for index, tracker in ipairs(trackers) do
-        Noir.Libraries.Logging:Info("Debugging", "#%d: %s", index, tracker:ToFormattedString())
-    end
+    self:_PresentTrackers("*Least* performant", trackers)
 end
 
 --[[
@@ -11965,12 +12149,29 @@ end
 ]]
 function Noir.Debugging:ShowMostPerformantTracked()
     local trackers = self:GetMostPerformantTracked()
+    self:_PresentTrackers("*Most* performant", trackers)
+end
 
-    Noir.Libraries.Logging:Success("Debugging", "--- *Most* performant functions:")
+--[[
+    Returns the tracked functions with the most calls.
+]]
+---@return table<integer, NoirTracker>
+function Noir.Debugging:GetMostCalledTracked()
+    local trackers = self:GetTrackedFunctions(true)
 
-    for index, tracker in ipairs(trackers) do
-        Noir.Libraries.Logging:Info("Debugging", "#%d: %s", index, tracker:ToFormattedString())
-    end
+    table.sort(trackers, function(a, b)
+        return a:GetCallCount() > b:GetCallCount()
+    end)
+
+    return trackers
+end
+
+--[[
+    Shows the tracked functions with the most calls.
+]]
+function Noir.Debugging:ShowMostCalledTracked()
+    local trackers = self:GetMostCalledTracked()
+    self:_PresentTrackers("*Most* called", trackers)
 end
 
 --[[
@@ -12057,7 +12258,7 @@ function Noir.Debugging:TrackAll(name, tbl, _journey)
             goto continue
         end
 
-        local tracker = self:TrackFunction(("%s:%s"):format(name, index), value)
+        local tracker = self:TrackFunction(("%s.%s"):format(name, index), value)
 
         if not tracker then
             goto continue
