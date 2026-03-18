@@ -10,7 +10,7 @@
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ g_savedata = { ---@diagnostic disable-line: lowercase-global
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -186,6 +186,306 @@ end
 ---| NoirClass
 
 --------------------------------------------------------
+-- [Noir] Enums
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    A table containing enums throughout Noir.
+]]
+Noir.Enums = {}
+
+--------------------------------------------------------
+-- [Noir] Enums - Addon Reason
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents how the addon has started (was it through a save being loaded? addons being reloaded? etc.).
+]]
+Noir.Enums.AddonReason = {
+    --[[
+        The addon was reloaded.
+    ]]
+    ADDON_RELOAD = "AddonReload",
+
+    --[[
+        A save was created with the addon enabled.
+    ]]
+    SAVE_CREATE = "SaveCreate",
+
+    --[[
+        A save was loaded with the addon enabled.
+    ]]
+    SAVE_LOAD = "SaveLoad"
+}
+
+--[[
+    Represents how the addon has started (was it through a save being loaded? addons being reloaded? etc.).
+]]
+---@alias NoirAddonReason
+---| "AddonReload" The addon was reloaded
+---| "SaveCreate" A save was created with the addon enabled
+---| "SaveLoad" A save with loaded into with the addon enabled
+
+--------------------------------------------------------
+-- [Noir] Enums - Log Level
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents a log level, with higher levels being more severe.
+]]
+Noir.Enums.LogLevel = {
+    --[[
+        The log level for debug messages.
+    ]]
+    DEBUG = 0,
+
+    --[[
+        The log level for info messages.
+    ]]
+    INFO = 5,
+
+    --[[
+        The log level for success messages.
+    ]]
+    SUCCESS = 10,
+
+    --[[
+        The log level for warning messages.
+    ]]
+    WARNING = 15,
+
+    --[[
+        The log level for error messages.
+    ]]
+    ERROR = 20
+}
+
+--[[
+    Represents a log level, with higher levels being more severe.
+]]
+---@alias NoirLogLevel
+---| 0 # The log level for debug messages.
+---| 5 # The log level for info messages.
+---| 10 # The log level for success messages.
+---| 15 # The log level for warning messages.
+---| 20 # The log level for error messages.
+
+--------------------------------------------------------
+-- [Noir] Enums - Task Type
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents the type of a task.
+]]
+Noir.Enums.TaskType = {
+    --[[
+        The task type uses time for determining when to run the task.
+    ]]
+    TIME = "Time",
+
+    --[[
+        The task type uses ticks for determining when to run the task.
+    ]]
+    TICKS = "Ticks"
+}
+
+--[[
+    Represents the type of a task.
+]]
+---@alias NoirTaskType
+---| "Time" The task type uses time for determining when to run the task.
+---| "Ticks" The task type uses ticks for determining when to run the task.
+
+--------------------------------------------------------
+-- [Noir] Enums - Widget Type
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents the type of a widget.
+]]
+Noir.Enums.WidgetType = {
+    --[[
+        A map object.
+    ]]
+    MAP_OBJECT = "MapObject",
+
+    --[[
+        A map label.
+    ]]
+    MAP_LABEL = "MapLabel",
+
+    --[[
+        A map line.
+    ]]
+    MAP_LINE = "MapLine",
+
+    --[[
+        A screen popup.
+    ]]
+    SCREEN_POPUP = "ScreenPopup",
+
+    --[[
+        A physical, in-world popup.
+    ]]
+    POPUP = "Popup"
+}
+
+--[[
+    Represents the type of a widget.
+]]
+---@alias NoirWidgetType
+---| "MapObject" A map object
+---| "MapLabel" A map label
+---| "MapLine" A map line
+---| "ScreenPopup" A screen popup
+---| "Popup" A physical, in-world popup
+
+--------------------------------------------------------
 -- [Noir] Classes
 --------------------------------------------------------
 
@@ -197,7 +497,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -236,7 +536,7 @@ Noir.Classes = {}
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -354,9 +654,6 @@ function Noir.Class(name, ...)
         -- Setup object
         object._IsObject = true
         self:_Descend(object, self._ClassMethods)
-
-        -- Bring down methods from parent
-        self:_DescendFromParent(object, self)
     end
 
     --[[
@@ -378,7 +675,7 @@ function Noir.Class(name, ...)
                 goto continue
             end
 
-            if object[index] then
+            if object[index] ~= nil then
                 goto continue
             end
 
@@ -389,11 +686,10 @@ function Noir.Class(name, ...)
     end
 
     --[[
-        Creates an object from the parent class and copies it to this object.<br>
-        Use this in the :Init() method of a class that inherits from a parent class.<br>
-        Any args provided will be passed to the :Init()
+        Calls the parent's `:Init()` method on this instance.<br>
+        Used internally. Do not use in your code.
     ]]
-    ---@param parent NoirClass 
+    ---@param parent NoirClass
     function class:InitFrom(parent, ...)
         -- Type checking
         Noir.TypeChecking:Assert("Noir.Class().InitFrom()", "parent", parent, "class")
@@ -403,11 +699,8 @@ function Noir.Class(name, ...)
             error("Class", "Attempted to call :InitFrom() when 'self' is a class and not an object.")
         end
 
-        -- Create an object from the parent class
-        local object = parent:New(...)
-
-        -- Copy and bring new attributes and methods down from the new parent object to this object
-        self._Descend(object, self, self._ClassMethods)
+        -- Init
+        parent.Init(self, ...)
     end
 
     --[[
@@ -453,13 +746,9 @@ function Noir.Class(name, ...)
         return false
     end
 
-    --[[
-        Returns if a table is a class or not.
-    ]]
-    ---@param other any
-    ---@return boolean
-    function class:IsClass(other)
-        return Noir.IsClass(other)
+    -- Bring down methods from parents to this class
+    for _, parent in pairs(class._Parents) do
+        class:_DescendFromParent(class, parent)
     end
 
     return class
@@ -486,7 +775,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -541,7 +830,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -1579,7 +1868,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -1601,6 +1890,11 @@ end
 -------------------------------
 
 --[[
+    Represents a command trigger callback.
+]]
+---@alias NoirCommandCallback fun(context: NoirCommandContext)
+
+--[[
     Represents a command.
 ]]
 ---@class NoirCommand: NoirClass
@@ -1611,7 +1905,7 @@ end
 ---@field RequiresAdmin boolean Whether or not this command requires admin
 ---@field CapsSensitive boolean Whether or not this command is case-sensitive
 ---@field Description string The description of this command
----@field OnUse NoirEvent Arguments: player (NoirPlayer), message (string), args (table<integer, string>), hasPermission (boolean) | Fired when this command is used
+---@field OnUse NoirEvent Arguments: context (NoirCommandContext) | Fired when this command is used
 Noir.Classes.Command = Noir.Class("Command")
 
 --[[
@@ -1655,7 +1949,13 @@ function Noir.Classes.Command:_Use(player, message, args)
     Noir.TypeChecking:Assert("Noir.Classes.Command:_Use()", "args", args, "table")
 
     -- Fire event
-    self.OnUse:Fire(player, message, args, self:CanUse(player))
+    self.OnUse:Fire(Noir.Classes.CommandContext:New(
+        player,
+        args,
+        message,
+        self:CanUse(player),
+        self
+    ))
 end
 
 --[[
@@ -1720,6 +2020,72 @@ function Noir.Classes.Command:CanUse(player)
 end
 
 --------------------------------------------------------
+-- [Noir] Classes - Command Context
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents the context for a command callback.
+]]
+---@class NoirCommandContext: NoirClass
+---@field New fun(self: NoirCommandContext, player: NoirPlayer, args: table<integer, string>, message: string, hasPermission: boolean, command: NoirCommand): NoirCommandContext
+---@field Player NoirPlayer The player who triggered the command
+---@field Args table<integer, string> The arguments of the command
+---@field Message string The full message the player provided
+---@field HasPermission boolean Whether the player has permission to run this command
+---@field Command NoirCommand The command that was used
+Noir.Classes.CommandContext = Noir.Class("CommandContext")
+
+--[[
+    Initializes class objects from this class.
+]]
+---@param player NoirPlayer
+---@param args table<integer, string>
+---@param message string
+---@param hasPermission boolean
+---@param command NoirCommand
+function Noir.Classes.CommandContext:Init(player, args, message, hasPermission, command)
+    Noir.TypeChecking:Assert("Noir.Classes.CommandContext:Init()", "player", player, Noir.Classes.Player)
+    Noir.TypeChecking:Assert("Noir.Classes.CommandContext:Init()", "args", args, "table")
+    Noir.TypeChecking:Assert("Noir.Classes.CommandContext:Init()", "message", message, "string")
+    Noir.TypeChecking:Assert("Noir.Classes.CommandContext:Init()", "hasPermission", hasPermission, "boolean")
+
+    self.Player = player
+    self.Args = args
+    self.Message = message
+    self.HasPermission = hasPermission
+    self.Command = command
+end
+
+--------------------------------------------------------
 -- [Noir] Classes - Connection
 --------------------------------------------------------
 
@@ -1731,7 +2097,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -1814,7 +2180,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2036,7 +2402,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2227,7 +2593,7 @@ function Noir.Classes.Hoardable:OnPostDeserialize(serialized, lookupClasses) end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2284,7 +2650,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2350,7 +2716,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2402,6 +2768,546 @@ function Noir.Classes.Library:Init(name, shortDescription, longDescription, auth
 end
 
 --------------------------------------------------------
+-- [Noir] Classes - Logger
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents a logger, used for logging messages to chat and other places.<br>
+    Functionality of loggers can be extended with LoggerMiddleware instances, allowing for<br>
+    sending logs to other places - like a Discord webhook via HTTP.
+]]
+---@class NoirLogger: NoirClass
+---@field New fun(self: NoirLogger, name: string): NoirLogger
+---@field Name string The name of the logger
+---@field Middleware table<integer, NoirLoggerMiddleware> The middleware attached to this logger
+---@field LevelFilter NoirLogLevel Logs below this level will not be sent
+---@field Enabled boolean Whether or not this logger is enabled
+---@field Formatter NoirLogFormatter The formatter for this logger
+---@field OnLog NoirEvent Fired when this logger logs something | Arguments: record (NoirLogRecord)
+Noir.Classes.Logger = Noir.Class("Logger")
+
+--[[
+    Initializes Logger class objects.
+]]
+---@param name string
+function Noir.Classes.Logger:Init(name)
+    Noir.TypeChecking:Assert("Noir.Classes.Logger:Init()", "name", name, "string")
+
+    self.Name = name
+    self.Middleware = {}
+    self.LevelFilter = Noir.Enums.LogLevel.DEBUG
+    self.Enabled = true
+
+    self.Formatter = function(record)
+        local start = ("[%s] [%s] [%sms] (%s): "):format(
+            Noir.AddonName,
+            Noir.Classes.Logger:GetLevelName(record.Level),
+            record.Time,
+            record.Logger.Name
+        )
+
+        return start..record.Message:gsub("\n", "\n"..start)
+    end
+
+    self.OnLog = Noir.Libraries.Events:Create()
+end
+
+--[[
+    Sets whether the logger is enabled or not.
+]]
+---@param enabled boolean
+function Noir.Classes.Logger:SetEnabled(enabled)
+    Noir.TypeChecking:Assert("Noir.Classes.Logger:SetEnabled()", "enabled", enabled, "boolean")
+    self.Enabled = enabled
+end
+
+--[[
+    Returns if the logger is enabled.
+]]
+---@return boolean
+function Noir.Classes.Logger:IsEnabled()
+    return self.Enabled
+end
+
+--[[
+    Sets the log filter.
+]]
+---@param level NoirLogLevel
+function Noir.Classes.Logger:SetFilter(level)
+    Noir.TypeChecking:Assert("Noir.Classes.Logger:SetFilter()", "level", level, "number")
+    self.LevelFilter = level
+end
+
+--[[
+    Attaches middleware to this logger.
+]]
+---@param middleware NoirLoggerMiddleware
+function Noir.Classes.Logger:AttachMiddleware(middleware)
+    Noir.TypeChecking:Assert("Noir.Classes.Logger:AttachMiddleware()", "middleware", middleware, Noir.Classes.LoggerMiddleware)
+    table.insert(self.Middleware, middleware)
+end
+
+--[[
+    Sets the formatter for this logger.
+]]
+---@param formatter NoirLogFormatter
+function Noir.Classes.Logger:SetFormatter(formatter)
+    Noir.TypeChecking:Assert("Noir.Classes.Logger:SetFormatter()", "formatter", formatter, "function")
+    self.Formatter = formatter
+end
+
+--[[
+    Returns the log level formatted a string.
+]]
+---@param level NoirLogLevel
+---@return string
+function Noir.Classes.Logger:GetLevelName(level)
+    if level == Noir.Enums.LogLevel.DEBUG then
+        return "DEBUG"
+    elseif level == Noir.Enums.LogLevel.INFO then
+        return "INFO"
+    elseif level == Noir.Enums.LogLevel.SUCCESS then
+        return "SUCCESS"
+    elseif level == Noir.Enums.LogLevel.WARNING then
+        return "WARNING"
+    elseif level == Noir.Enums.LogLevel.ERROR then
+        return "ERROR"
+    else
+        return "UNKNOWN"
+    end
+end
+
+--[[
+    Returns if this logger can handle a log level based on the logger's filter.
+]]
+---@param level NoirLogLevel
+---@return boolean
+function Noir.Classes.Logger:CanHandle(level)
+    return level >= self.LevelFilter
+end
+
+--[[
+    Returns all middleware attached to this logger.
+]]
+---@return table<integer, NoirLoggerMiddleware>
+function Noir.Classes.Logger:GetMiddleware()
+    return self.Middleware
+end
+
+--[[
+    Propagates a log record to all attached middleware for processing.
+]]
+---@param record NoirLogRecord
+function Noir.Classes.Logger:_PropagateLogRecord(record)
+    for _, middleware in pairs(self:GetMiddleware()) do
+        middleware:Process(record)
+    end
+end
+
+--[[
+    Sends a log.
+]]
+---@param level NoirLogLevel
+---@param message string
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Log(level, message, ...)
+    local fullMessage = ... and message:format(...) or message
+    local logRecord = Noir.Classes.LogRecord:New(level, fullMessage, self, server.getTimeMillisec())
+
+    if not self:CanHandle(level) then
+        return logRecord
+    end
+
+    if not self:IsEnabled() then
+        return logRecord
+    end
+
+    self:_PropagateLogRecord(logRecord)
+    self.OnLog:Fire(logRecord)
+
+    return logRecord
+end
+
+--[[
+    Sends a debug log.
+]]
+---@param message any
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Debug(message, ...)
+    return self:Log(Noir.Enums.LogLevel.DEBUG, message, ...)
+end
+
+--[[
+    Sends an info log.
+]]
+---@param message any
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Info(message, ...)
+    return self:Log(Noir.Enums.LogLevel.INFO, message, ...)
+end
+
+--[[
+    Sends a success log.
+]]
+---@param message any
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Success(message, ...)
+    return self:Log(Noir.Enums.LogLevel.SUCCESS, message, ...)
+end
+
+--[[
+    Sends a warning log.
+]]
+---@param message any
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Warning(message, ...)
+    return self:Log(Noir.Enums.LogLevel.WARNING, message, ...)
+end
+
+--[[
+    Sends an error log.
+]]
+---@param message any
+---@param ... any
+---@return NoirLogRecord
+function Noir.Classes.Logger:Error(message, ...)
+    return self:Log(Noir.Enums.LogLevel.ERROR, message, ...)
+end
+
+-------------------------------
+-- // Intellisense
+-------------------------------
+
+--[[
+    Represents a function used for formatting log records.
+]]
+---@alias NoirLogFormatter fun(record: NoirLogRecord): string
+
+--------------------------------------------------------
+-- [Noir] Classes - Logger Middleware
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents a logger middleware.<br>
+    Logger middleware are used to handle any logs sent via a logger.<br>
+    An example of a logger middleware is one that receives logs and sends them in chat.
+]]
+---@class NoirLoggerMiddleware: NoirClass
+---@field New fun(self: NoirLoggerMiddleware, name: string): NoirLoggerMiddleware
+---@field Name string The name of the logger middleware
+---@field LevelFilter NoirLogLevel The log level below which this logger middleware will ignore logs
+---@field Enabled boolean Whether or not this logger middleware is enabled
+Noir.Classes.LoggerMiddleware = Noir.Class("LoggerMiddleware")
+
+--[[
+    Initializes LoggerMiddleware class objects.
+]]
+---@param name string
+function Noir.Classes.LoggerMiddleware:Init(name)
+    Noir.TypeChecking:Assert("Noir.Classes.LoggerMiddleware:Init()", "name", name, "string")
+
+    self.Name = name
+    self.LevelFilter = Noir.Enums.LogLevel.DEBUG
+    self.Enabled = true
+end
+
+--[[
+    Sets the level filter for this middleware.
+]]
+---@param level NoirLogLevel
+function Noir.Classes.LoggerMiddleware:SetFilter(level)
+    Noir.TypeChecking:Assert("Noir.Classes.LoggerMiddleware:SetFilter()", "level", level, "number")
+    self.LevelFilter = level
+end
+
+--[[
+    Enables or disables this middleware.
+]]
+---@param enabled boolean
+function Noir.Classes.LoggerMiddleware:SetEnabled(enabled)
+    Noir.TypeChecking:Assert("Noir.Classes.LoggerMiddleware:Enable()", "enabled", enabled, "boolean")
+    self.Enabled = enabled
+end
+
+--[[
+    Returns if this middleware can handle a log record.
+]]
+---@param record NoirLogRecord
+---@return boolean
+function Noir.Classes.LoggerMiddleware:CanHandle(record)
+    return record.Level >= self.LevelFilter and self.Enabled
+end
+
+--[[
+    Processes a log record.
+]]
+---@param record NoirLogRecord
+function Noir.Classes.LoggerMiddleware:Process(record)
+    if not self:CanHandle(record) then
+        return
+    end
+
+    self:OnLog(record)
+end
+
+--[[
+    Called when a log from the attached logger is received.<br>
+    *abstractmethod - replace with own implementation in subclass*
+]]
+---@param record NoirLogRecord
+function Noir.Classes.LoggerMiddleware:OnLog(record) end
+
+--------------------------------------------------------
+-- [Noir] Classes - Chat Logger Middleware
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Logger middleware to send logs to chat.
+]]
+---@class NoirChatLoggerMiddleware: NoirLoggerMiddleware
+---@field New fun(self: NoirChatLoggerMiddleware): NoirChatLoggerMiddleware
+Noir.Classes.ChatLoggerMiddleware = Noir.Class("ChatLoggerMiddleware", Noir.Classes.LoggerMiddleware)
+
+--[[
+    Initializes ChatLoggerMiddleware class objects.
+]]
+function Noir.Classes.ChatLoggerMiddleware:Init()
+    self:InitFrom(
+        Noir.Classes.LoggerMiddleware,
+        "ChatLoggerMiddleware"
+    )
+end
+
+--[[
+    Called when a log from the attached logger is received.
+]]
+---@param record NoirLogRecord
+function Noir.Classes.ChatLoggerMiddleware:OnLog(record)
+    server.announce(record.Logger.Name, record:Format())
+end
+
+--------------------------------------------------------
+-- [Noir] Classes - Debug Log Logger Middleware
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Logger middleware to send logs via `debug.log`.
+]]
+---@class NoirDebugLogLoggerMiddleware: NoirLoggerMiddleware
+---@field New fun(self: NoirDebugLogLoggerMiddleware): NoirDebugLogLoggerMiddleware
+Noir.Classes.DebugLogLoggerMiddleware = Noir.Class("DebugLogLoggerMiddleware", Noir.Classes.LoggerMiddleware)
+
+--[[
+    Initializes DebugLogLoggerMiddleware class objects.
+]]
+function Noir.Classes.DebugLogLoggerMiddleware:Init()
+    self:InitFrom(
+        Noir.Classes.LoggerMiddleware,
+        "DebugLogLoggerMiddleware"
+    )
+end
+
+--[[
+    Called when a log from the attached logger is received.
+]]
+---@param record NoirLogRecord
+function Noir.Classes.DebugLogLoggerMiddleware:OnLog(record)
+    debug.log(record:Format())
+end
+
+--------------------------------------------------------
+-- [Noir] Classes - Log Record
+--------------------------------------------------------
+
+--[[
+    ----------------------------
+
+    CREDIT:
+        Author(s): @Cuh4 (GitHub)
+        GitHub Repository: https://github.com/cuhHub/Noir
+
+    License:
+        Copyright (C) 2026 Cuh4
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    ----------------------------
+]]
+
+-------------------------------
+-- // Main
+-------------------------------
+
+--[[
+    Represents a log record (a logged message, essentially).
+]]
+---@class NoirLogRecord: NoirClass
+---@field New fun(self: NoirLogRecord, level: NoirLogLevel, message: string, logger: NoirLogger, time: number): NoirLogRecord
+---@field Level NoirLogLevel The log level
+---@field Message string The log message
+---@field Logger NoirLogger The logger the log was sent from
+---@field Time number The time the log was sent (milliseconds)
+Noir.Classes.LogRecord = Noir.Class("LogRecord")
+
+--[[
+    Initializes LogRecord class objects.
+]]
+---@param level NoirLogLevel
+---@param message string
+---@param logger NoirLogger
+---@param time number
+function Noir.Classes.LogRecord:Init(level, message, logger, time)
+    Noir.TypeChecking:Assert("Noir.Classes.LogRecord:Init()", "level", level, "number")
+    Noir.TypeChecking:Assert("Noir.Classes.LogRecord:Init()", "message", message, "string")
+    Noir.TypeChecking:Assert("Noir.Classes.LogRecord:Init()", "logger", logger, Noir.Classes.Logger)
+    Noir.TypeChecking:Assert("Noir.Classes.LogRecord:Init()", "time", time, "number")
+
+    self.Level = level
+    self.Message = message
+    self.Logger = logger
+    self.Time = time
+end
+
+--[[
+    Formats the record using the parent logger's formatter.
+]]
+---@return string
+function Noir.Classes.LogRecord:Format()
+    return self.Logger.Formatter(self)
+end
+
+--------------------------------------------------------
 -- [Noir] Classes - Message
 --------------------------------------------------------
 
@@ -2413,7 +3319,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2538,7 +3444,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -2620,13 +3526,13 @@ end
 --[[
     Returns the data of this object.
 ]]
----@return SWObjectData
+---@return SWObjectData|nil
 function Noir.Classes.Object:GetData()
     -- Get the data
     local data = server.getObjectData(self.ID)
 
     if not data then
-        error("Noir.Classes.Object:GetData()", ":GetData() failed for object %d. Data is nil", self.ID)
+        return
     end
 
     -- Return the data
@@ -2704,7 +3610,13 @@ end
 ]]
 ---@return number
 function Noir.Classes.Object:GetHealth()
-    return self:GetData().hp
+    local data = self:GetData()
+
+    if not data then
+        return 0
+    end
+
+    return data.hp
 end
 
 --[[
@@ -2811,10 +3723,11 @@ function Noir.Classes.Object:GetVehicle()
 end
 
 --[[
-    Returns the item this character is holding in the specified slot (if character).
+    Returns the item this character is holding in the specified slot (if character).<br>
+    Returns nil if unsuccessful.
 ]]
 ---@param slot SWSlotNumberEnum
----@return SWEquipmentTypeEnum
+---@return SWEquipmentTypeEnum|nil
 function Noir.Classes.Object:GetItem(slot)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Classes.Object:GetItem()", "slot", slot, "number")
@@ -2823,7 +3736,7 @@ function Noir.Classes.Object:GetItem(slot)
     local item, success = server.getCharacterItem(self.ID, slot)
 
     if not success then
-        error("Noir.Classes.Object:GetItem()", "server.getCharacterItem(...) was unsuccessful. Is the slot out of range? Is this object a character?")
+        return
     end
 
     -- Return it
@@ -2856,6 +3769,11 @@ end
 ---@return boolean
 function Noir.Classes.Object:IsDowned()
     local data = self:GetData()
+
+    if not data then
+        return false
+    end
+
     return data.dead or data.incapacitated or data.hp <= 0
 end
 
@@ -2934,15 +3852,8 @@ end
 ]]
 ---@return boolean
 function Noir.Classes.Object:IsLit()
-    -- Get fire data
     local isLit, success = server.getFireData(self.ID)
-
-    if not success then
-        error("Noir.Classes.Object:IsLit()", "server.getFireData() was unsuccessful.")
-    end
-
-    -- Return
-    return isLit
+    return isLit and success
 end
 
 --[[
@@ -2991,7 +3902,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3211,7 +4122,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3275,7 +4186,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3534,7 +4445,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3605,9 +4516,6 @@ function Noir.Classes.Task:Init(ID, taskType, duration, isRepeating, arguments, 
     self.OnCompletion = Noir.Libraries.Events:Create()
 end
 
-    --[[
-]]
-
 --[[
     Sets whether or not this task is repeating.<br>
     If repeating, the task will be triggered repeatedly as implied.<br>
@@ -3646,17 +4554,6 @@ function Noir.Classes.Task:Remove()
     Noir.Services.TaskService:RemoveTask(self)
 end
 
--------------------------------
--- // Intellisense
--------------------------------
-
---[[
-    Represents a task type.
-]]
----@alias NoirTaskType
----| "Time" The task will use `server.getTimeMillisec()`
----| "Ticks" The task will count ticks in `onTick` while considering the amount of ticks passed in a single tick
-
 --------------------------------------------------------
 -- [Noir] Classes - Tick Iteration Process
 --------------------------------------------------------
@@ -3669,7 +4566,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3696,7 +4593,7 @@ end
 ---@class NoirTickIterationProcess: NoirClass
 ---@field New fun(self: NoirTickIterationProcess, ID: number, tbl: table, chunkSize: integer): NoirTickIterationProcess
 ---@field ID integer The ID of this process
----@field IterationEvent NoirEvent Arguments: value (any), tick (integer), completed (boolean) | Fired when an iteration during a tick is occuring
+---@field IterationEvent NoirEvent Arguments: index (any), value (any), tick (integer), completed (boolean) | Fired when an iteration during a tick is occuring
 ---@field ChunkSize integer The number of values to iterate through per tick
 ---@field TableToIterate table The table to iterate through across ticks
 ---@field CurrentTick integer Represents the current tick the iteration is at
@@ -3774,7 +4671,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -3800,11 +4697,17 @@ end
 ]]
 ---@class NoirTracker: NoirClass
 ---@field New fun(self: NoirTracker, name: string, func: function): NoirTracker
+---@field OnBeforeCall NoirEvent Fired before the function is called | Arguments: ... (any)
+---@field OnAfterCall NoirEvent Fired after the function is called | Arguments: ... (any)
 ---@field FunctionName string The name of the function provided
 ---@field Function function The original unmodified function
 ---@field CallCount integer The number of times the function has been called
 ---@field ExecutionTimes table<integer, integer> A table containing the execution time of each function call in milliseconds
 ---@field AverageExecutionTime number The average execution time of the function
+---@field AverageCallsPerTick integer The average number of times the function gets called per tick
+---@field CallsPerTick integer The number of times the function has been called this tick
+---@field CallsPerTickHistory table<integer, integer> A table containing the number of times the function has been called per tick
+---@field _LastProcessedTick integer The amount of ticks that have passed since the last calls per tick calculation
 ---@field _TimeBeforeCall number The time before the function was called via server.getTimeMillisec()
 ---@field _ModifiedFunction function The unmodified function but wrapped with debug code
 Noir.Classes.Tracker = Noir.Class("Tracker")
@@ -3818,11 +4721,20 @@ function Noir.Classes.Tracker:Init(name, func)
     Noir.TypeChecking:Assert("Noir.Classes.Tracker:Init()", "name", name, "string")
     Noir.TypeChecking:Assert("Noir.Classes.Tracker:Init()", "func", func, "function")
 
+    self.OnBeforeCall = Noir.Libraries.Events:Create()
+    self.OnAfterCall = Noir.Libraries.Events:Create()
+
     self.FunctionName = name
     self.Function = func
     self.CallCount = 0
+
     self.ExecutionTimes = {}
     self.AverageExecutionTime = 0
+
+    self.AverageCallsPerTick = 0
+    self.CallsPerTick = 0
+    self.CallsPerTickHistory = {}
+    self._LastProcessedTick = 0
 
     self._TimeBeforeCall = 0
 
@@ -3841,6 +4753,7 @@ end
 ]]
 function Noir.Classes.Tracker:_BeforeCall(...)
     self._TimeBeforeCall = server.getTimeMillisec()
+    self.OnBeforeCall:Fire(...)
 end
 
 --[[
@@ -3851,6 +4764,24 @@ function Noir.Classes.Tracker:_AfterCall(...)
     -- Increment call count
     self.CallCount = self.CallCount + 1
 
+    -- Calculate calls per tick
+    local currentTick = Noir.Services.TaskService.Ticks
+
+    if currentTick ~= self._LastProcessedTick then
+        table.insert(self.CallsPerTickHistory, self.CallsPerTick)
+
+        if #self.CallsPerTickHistory >= 10 then
+            table.remove(self.CallsPerTickHistory, 1)
+        end
+
+        self.AverageCallsPerTick = Noir.Libraries.Number:Average(self.CallsPerTickHistory)
+
+        self.CallsPerTick = 0
+        self._LastProcessedTick = currentTick
+    end
+
+    self.CallsPerTick = self.CallsPerTick + 1
+
     -- Add execution time
     if #self.ExecutionTimes >= 10 then
         table.remove(self.ExecutionTimes, 1)
@@ -3860,6 +4791,9 @@ function Noir.Classes.Tracker:_AfterCall(...)
 
     -- Calculate average execution time
     self.AverageExecutionTime = Noir.Libraries.Number:Average(self.ExecutionTimes)
+
+    -- Fire events
+    self.OnAfterCall:Fire(...)
 end
 
 --[[
@@ -3867,11 +4801,12 @@ end
 ]]
 ---@return string
 function Noir.Classes.Tracker:ToFormattedString()
-    return ("%s() | Avg. Exc. Time: %.8f ms, Last Exc. Time: %.8fms, Call Count: %d"):format(
+    return ("%s() | Avg. Exc. Time: %.8f ms, Last Exc. Time: %.8fms, Call Count: %d, %.1f calls/tick"):format(
         self:GetName(),
         self:GetAverageExecutionTime(),
         self:GetLastExecutionTime(),
-        self:GetCallCount()
+        self:GetCallCount(),
+        self:GetAverageCallsPerTick()
     )
 end
 
@@ -3892,6 +4827,22 @@ end
 ---@return string
 function Noir.Classes.Tracker:GetName()
     return self.FunctionName
+end
+
+--[[
+    Returns the calls per tick.
+]]
+---@return number
+function Noir.Classes.Tracker:GetCallsPerTick()
+    return self.CallsPerTick
+end
+
+--[[
+    Returns the average calls per tick.
+]]
+---@return number
+function Noir.Classes.Tracker:GetAverageCallsPerTick()
+    return self.AverageCallsPerTick
 end
 
 --[[
@@ -3930,7 +4881,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4186,7 +5137,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4216,6 +5167,7 @@ end
 ---@field Visible boolean Whether or not this widget is visible
 ---@field WidgetType NoirWidgetType The type of this widget (eg: "MapObject")
 ---@field Player NoirPlayer|nil The player that this widget is attached to. If nil, all players can see this UI
+---@field ForceHidden boolean Whether or not this widget is forcefully hidden
 Noir.Classes.Widget = Noir.Class("Widget")
 
 --[[
@@ -4235,6 +5187,7 @@ function Noir.Classes.Widget:Init(ID, visible, widgetType, player)
     self.Visible = visible
     self.WidgetType = widgetType
     self.Player = player
+    self.ForceHidden = false
 end
 
 --[[
@@ -4246,7 +5199,8 @@ function Noir.Classes.Widget:Serialize()
         ID = self.ID,
         Visible = self.Visible,
         WidgetType = self.WidgetType,
-        Player = self.Player and self.Player.ID or -1
+        Player = self.Player and self.Player.ID or -1,
+        ForceHidden = self.ForceHidden
     }, self:_Serialize())
 end
 
@@ -4271,18 +5225,19 @@ function Noir.Classes.Widget:Deserialize(serializedWidget)
 end
 
 --[[
+    Returns if this widget is visible.
+]]
+---@return boolean
+function Noir.Classes.Widget:IsVisible()
+    return self.Visible and not self.ForceHidden
+end
+
+--[[
     Updates this widget.
 ]]
 function Noir.Classes.Widget:Update()
-    if self.Player then
-        self:_Destroy(self.Player) -- destroy old version. prevents duplication
-        self:_Update(self.Player)
-    else
-        for _, player in pairs(Noir.Services.PlayerService:GetPlayers(true)) do
-            self:_Destroy(player)
-            self:_Update(player)
-        end
-    end
+    self:_Destroy() -- destroy old version. prevents duplication
+    self:_Update()
 
     if self:Exists() then
         Noir.Services.UIService:_SaveWidget(self)
@@ -4293,8 +5248,7 @@ end
     Updates this widget.<br>
     *abstract method*
 ]]
----@param player NoirPlayer
-function Noir.Classes.Widget:_Update(player)
+function Noir.Classes.Widget:_Update()
     error("Noir.Classes.Widget:Update()", "This method is abstract and must be overridden.")
 end
 
@@ -4302,22 +5256,23 @@ end
     Destroys this widget.
 ]]
 function Noir.Classes.Widget:Destroy()
-    if self.Player then
-        self:_Destroy(self.Player)
-    else
-        for _, player in pairs(Noir.Services.PlayerService:GetPlayers(true)) do
-            self:_Destroy(player)
-        end
-    end
+    self:_Destroy()
 end
 
 --[[
     Destroys this widget.<br>
     *abstract method*
 ]]
----@param player NoirPlayer
-function Noir.Classes.Widget:_Destroy(player)
+function Noir.Classes.Widget:_Destroy()
     error("Noir.Classes.Widget:_Destroy()", "This method is abstract and must be overridden.")
+end
+
+--[[
+    Returns the peer ID for the player this widget is attached to, or -1 if for everyone.
+]]
+---@return integer
+function Noir.Classes.Widget:_GetPeerID()
+    return self.Player and self.Player.ID or -1
 end
 
 --[[
@@ -4347,16 +5302,7 @@ end
 ---@field Visible boolean Whether or not this widget is visible
 ---@field WidgetType NoirWidgetType The type of this widget (eg: "MapObject")
 ---@field Player integer The peer ID of the player that this widget is attached to, or -1 if for everyone
-
---[[
-    Represents a widget type.
-]]
----@alias NoirWidgetType
----| "MapObject" # A map object widget
----| "MapLabel" # A map label widget
----| "MapLine" # A map line widget
----| "ScreenPopup" # A screen popup widget
----| "Popup" # A popup widget in 3D space
+---@field ForceHidden boolean Whether or not the widget is force-hidden
 
 --------------------------------------------------------
 -- [Noir] Classes - Map Label Widget
@@ -4370,7 +5316,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4421,7 +5367,7 @@ function Noir.Classes.MapLabelWidget:Init(ID, visible, text, labelType, position
         Noir.Classes.Widget,
         ID,
         visible,
-        "MapLabel",
+        Noir.Enums.WidgetType.MAP_LABEL,
         player
     )
 
@@ -4463,16 +5409,13 @@ end
 --[[
     Handles updating this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapLabelWidget:_Update(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapLabelWidget:_Update()", "player", player, Noir.Classes.Player)
-
-    if not self.Visible then
+function Noir.Classes.MapLabelWidget:_Update()
+    if not self:IsVisible() then
         return
     end
 
     server.addMapLabel(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         self.LabelType,
         self.Text,
@@ -4484,10 +5427,8 @@ end
 --[[
     Handles destroying this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapLabelWidget:_Destroy(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapLabelWidget:_Destroy()", "player", player, Noir.Classes.Player)
-    server.removeMapLabel(player.ID, self.ID)
+function Noir.Classes.MapLabelWidget:_Destroy()
+    server.removeMapLabel(self:_GetPeerID(), self.ID)
 end
 
 -------------------------------
@@ -4514,7 +5455,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4588,7 +5529,7 @@ function Noir.Classes.MapObjectWidget:Init(ID, visible, title, text, objectType,
         Noir.Classes.Widget,
         ID,
         visible,
-        "MapObject",
+        Noir.Enums.WidgetType.MAP_OBJECT,
         player
     )
 
@@ -4718,16 +5659,13 @@ end
 --[[
     Handles updating this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapObjectWidget:_Update(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapObjectWidget:_Update()", "player", player, Noir.Classes.Player)
-
-    if not self.Visible then
+function Noir.Classes.MapObjectWidget:_Update()
+    if not self:IsVisible() then
         return
     end
 
     server.addMapObject(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         self._AttachmentMode,
         self.ObjectType,
@@ -4750,10 +5688,8 @@ end
 --[[
     Handles destroying this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapObjectWidget:_Destroy(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapObjectWidget:_Destroy()", "player", player, Noir.Classes.Player)
-    server.removeMapObject(player.ID, self.ID)
+function Noir.Classes.MapObjectWidget:_Destroy()
+    server.removeMapObject(self:_GetPeerID(), self.ID)
 end
 
 -------------------------------
@@ -4790,7 +5726,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4842,7 +5778,7 @@ function Noir.Classes.ScreenPopupWidget:Init(ID, visible, text, X, Y, player)
         Noir.Classes.Widget,
         ID,
         visible,
-        "ScreenPopup",
+        Noir.Enums.WidgetType.SCREEN_POPUP,
         player
     )
 
@@ -4884,19 +5820,16 @@ end
 --[[
     Handles updating this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.ScreenPopupWidget:_Update(player)
-    Noir.TypeChecking:Assert("Noir.Classes.ScreenPopupWidget:_Update()", "player", player, Noir.Classes.Player)
-
-    if not self.Visible then
+function Noir.Classes.ScreenPopupWidget:_Update()
+    if not self:IsVisible() then
         return
     end
 
     server.setPopupScreen(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         "",
-        self.Visible,
+        self:IsVisible(),
         self.Text,
         self.X,
         self.Y
@@ -4906,12 +5839,9 @@ end
 --[[
     Handles destroying this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.ScreenPopupWidget:_Destroy(player)
-    Noir.TypeChecking:Assert("Noir.Classes.ScreenPopupWidget:_Destroy()", "player", player, Noir.Classes.Player)
-
+function Noir.Classes.ScreenPopupWidget:_Destroy()
     server.setPopupScreen( -- `server.removePopup` shows a tutorial popup for a brief moment, so we aren't using it
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         "",
         false,
@@ -4943,7 +5873,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -4998,7 +5928,7 @@ function Noir.Classes.PopupWidget:Init(ID, visible, text, position, renderDistan
         Noir.Classes.Widget,
         ID,
         visible,
-        "Popup",
+        Noir.Enums.WidgetType.POPUP,
         player
     )
 
@@ -5111,19 +6041,16 @@ end
 --[[
     Handles updating this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.PopupWidget:_Update(player)
-    Noir.TypeChecking:Assert("Noir.Classes.PopupWidget:_Update()", "player", player, Noir.Classes.Player)
-
-    if not self.Visible then
+function Noir.Classes.PopupWidget:_Update()
+    if not self:IsVisible() then
         return
     end
 
     server.setPopup(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         "",
-        self.Visible,
+        self:IsVisible(),
         self.Text,
         self._AttachmentMode == 0 and self.Position[13] or self.AttachmentOffset[13],
         self._AttachmentMode == 0 and self.Position[14] or self.AttachmentOffset[14],
@@ -5137,12 +6064,9 @@ end
 --[[
     Handles destroying this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.PopupWidget:_Destroy(player)
-    Noir.TypeChecking:Assert("Noir.Classes.PopupWidget:_Destroy()", "player", player, Noir.Classes.Player)
-
+function Noir.Classes.PopupWidget:_Destroy()
     server.setPopup(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         "",
         false,
@@ -5184,7 +6108,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5248,7 +6172,7 @@ function Noir.Classes.MapLineWidget:Init(ID, visible, startPosition, endPosition
         Noir.Classes.Widget,
         ID,
         visible,
-        "MapLine",
+        Noir.Enums.WidgetType.MAP_LINE,
         player
     )
 
@@ -5302,16 +6226,13 @@ end
 --[[
     Handles updating this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapLineWidget:_Update(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapLineWidget:_Update()", "player", player, Noir.Classes.Player)
-
-    if not self.Visible then
+function Noir.Classes.MapLineWidget:_Update()
+    if not self:IsVisible() then
         return
     end
 
     server.addMapLine(
-        player.ID,
+        self:_GetPeerID(),
         self.ID,
         self.StartPosition,
         self.EndPosition,
@@ -5326,10 +6247,8 @@ end
 --[[
     Handles destroying this widget.
 ]]
----@param player NoirPlayer
-function Noir.Classes.MapLineWidget:_Destroy(player)
-    Noir.TypeChecking:Assert("Noir.Classes.MapLineWidget:_Destroy()", "player", player, Noir.Classes.Player)
-    server.removeMapLine(player.ID, self.ID)
+function Noir.Classes.MapLineWidget:_Destroy()
+    server.removeMapLine(self:_GetPeerID(), self.ID)
 end
 
 -------------------------------
@@ -5360,7 +6279,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5432,7 +6351,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5619,7 +6538,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5751,7 +6670,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5821,7 +6740,7 @@ function Noir.Libraries.Deprecation:Deprecated(name, replacement, note)
     end
 
     -- Send message
-    Noir.Libraries.Logging:Warning("Deprecated", "'%s' is deprecated.".._replacement.._note, name)
+    Noir.Logger:Warning("'%s' is deprecated.".._replacement.._note, name)
 end
 
 --------------------------------------------------------
@@ -5836,7 +6755,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -5933,7 +6852,7 @@ Noir.Libraries.Events.DismissAction = {}
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -6063,7 +6982,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -6427,7 +7346,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -6449,161 +7368,25 @@ end
 -------------------------------
 
 --[[
-    A library containing methods related to logging.
+    A library providing standard logging functionality.
 ]]
 ---@class NoirLoggingLib: NoirLibrary
 Noir.Libraries.Logging = Noir.Libraries:Create(
     "Logging",
-    "A library containing methods related to logging.",
+    "A library providing standard logging functionality.",
     nil,
     {"Cuh4"}
 )
 
 --[[
-    The mode to use when logging.<br>
-    - "DebugLog": Sends logs to DebugView<br>
-    - "Chat": Sends logs to chat
+    Creates a logger.
 ]]
-Noir.Libraries.Logging.LoggingMode = "DebugLog" ---@type NoirLoggingMode
-
---[[
-    An event called when a log is sent.<br>
-    Arguments: (log: string)
-]]
-Noir.Libraries.Logging.OnLog = Noir.Libraries.Events:Create()
-
---[[
-    Represents the logging layout.<br>
-    Requires two '%s' in the layout. First %s is the addon name, second %s is the log type, and the third %s is the log title. The message is then added after the layout.
-]]
-Noir.Libraries.Logging.Layout = "[Noir] [%s] [%s] [%s]: "
-
---[[
-    Set the logging mode.
-
-    Noir.Libraries.Logging:SetMode("DebugLog")
-]]
----@param mode NoirLoggingMode
-function Noir.Libraries.Logging:SetMode(mode)
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:SetMode()", "mode", mode, "string")
-    self.LoggingMode = mode
+---@param name string
+---@return NoirLogger
+function Noir.Libraries.Logging:CreateLogger(name)
+    Noir.TypeChecking:Assert("Noir.Libraries.Logging:CreateLogger()", "name", name, "string")
+    return Noir.Classes.Logger:New(name)
 end
-
---[[
-    Sends a log.
-
-    Noir.Libraries.Logging:Log("Warning", "Title", "Something went wrong relating to %s", "something.")
-]]
----@param logType string
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:Log(logType, title, message, ...)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Log()", "logType", logType, "string")
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Log()", "title", title, "string")
-
-    -- Format
-    local formattedText = self:_FormatLog(logType, title, message, ...)
-
-    -- Send log
-    if self.LoggingMode == "DebugLog" then
-        debug.log(formattedText)
-    elseif self.LoggingMode == "Chat" then
-        debug.log(formattedText)
-        server.announce("Noir", formattedText) -- this goes against the rules of noir libraries as they should not interact with the game, but i suppose this is a special case. whups!
-    else
-        self:Error("Logging", "'%s' is not a valid logging mode.", true, tostring(Noir.Libraries.LoggingMode))
-    end
-
-    -- Send event
-    self.OnLog:Fire(formattedText)
-end
-
---[[
-    Format a log.<br>
-    Used internally.
-]]
----@param logType string
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:_FormatLog(logType, title, message, ...)
-    -- Type checking
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:_FormatLog()", "logType", logType, "string")
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:_FormatLog()", "title", title, "string")
-
-    -- Validate args
-    local validatedLogType = tostring(logType)
-    local validatedTitle = tostring(title)
-    local validatedMessage = type(message) == "table" and Noir.Libraries.Table:ToString(message) or (... and tostring(message):format(...) or tostring(message))
-
-    -- Format text
-    local formattedMessage = (self.Layout:format(Noir.AddonName, validatedLogType, validatedTitle)..validatedMessage):gsub("\n", "\n"..self.Layout:format(Noir.AddonName, validatedLogType, validatedTitle))
-
-    -- Return
-    return formattedMessage
-end
-
---[[
-    Sends an error log.
-
-    Noir.Libraries.Logging:Error("Title", "Something went wrong relating to %s", "something.")
-]]
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:Error(title, message, ...)
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Error()", "title", title, "string")
-    self:Log("Error", title, message, ...)
-end
-
---[[
-    Sends a warning log.
-
-    Noir.Libraries.Logging:Warning("Title", "Something went unexpected relating to %s", "something.")
-]]
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:Warning(title, message, ...)
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Warning()", "title", title, "string")
-    self:Log("Warning", title, message, ...)
-end
-
---[[
-    Sends an info log.
-
-    Noir.Libraries.Logging:Info("Title", "Something went okay relating to %s", "something.")
-]]
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:Info(title, message, ...)
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Info()", "title", title, "string")
-    self:Log("Info", title, message, ...)
-end
-
---[[
-    Sends a success log.
-
-    Noir.Libraries.Logging:Success("Title", "Something went right relating to %s", "something.")
-]]
----@param title string
----@param message any
----@param ... any
-function Noir.Libraries.Logging:Success(title, message, ...)
-    Noir.TypeChecking:Assert("Noir.Libraries.Logging:Success()", "title", title, "string")
-    self:Log("Success", title, message, ...)
-end
-
--------------------------------
--- // Intellisense
--------------------------------
-
----@alias NoirLoggingMode
----| "Chat" Sends via server.announce and via debug.log
----| "DebugLog" Sends only via debug.log
 
 --------------------------------------------------------
 -- [Noir] Libraries - Table
@@ -6617,7 +7400,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -6759,7 +7542,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -6909,7 +7692,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -7044,7 +7827,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -7435,6 +8218,99 @@ function Noir.Libraries.Table:FindDeep(tbl, value)
     end
 end
 
+--[[
+    Calls the function for every value in a table, and returns a new table with the results.
+    
+    local myTbl = {1, 2, 3}
+
+    local myChangedTbl = Noir.Libraries.Table:Map(myTbl, function(index, value)
+        return value * 2
+    end)
+
+    print(myChangedTbl) -- {2, 4, 6}
+]]
+---@param tbl table
+---@param callback fun(index: any, value: any): any
+---@return table
+function Noir.Libraries.Table:Map(tbl, callback)
+    -- Type checking
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:Map()", "tbl", tbl, "table")
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:Map()", "callback", callback, "function")
+
+    -- Map the table
+    local new = {}
+
+    for index, value in pairs(tbl) do
+        new[index] = callback(index, value)
+    end
+
+    return new
+end
+
+--[[
+    Calls the function for every value in the provided table, keeping the value in a new table if the
+    function returns true.
+
+    local myTbl = {1, 2, 3, 1}
+
+    local myFilteredTbl = Noir.Libraries.Table:Filter(myTbl, function(index, value)
+        return value == 1
+    end)
+
+    print(myFilteredTbl) -- {[1] = 1, [4] = 1}
+]]
+---@param tbl table
+---@param callback fun(index: any, value: any): boolean
+---@return table
+function Noir.Libraries.Table:Filter(tbl, callback)
+    -- Type checking
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:Filter()", "tbl", tbl, "table")
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:Filter()", "callback", callback, "function")
+
+    -- Filter the table
+    local new = {}
+
+    for index, value in pairs(tbl) do
+        if callback(index, value) then
+            new[index] = value
+        end
+    end
+
+    return new
+end
+
+--[[
+    Calls the function for every value in the provided table, keeping the value in a new table if the
+    function returns false. Unlike `:Filter()`, the indices are not maintained and `table.insert` is used instead.
+
+    local myTbl = {1, 2, 3, 1}
+
+    local myFilteredTbl = Noir.Libraries.Table:FilterSequential(myTbl, function(index, value)
+        return value == 1
+    end)
+
+    print(myFilteredTbl) -- {[1] = 1, [2] = 1}
+]]
+---@param tbl table
+---@param callback fun(index: any, value: any): boolean
+---@return table
+function Noir.Libraries.Table:FilterSequential(tbl, callback)
+    -- Type checking
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:FilterSequential()", "tbl", tbl, "table")
+    Noir.TypeChecking:Assert("Noir.Libraries.Table:FilterSequential()", "callback", callback, "function")
+
+    -- Filter the table
+    local new = {}
+
+    for index, value in pairs(tbl) do
+        if callback(index, value) then
+            table.insert(new, value)
+        end
+    end
+
+    return new
+end
+
 --------------------------------------------------------
 -- [Noir] Services
 --------------------------------------------------------
@@ -7447,7 +8323,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -7645,7 +8521,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -7740,14 +8616,14 @@ end
     Create a new command.
 
     -- `true` = requires auth
-    Noir.Services.CommandService:CreateCommand("help", {"h"}, true, false, false, "My Command Description", function(player, message, args, hasPermission)
-        if not hasPermission then
-            player:Notify("Lacking Permissions", "Sorry, you don't have permission to run this command. Try again.", 3)
-            player:SetAuth(true)
+    Noir.Services.CommandService:CreateCommand("help", {"h"}, true, false, false, "My Command Description", function(context)
+        if not context.HasPermission then
+            context.Player:Notify("Lacking Permissions", "Sorry, you don't have permission to run this command. Try again.", 3)
+            context.Player:SetAuth(true)
             return
         end
 
-        player:Notify("Help", "TODO: Add a help message", 4)
+        context.Player:Notify("Help", "TODO: Add a help message", 4)
     end)
 ]]
 ---@param name string The name of the command (eg: if you provided "help", the player would need to type "?help" in chat)
@@ -7756,7 +8632,7 @@ end
 ---@param requiresAdmin boolean|nil Whether or not this command requires admin
 ---@param capsSensitive boolean|nil Whether or not this command is case-sensitive
 ---@param description string|nil The description of this command
----@param callback fun(player: NoirPlayer, message: string, args: table<integer, string>, hasPermission: boolean)
+---@param callback NoirCommandCallback
 ---@return NoirCommand
 function Noir.Services.CommandService:CreateCommand(name, aliases, requiresAuth, requiresAdmin, capsSensitive, description, callback)
     -- Type checking
@@ -7824,7 +8700,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -7921,7 +8797,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -8389,7 +9265,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -8420,7 +9296,7 @@ end
         end
 
         local item = response:JSON()
-        Noir.Libraries.Logging:Info("Item", item.Name)
+        Noir.Logger:Info("Item: "..item.Name)
     end)
 ]]
 ---@class NoirHTTPService: NoirService
@@ -8471,7 +9347,8 @@ end
 ]]
 ---@param URL string
 ---@param port integer
----@return NoirHTTPRequest|nil, integer|nil
+---@return NoirHTTPRequest|nil
+---@return integer|nil
 function Noir.Services.HTTPService:_FindRequest(URL, port)
     -- Type checking
     Noir.TypeChecking:Assert("Noir.Services.HTTPService:_FindRequest()", "URL", URL, "string")
@@ -8508,7 +9385,7 @@ end
         end
 
         local item = response:JSON()
-        Noir.Libraries.Logging:Info("Item", item.Name)
+        Noir.Logger:Info("Item: "..item.Name)
     end)
 ]]
 ---@param URL string
@@ -8561,7 +9438,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -8587,7 +9464,7 @@ end
 
     ---@param message NoirMessage
     Noir.Services.MessageService.OnMessage:Connect(function(message)
-        Noir.Libraries.Logging:Info("Message", "(%s) > %s (%s)", message.Title, message.Content, message.IsAddon and "Sent by addon" or "Sent by player")
+        Noir.Logger:Info("(%s) > %s (%s)", message.Title, message.Content, message.IsAddon and "Sent by addon" or "Sent by player")
     end)
 
     Noir.Services.MessageService:SendMessage(nil, "[Server]", "Hello world!")
@@ -8626,7 +9503,7 @@ function Noir.Services.MessageService:ServiceStart()
         local author = Noir.Services.PlayerService:GetPlayer(peerID)
 
         if not author then
-            error("MessageService", "Failed to get author of message via 'onChatMessage' callback.")
+            return
         end
 
         -- Register message
@@ -8835,7 +9712,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -8979,7 +9856,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -9455,7 +10332,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -9642,7 +10519,7 @@ end
 ]]
 ---@return table<integer, NoirPlayer>
 function Noir.Services.PlayerService:_LoadPlayers()
-    if Noir.AddonReason == "SaveLoad" then
+    if Noir.AddonReason == Noir.Enums.AddonReason.SAVE_LOAD then
         self:_ClearRecognized() -- clear recognized players on save load, otherwise players that were recognized before the save was loaded will be recognized again
     end
 
@@ -9656,7 +10533,12 @@ function Noir.Services.PlayerService:_LoadPlayers()
         end
 
         -- Check if unnamed client
-        if player.name == "unnamed client" and not player.object_id then -- i don't like this. what if a player actually has their name as unnamed client? i'm also not entirely sure if actual players have an object_id when loading in
+        if player.name == "unnamed client" then -- i don't like this. what if a player actually has their name as unnamed client? i'm also not entirely sure if actual players have an object_id when loading in
+            goto continue
+        end
+
+        -- Check if fully loaded into server
+        if not player.object_id then
             goto continue
         end
 
@@ -9969,7 +10851,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -10068,7 +10950,7 @@ function Noir.Services.RelPosService:_FillTileCache()
     end
 
     local took = (server.getTimeMillisec() - start) / 1000 -- seconds
-    Noir.Libraries.Logging:Info("RelPosService", "Took %.5f seconds to fill tile cache. Got positions for %d tiles.", took, count)
+    Noir.Logger:Info("Took %.5f seconds to fill tile cache. Got positions for %d tiles.", took, count)
 end
 
 --[[
@@ -10141,7 +11023,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -10200,7 +11082,8 @@ function Noir.Services.TaskService:ServiceInit()
 
     self._TaskTypeHandlers = {}
 
-    self._TaskTypeHandlers["Time"] = function(task)
+    ---@param task NoirTask
+    self._TaskTypeHandlers[Noir.Enums.TaskType.TIME] = function(task)
         local time = self:GetTimeSeconds()
 
         if time < task.StopsAt then
@@ -10210,15 +11093,15 @@ function Noir.Services.TaskService:ServiceInit()
         if task.IsRepeating then
             task.StartedAt = time
             task.StopsAt = time + task.Duration
-
-            task.OnCompletion:Fire(table.unpack(task.Arguments))
         else
             self:RemoveTask(task)
-            task.OnCompletion:Fire(table.unpack(task.Arguments))
         end
+
+        task.OnCompletion:Fire(table.unpack(task.Arguments))
     end
 
-    self._TaskTypeHandlers["Ticks"] = function(task)
+    ---@param task NoirTask
+    self._TaskTypeHandlers[Noir.Enums.TaskType.TICKS] = function(task)
         if self.Ticks < task.StopsAt then
             return
         end
@@ -10226,18 +11109,17 @@ function Noir.Services.TaskService:ServiceInit()
         if task.IsRepeating then
             task.StartedAt = self.Ticks
             task.StopsAt = self.Ticks + task.Duration
-
-            task.OnCompletion:Fire(table.unpack(task.Arguments))
         else
             self:RemoveTask(task)
-            task.OnCompletion:Fire(table.unpack(task.Arguments))
         end
+
+        task.OnCompletion:Fire(table.unpack(task.Arguments))
     end
 end
 
 function Noir.Services.TaskService:ServiceStart()
     self._OnTickConnection = Noir.Callbacks:Connect("onTick", function(ticks)
-        self.Ticks = self.Ticks + ticks
+        self.Ticks = self.Ticks + 1
         self.DeltaTicks = ticks
 
         self:_HandleTickIterationProcesses()
@@ -10250,12 +11132,17 @@ end
     Used internally.
 ]]
 function Noir.Services.TaskService:_HandleTickIterationProcesses()
-    for _, tickIterationProcess in pairs(self:GetTickIterationProcesses(true)) do
-        if tickIterationProcess.Completed then
-            self:RemoveTickIterationProcess(tickIterationProcess)
-        else
-            tickIterationProcess:Iterate()
+    ---@type table<integer, NoirTickIterationProcess>
+    local toRemove = {}
+
+    for _, tickIterationProcess in pairs(self:GetTickIterationProcesses()) do
+        if tickIterationProcess:Iterate() then
+            table.insert(toRemove, tickIterationProcess)
         end
+    end
+
+    for _, tickIterationProcess in pairs(toRemove) do
+        self:RemoveTickIterationProcess(tickIterationProcess)
     end
 end
 
@@ -10318,7 +11205,7 @@ end
     Returns whether or not a task type is valid.<br>
     Used internally.
 ]]
----@param taskType string
+---@param taskType NoirTaskType
 ---@return boolean
 function Noir.Services.TaskService:_IsValidTaskType(taskType)
     return self._TaskTypeHandlers[taskType] ~= nil
@@ -10357,7 +11244,7 @@ function Noir.Services.TaskService:AddTimeTask(callback, duration, arguments, is
     Noir.TypeChecking:Assert("Noir.Services.TaskService:AddTimeTask()", "isRepeating", isRepeating, "boolean", "nil")
 
     -- Create task
-    local task = self:_AddTask(callback, duration, arguments or {}, isRepeating or false, "Time", self:GetTimeSeconds())
+    local task = self:_AddTask(callback, duration, arguments or {}, isRepeating or false, Noir.Enums.TaskType.TIME, self:GetTimeSeconds())
     return task
 end
 
@@ -10413,7 +11300,7 @@ function Noir.Services.TaskService:AddTickTask(callback, duration, arguments, is
     Noir.TypeChecking:Assert("Noir.Services.TaskService:AddTickTask()", "isRepeating", isRepeating, "boolean", "nil")
 
     -- Create task
-    local task = self:_AddTask(callback, duration, arguments or {}, isRepeating or false, "Ticks", self.Ticks)
+    local task = self:_AddTask(callback, duration, arguments or {}, isRepeating or false, Noir.Enums.TaskType.TICKS, self.Ticks)
     return task
 end
 
@@ -10483,9 +11370,9 @@ end
         print(value)
     end)
 ]]
----@param tbl table<integer, any>
+---@param tbl table
 ---@param chunkSize integer How many values to iterate per tick
----@param callback fun(index: any, value: any, currentTick: integer|nil, completed: boolean|nil) `currentTick` and `completed` are never nil. this is just to mark the paramters as optional
+---@param callback fun(index: any, value: any, currentTick: integer, completed: boolean)
 ---@return NoirTickIterationProcess
 function Noir.Services.TaskService:IterateOverTicks(tbl, chunkSize, callback)
     -- Type checking
@@ -10544,7 +11431,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -10698,7 +11585,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -10760,7 +11647,9 @@ function Noir.Services.UIService:ServiceStart()
     ---@param player NoirPlayer
     self._OnJoinConnection = Noir.Services.PlayerService.OnJoin:Connect(function(player)
         if player:GetCharacter() then
-            self:_ShowWidgetsToPlayer(player)
+            Noir.Services.TaskService:AddTimeTask(function() -- hacky fix for a bug where widgets don't show up for players who join
+                self:_ShowWidgetsToPlayer(player)                       -- not sure why this happens, guessing its a stormworks issue
+            end, 1)
         else
             player.OnCharacterLoad:Once(function()
                 self:_ShowWidgetsToPlayer(player)
@@ -10820,29 +11709,29 @@ function Noir.Services.UIService:_LoadWidgets()
 
         ---@type table<NoirWidgetType, function>
         local deserializers = {
-            ["MapObject"] = function(serializedWidget)
+            [Noir.Enums.WidgetType.MAP_OBJECT] = function(serializedWidget)
                 return Noir.Classes.MapObjectWidget:Deserialize(serializedWidget)
             end,
 
-            ["MapLabel"] = function(serializedWidget)
+            [Noir.Enums.WidgetType.MAP_LABEL] = function(serializedWidget)
                 return Noir.Classes.MapLabelWidget:Deserialize(serializedWidget)
             end,
 
-            ["Popup"] = function(serializedWidget)
+            [Noir.Enums.WidgetType.POPUP] = function(serializedWidget)
                 return Noir.Classes.PopupWidget:Deserialize(serializedWidget)
             end,
 
-            ["ScreenPopup"] = function(serializedWidget)
+            [Noir.Enums.WidgetType.SCREEN_POPUP] = function(serializedWidget)
                 return Noir.Classes.ScreenPopupWidget:Deserialize(serializedWidget)
             end,
 
-            ["MapLine"] = function(serializedWidget)
+            [Noir.Enums.WidgetType.MAP_LINE] = function(serializedWidget)
                 return Noir.Classes.MapLineWidget:Deserialize(serializedWidget)
             end
         }
 
         if not deserializers[savedWidget.WidgetType] then
-            Noir.Libraries.Logging:Warning("UIService", "Got unknown saved widget of type: %s", savedWidget.WidgetType)
+            Noir.Logger:Warning("Got unknown saved widget of type: %s", savedWidget.WidgetType)
             goto continue
         end
 
@@ -11162,7 +12051,8 @@ function Noir.Services.UIService:RemoveWidget(ID)
     local widget = self:GetWidget(ID)
 
     if not widget then
-        error("Noir.Services.UIService:RemoveWidget()", "No widget with ID %d exists.", ID)
+        -- error("Noir.Services.UIService:RemoveWidget()", "No widget with ID %d exists.", ID)
+        return
     end
 
     widget:Destroy()
@@ -11203,7 +12093,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -11942,7 +12832,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -12038,6 +12928,23 @@ Noir.Debugging._TrackingExceptions = {
 }
 
 --[[
+    Fired whenever an error is raised.
+]]
+Noir.Debugging.OnError = Noir.Libraries.Events:Create()
+
+--[[
+    Fired before any tracked function is called.<br>
+    Arguments: tracker (NoirTracker), ... (any)
+]]
+Noir.Debugging.OnBeforeCall = Noir.Libraries.Events:Create()
+
+--[[
+    Fired after any tracked function is called.<br>
+    Arguments: tracker (NoirTracker), ... (any)
+]]
+Noir.Debugging.OnAfterCall = Noir.Libraries.Events:Create()
+
+--[[
     Raises an error.<br>
     This method can still be called regardless of if debugging is enabled or not.<br>
     `error()` is aliased to this method.
@@ -12046,7 +12953,9 @@ Noir.Debugging._TrackingExceptions = {
 ---@param message string
 ---@param ... any
 function Noir.Debugging:RaiseError(source, message, ...)
-    Noir.Libraries.Logging:Error("Error", source..": "..message, ...)
+    Noir.Logger:Error(source..": "..message, ...)
+    self.OnError:Fire(source, ... and message:format(...) or message)
+
     _ENV["Noir: An error was raised. See logs for details."]()
 end
 
@@ -12069,10 +12978,13 @@ end
 ---@param category string
 ---@param trackers table<integer, NoirTracker>
 function Noir.Debugging:_PresentTrackers(category, trackers)
-    Noir.Libraries.Logging:Success("Debugging", "--- "..category.." functions:")
+    Noir.TypeChecking:Assert("Noir.Debugging:_PresentTrackers()", "category", category, "string")
+    Noir.TypeChecking:Assert("Noir.Debugging:_PresentTrackers()", "trackers", trackers, "table")
+
+    Noir.Logger:Success("--- "..category.." functions:")
 
     for index, tracker in ipairs(trackers) do
-        Noir.Libraries.Logging:Info("Debugging", "Tracker #%d: %s", index, tracker:ToFormattedString())
+        Noir.Logger:Info("Tracker #%d: %s", index, tracker:ToFormattedString())
     end
 end
 
@@ -12175,6 +13087,28 @@ function Noir.Debugging:ShowMostCalledTracked()
 end
 
 --[[
+    Returns the tracked functions with the most calls per tick.
+]]
+---@return table<integer, NoirTracker>
+function Noir.Debugging:GetMostCalledPerTickTracked()
+    local trackers = self:GetTrackedFunctions(true)
+
+    table.sort(trackers, function(a, b)
+        return a:GetAverageCallsPerTick() > b:GetAverageCallsPerTick()
+    end)
+
+    return trackers
+end
+
+--[[
+    Shows the tracked functions with the most calls per tick.
+]]
+function Noir.Debugging:ShowMostCalledPerTickTracked()
+    local trackers = self:GetMostCalledPerTickTracked()
+    self:_PresentTrackers("*Most* calls/tick", trackers)
+end
+
+--[[
     Track a function. This returns a tracker which will track the performance of the function among other things.<br>
     Returns `nil` if the provided function isn't allowed to be tracked or if debugging isn't enabled.
     
@@ -12205,6 +13139,15 @@ function Noir.Debugging:TrackFunction(name, func)
     -- Track
     local tracker = Noir.Classes.Tracker:New(name, func)
     table.insert(self.Trackers, tracker)
+
+    -- Handle events
+    tracker.OnBeforeCall:Connect(function(...)
+        self.OnBeforeCall:Fire(tracker, ...)
+    end)
+
+    tracker.OnAfterCall:Connect(function(...)
+        self.OnAfterCall:Fire(tracker, ...)
+    end)
 
     -- Return
     return tracker
@@ -12300,7 +13243,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -12507,7 +13450,7 @@ function Noir.Callbacks:_InstantiateCallback(name, hideStartWarning)
 
     -- Check if Noir has started
     if not Noir.HasStarted and not hideStartWarning then
-        Noir.Libraries.Logging:Warning("Callbacks", "Noir has not started yet. It is not recommended to connect to callbacks before `Noir:Start()` is called and finalized. Please connect to the `Noir.Started` event and attach to game callbacks in that.")
+        Noir.Logger:Warning( "Noir has not started yet. It is not recommended to connect to callbacks before `Noir:Start()` is called and finalized. Please connect to the `Noir.Started` event and attach to game callbacks in that.")
     end
 
     -- For later
@@ -12529,7 +13472,7 @@ function Noir.Callbacks:_InstantiateCallback(name, hideStartWarning)
 
     if existing then
         -- Inform developer that a function for a game callback already exists
-        Noir.Libraries.Logging:Warning("Callbacks", "Your addon has a function for the game callback '%s'. Noir will wrap around it to prevent overwriting. Please use `Noir.Callbacks:Connect(\"%s\", function(...) end)` instead of `function %s(...) end` function to avoid this warning.", name, name, name)
+        Noir.Logger:Warning("Your addon has a function for the game callback '%s'. Noir will wrap around it to prevent overwriting. Please use `Noir.Callbacks:Connect(\"%s\", function(...) end)` instead of `function %s(...) end` function to avoid this warning.", name, name, name)
 
         -- Wrap around existing function
         _ENV[name] = function(...)
@@ -12559,7 +13502,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -12690,7 +13633,7 @@ end
 ]]
 function Noir.Bootstrapper:InitializeServices()
     for _, service in pairs(self:_SortServicesByPriority("Init")) do
-        Noir.Libraries.Logging:Info("Bootstrapper", "Initializing %s of priority %d.", Noir.Services:FormatService(service), service.InitPriority)
+        Noir.Logger:Info("Initializing %s of priority %d.", Noir.Services:FormatService(service), service.InitPriority)
         service:_Initialize()
     end
 end
@@ -12702,7 +13645,7 @@ end
 ]]
 function Noir.Bootstrapper:StartServices()
     for _, service in pairs(self:_SortServicesByPriority("Start")) do
-        Noir.Libraries.Logging:Info("Bootstrapper", "Starting %s of priority %d.", Noir.Services:FormatService(service), service.StartPriority)
+        Noir.Logger:Info("Starting %s of priority %d.", Noir.Services:FormatService(service), service.StartPriority)
         service:_Start()
     end
 end
@@ -12749,7 +13692,7 @@ end
         GitHub Repository: https://github.com/cuhHub/Noir
 
     License:
-        Copyright (C) 2025 Cuh4
+        Copyright (C) 2026 Cuh4
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -12825,7 +13768,14 @@ Noir.IsDedicatedServer = false
     - Started via a save load<br>
     - Started via a save creation
 ]]
-Noir.AddonReason = "AddonReload" ---@type NoirAddonReason
+Noir.AddonReason = Noir.Enums.AddonReason.ADDON_RELOAD ---@type NoirAddonReason
+
+--[[
+    The main logger for Noir.<br>
+    This should only be used by Noir. It is recommended to create your own logger for your addon.
+]]
+Noir.Logger = Noir.Libraries.Logging:CreateLogger("Noir")
+Noir.Logger:AttachMiddleware(Noir.Classes.DebugLogLoggerMiddleware:New())
 
 --[[
     Starts the framework.<br>
@@ -12841,12 +13791,12 @@ Noir.AddonReason = "AddonReload" ---@type NoirAddonReason
 function Noir:Start()
     -- Checks
     if self.IsStarting then
-        self.Debugging:RaiseError("Start", "The addon attempted to start Noir when it is in the process of starting.")
+        self.Debugging:RaiseError("Noir:Start()", "The addon attempted to start Noir when it is in the process of starting.")
         return
     end
 
     if self.HasStarted then
-        self.Debugging:RaiseError("Start", "The addon attempted to start Noir more than once.")
+        self.Debugging:RaiseError("Noir:Start()", "The addon attempted to start Noir more than once.")
         return
     end
 
@@ -12858,7 +13808,7 @@ function Noir:Start()
         self.Callbacks:Once("onTick", function()
             -- Determine the addon reason
             local took = server.getTimeMillisec() - startTime
-            self.AddonReason = isSaveCreate and "SaveCreate" or (took < 1000 and "AddonReload" or "SaveLoad")
+            self.AddonReason = isSaveCreate and Noir.Enums.AddonReason.SAVE_CREATE or (took < 1000 and Noir.Enums.AddonReason.ADDON_RELOAD or Noir.Enums.AddonReason.SAVE_LOAD)
 
             self.IsStarting = false
             self.HasStarted = true
@@ -12877,12 +13827,11 @@ function Noir:Start()
             self.Bootstrapper:StartServices()
 
             -- Send log
-            self.Libraries.Logging:Success("Start", "Noir v%s has started. Bootstrapper has initialized and started all services.\nTook: %sms | Addon Reason: %s", self.Version, took, Noir.AddonReason)
+            self.Logger:Success("Noir v%s has started. Bootstrapper has initialized and started all services.\nTook: %sms | Addon Reason: %s", self.Version, took, Noir.AddonReason)
 
             -- Send log on addon stop
             self.Callbacks:Once("onDestroy", function()
-                local addonData = server.getAddonData((server.getAddonIndex()))
-                self.Libraries.Logging:Info("Stop", "%s, using Noir v%s, has stopped.", addonData.name, self.Version)
+                self.Logger:Warning("%s, using Noir v%s, has stopped.", self.AddonName, Noir.Version)
             end)
         end, true)
     end
@@ -12897,12 +13846,3 @@ end
 
 -- Prevent user-created methods in services from being called before the service has been initialized
 Noir.Bootstrapper:WrapServiceMethodsForAllServices()
-
--------------------------------
--- // Intellisense
--------------------------------
-
----@alias NoirAddonReason
----| "AddonReload" The addon was reloaded
----| "SaveCreate" A save was created with the addon enabled
----| "SaveLoad" A save with loaded into with the addon enabled

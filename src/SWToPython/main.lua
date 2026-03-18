@@ -24,31 +24,10 @@
 -------------------------------
 
 --[[
-    Prints a warning.
+    The logger for this addon.
 ]]
----@param message any
----@param ... any
-warn = function(message, ...)
-    return Noir.Libraries.Logging:Warning("Warn", message, ...)
-end
-
---[[
-    Prints a message.
-]]
----@param message any
----@param ... any
-print = function(message, ...)
-    return Noir.Libraries.Logging:Info("Info", message, ...)
-end
-
-Noir.Libraries.Logging:SetMode("DebugLog")
-
--- Disable most built-in services
-Noir.Services:RemoveBuiltInServices({
-    "TaskService",
-    "HTTPService",
-    "HoarderService"
-})
+SWToPython.Logger = Noir.Libraries.Logging:CreateLogger("SWToPython")
+SWToPython.Logger:AttachMiddleware(Noir.Classes.DebugLogLoggerMiddleware:New())
 
 -- Start Noir
 Noir:Start()

@@ -497,13 +497,7 @@ class Addon():
             for triggered_callback in triggered_callbacks:
                 name = triggered_callback["Name"]
                 arguments = triggered_callback["Arguments"]
-                
-                try:
-                    name = CallbackEnum(name)
-                except ValueError as exception:
-                    self._error(f"Unknown callback name of {name}")
-                    continue
-                
+
                 self._handle_callback(name, arguments)
 
             return self.calls
@@ -607,12 +601,12 @@ class Addon():
     
         self.attach_lua_code(io.quick_read(path, "r"))
         
-    def _handle_callback(self, name: CallbackEnum, arguments: list[Any]):
+    def _handle_callback(self, name: str, arguments: list[Any]):
         """
-        Handles a callback from Stormworks and fires the corresponding event (if any)
+        Handles a callback from the in-game addon and fires the corresponding event (if any)
         
         Args:
-            name (CallbackEnum): The name of the callback.
+            name (str): The name of the callback.
             arguments (list[Any]): The arguments passed to the callback.
             
         Raises:
@@ -627,20 +621,26 @@ class Addon():
         except Exception as exception:
             raise PTSCallbackException(f"Something went wrong with the `{name}` event. Are your callbacks expecting the right amount of arguments?") from exception
         
-    def connect(self, name: CallbackEnum, callback: Callable):
+    def connect(self, name: str|CallbackEnum, callback: Callable):
         """
-        Connects the passed callable argument to a specific game callback.
+        Connects the passed callable argument to a specific callback.<br>
+        Consider using `CallbackEnum` for in-game callbacks.<br>
+        You can fire custom callbacks via Lua code injection, which you can then
+        connect to here.
         
         Args:
-            name (CallbackEnum): The in-game callback to connect to
+            name (str | CallbackEnum): The callback to connect to (in-game or custom)
             callback (Callable): The callback function to call when the event is fired.
         """
+        
+        if isinstance(name, CallbackEnum):
+            name = name.value
         
         if name not in self.callbacks:
             self.callbacks[name] = Event()
         
         self.callbacks[name] += callback
-        self._info(f"Connected callback to game callback: {name}")
+        self._info(f"Connected function to callback: {name}")
         
     def _handle_call(self, call: Call, return_values: list[Any]):
         """
