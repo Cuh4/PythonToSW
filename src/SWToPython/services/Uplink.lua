@@ -257,7 +257,7 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
                     return
                 end
 
-                warn("Uplink:Request(): Request returned not ok. Proceeding to assume the PythonToSW server is down. Response: %s", response.Text)
+                SWToPython.Logger:Error("Uplink:Request(): Request returned not ok. Proceeding to assume the PythonToSW server is down. Response: %s", response.Text)
                 self:SetAlive(false)
 
                 return
@@ -267,17 +267,17 @@ function SWToPython.Uplink:Request(endpoint, params, callback, overrideAliveChec
             local data = response:JSON()
 
             if not data then
-                warn("Uplink:Request(): Failed to parse response from request to '%s' on PythonToSW server. Response: %s", endpoint, response.Text)
+                SWToPython.Logger:Error("Uplink:Request(): Failed to parse response from request to '%s' on PythonToSW server. Response: %s", endpoint, response.Text)
                 return
             end
 
             if data["detail"] and Noir.Libraries.String:StartsWith(data["detail"], "no_auth") then
-                warn("Uplink:Request(): Can't send request. Outdated token. Try `?reload_scripts`.")
+                SWToPython.Logger:Error("Uplink:Request(): Can't send request. Outdated token. Try `?reload_scripts`.")
                 return
             end
 
             if data["detail"] then
-                warn("Uplink:Request(): Sent request, but got an error from PythonToSW server: %s", data["detail"])
+                SWToPython.Logger:Error("Uplink:Request(): Sent request, but got an error from PythonToSW server: %s", data["detail"])
                 return
             end
 
@@ -296,17 +296,17 @@ end
 ---@param alive boolean
 function SWToPython.Uplink:SetAlive(alive)
     if self.Alive == alive then
-        warn("Uplink:SetAlive(): Attempted to set alive to what it is already.")
+        SWToPython.Logger:Warning("Uplink:SetAlive(): Attempted to set alive to what it is already.")
         return
     end
 
     self.Alive = alive
 
     if self.Alive then
-        print("Uplink:SetAlive(): Connected to PythonToSW server (alive).")
+        SWToPython.Logger:Success("Uplink:SetAlive(): Connected to PythonToSW server (alive).")
         self.OnConnect:Fire()
     else
-        warn("Uplink:SetAlive(): Disconnected from PythonToSW server (not alive).")
+        SWToPython.Logger:Warning("Uplink:SetAlive(): Disconnected from PythonToSW server (not alive).")
         self.OnDisconnect:Fire()
     end
 end
@@ -316,7 +316,7 @@ end
 ]]
 ---@param message string
 function SWToPython.Uplink:PropagateError(message)
-    warn("Uplink:PropagateError(): "..message)
+    SWToPython.Logger:Error("Uplink: Propagated error > "..message)
     self:Request("/error", {message = message})
 end
 
@@ -324,15 +324,10 @@ end
     Handles the process of running calls from the PythonToSW server, returning values, etc.
 ]]
 function SWToPython.Uplink:Update()
-    local handledCalls = self:HandledCallsToTable()
+    local handledCalls = self:GetHandledCallsCopy()
+    local triggeredCallbacks = self:GetTriggeredCallbacksCopy()
 
-    for _, handledCall in pairs(self.HandledCalls) do
-        self:RemoveHandledCall(handledCall)
-    end
-
-    local triggeredCallbacks = self:TriggeredCallbacksToTable()
-
-    for _, triggeredCallback in pairs(self.TriggeredCallbacks) do
+    for _, triggeredCallback in pairs(triggeredCallbacks) do
         self:RemoveTriggeredCallback(triggeredCallback)
     end
 
@@ -340,12 +335,13 @@ function SWToPython.Uplink:Update()
         "/update",
 
         {
-            handled_calls = handledCalls,
-            triggered_callbacks = triggeredCallbacks
+            handled_calls = self:HandledCallsToTable(handledCalls),
+            triggered_callbacks = self:TriggeredCallbacksToTable(triggeredCallbacks),
         },
 
         ---@param calls table<integer, table>
         function(calls)
+            -- handle new calls
             for _, _call in ipairs(calls) do
                 local call = SWToPython.Classes.Call:FromTable(_call)
 
@@ -355,46 +351,70 @@ function SWToPython.Uplink:Update()
 
                 self:HandleCall(call)
             end
+
+            -- `/update` propagated handled calls and triggered callbacks to server
+            -- so we can safely stop tracking them
+            for _, handledCall in pairs(handledCalls) do
+                self:RemoveHandledCall(handledCall)
+            end
         end
     )
 end
 
 --[[
+    Returns a copy of handled calls.
+]]
+---@return table<string, SWToPython.HandledCall>
+function SWToPython.Uplink:GetHandledCallsCopy()
+    return Noir.Libraries.Table:Copy(self.HandledCalls)
+end
+
+--[[
     Converts handled calls to table representations.
 ]]
+---@param handledCalls table<string, SWToPython.HandledCall>
 ---@return table<integer, SwToPython.HandledCall.AsTable>
-function SWToPython.Uplink:HandledCallsToTable()
+function SWToPython.Uplink:HandledCallsToTable(handledCalls)
     ---@type table<integer, SwToPython.HandledCall.AsTable>
-    local handledCalls = {}
+    local toConvert = {}
 
-    for _, handledCall in pairs(self.HandledCalls) do
-        table.insert(handledCalls, handledCall:ToTable())
+    for _, handledCall in pairs(handledCalls) do
+        table.insert(toConvert, handledCall:ToTable())
     end
 
-    table.sort(handledCalls, function (handledCallA, handledCallB)
+    table.sort(toConvert, function (handledCallA, handledCallB)
         return handledCallA.Time < handledCallB.Time
     end)
 
-    return handledCalls
+    return toConvert
+end
+
+--[[
+    Returns a copy of triggered callbacks.
+]]
+---@return table<integer, SWToPython.TriggeredCallback>
+function SWToPython.Uplink:GetTriggeredCallbacksCopy()
+    return Noir.Libraries.Table:Copy(self.TriggeredCallbacks)
 end
 
 --[[
     Converts triggered callbacks to table representations.
 ]]
+---@param triggeredCallbacks table<integer, SWToPython.TriggeredCallback>
 ---@return table<integer, SwToPython.TriggeredCallback.AsTable>
-function SWToPython.Uplink:TriggeredCallbacksToTable()
+function SWToPython.Uplink:TriggeredCallbacksToTable(triggeredCallbacks)
     ---@type table<integer, SwToPython.TriggeredCallback.AsTable>
-    local triggeredCallbacks = {}
+    local toConvert = {}
 
-    for _, triggeredCallback in pairs(self.TriggeredCallbacks) do
-        table.insert(triggeredCallbacks, triggeredCallback:ToTable())
+    for _, triggeredCallback in pairs(triggeredCallbacks) do
+        table.insert(toConvert, triggeredCallback:ToTable())
     end
 
-    table.sort(triggeredCallbacks, function (triggeredCallbackA, triggeredCallbackB)
+    table.sort(toConvert, function (triggeredCallbackA, triggeredCallbackB)
         return triggeredCallbackA.Time < triggeredCallbackB.Time
     end)
 
-    return triggeredCallbacks
+    return toConvert
 end
 
 --[[
@@ -409,7 +429,7 @@ function SWToPython.Uplink:HandleCall(call)
     local handledCall = call:Call()
 
     if not handledCall then
-        warn("Uplink:HandleCall(): Failed to handle call. ID: %s", call.ID)
+        SWToPython.Logger:Error("Uplink:HandleCall(): Failed to handle call. ID: %s", call.ID)
         return
     end
 
@@ -479,7 +499,7 @@ function SWToPython.Uplink:CheckAlive()
         return
     end
 
-    print("Uplink:CheckAlive(): Checking if PythonToSW server is alive...")
+    SWToPython.Logger:Info("Uplink:CheckAlive(): Checking if PythonToSW server is alive...")
 
     self:Request("/ok", {}, function(response)
         self:SetAlive(true)
