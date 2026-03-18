@@ -1,11 +1,9 @@
 {
     "order" : [
+        "framework",
         "init.lua",
-        "Framework",
-        "Enums",
-        "Classes",
-        "Libs",
-        "Services",
+        "classes",
+        "services",
         "main.lua"
     ]
 }
