@@ -38,7 +38,8 @@ The rest of the arguments represent the arguments we want to pass to the `server
 
 PythonToSW handles that too! If you call an in-game function that returns something, the in-game addon will relay it back to us. Take a look!
 
-```
+{% code title="main.py" %}
+```python
 # ...
 
 def on_start():
@@ -56,6 +57,7 @@ def on_start():
     
 # ...
 ```
+{% endcode %}
 
 {% hint style="info" %}
 The [community Stormworks Addon Lua documentation](https://github.com/Cuh4/StormworksAddonLuaDocumentation) also shows what `server` functions return.
@@ -80,7 +82,7 @@ addon.connect(CallbackEnum.ON_PLAYER_JOIN, on_player_join)
 ```
 {% endcode %}
 
-You can connect to callbacks whenever, whether it's before your addon starts or even during runtime. **Ideally you should** connect to them straight away before your addon starts however.
+You can connect to callbacks whenever, whether it's before your addon starts or even during runtime.
 
 {% hint style="info" %}
 Most in-game callbacks come with arguments! You can see them in the [documentation](https://github.com/Cuh4/StormworksAddonLuaDocumentation).
@@ -149,6 +151,18 @@ SWToPython's code can be found [here](https://github.com/Cuh4/PythonToSW/tree/ma
 As for Noir, the code can be found [here](https://github.com/cuhHub/Noir).
 {% endhint %}
 
+## Independent Lua Code
+
+If your Lua code needs to run stuff on its own without your PythonToSW addon orchestrating it, consider creating a Noir service! See the [Noir documentation](https://github.com/cuhHub/Noir) for more information on Noir services.
+
+If you do not want to use Noir, then **ensure that any code that interacts with the `SWToPython` Noir service is ran after Noir starts**. You can ensure this by using the `Noir.Started` event like so:
+
+<pre class="language-lua"><code class="lang-lua"><strong>Noir.Started:Once(function()
+</strong>    -- Anything involving SWToPython or any Noir service can now safely be used
+    SWToPython.Uplink:InvokeCallback("foo", {"Hello from in-game!"})
+<strong>end)
+</strong></code></pre>
+
 ## Calling Custom Functions
 
 In the previous section, we created a function in `foo.bar` called `myFunction`, but that would be pointless if we couldn't call it. Luckily, we can.
@@ -170,3 +184,36 @@ Of course, we can also access anything the function returns. In the Lua code, th
 </strong></code></pre>
 
 Easy!
+
+## Custom Callbacks
+
+Injected Lua code can also propagate custom callbacks. This can be done like so:
+
+<pre class="language-lua" data-title="helper.lua"><code class="lang-lua">foo = {
+    bar = {}
+}
+
+function foo.bar.myFunction()
+    print("I was called!")
+<strong>    SWToPython.Uplink:InvokeCallback("register_foo", {"foo", 15})
+</strong>    return 1
+end
+</code></pre>
+
+On the Python side, you can then listen to your custom callback with the same `.connect` method, like so:
+
+{% code title="main.py" %}
+```python
+# ...
+
+def custom_callback_handler(foo: str, some_number: int):
+    print(foo) # "foo"
+    print(time) # 15
+
+addon.connect("register_foo", custom_callback_handler)
+
+# ...
+```
+{% endcode %}
+
+This allows for two-way communication between injected Lua code and your PythonToSW addon!

@@ -7,7 +7,7 @@ icon: message-lines
 
 ## Logging
 
-You likely won't need to view logs from the in-game addon, but if you ever inject Lua code and use `print` or something of the sorts, you won't be able to see the message unless you use specific software.
+You likely won't need to view logs from the in-game addon, but if you ever inject Lua code and invoke `debug.log` or use a Noir logger with DebugLog logger middleware attached, you won't be able to see the logs unless you use specific software.
 
 Additionally, if the in-game addon runs into an error, it will be helpful to look at the logs to figure out why it happened (be sure to fill out an issue too! See [..](../ "mention") for a link).
 
