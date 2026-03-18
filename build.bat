@@ -3,5 +3,5 @@ py combine.py --directory "src/SWToPython" --destination "src/PythonToSW/addon/s
 
 rmdir dist /S /q
 
-pipreqs --force
+pip freeze > requirements.txt
 py -m build
